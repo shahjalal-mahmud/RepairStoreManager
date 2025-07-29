@@ -1,4 +1,4 @@
-package com.example.repairstoremanager.ui.screens.dashboard
+package com.example.repairstoremanager.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*

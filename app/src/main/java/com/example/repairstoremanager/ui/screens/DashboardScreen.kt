@@ -7,8 +7,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.repairstoremanager.ui.screens.dashboard.InvoiceFormSection
-import com.example.repairstoremanager.ui.screens.dashboard.StoreInfoSection
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,9 +23,7 @@ fun DashboardScreen() {
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            StoreInfoSection()
-            Spacer(modifier = Modifier.height(16.dp))
-            InvoiceFormSection()
+            Text("This is Dashboard....")
         }
     }
 }

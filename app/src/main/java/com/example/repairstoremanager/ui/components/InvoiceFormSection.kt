@@ -1,4 +1,4 @@
-package com.example.repairstoremanager.ui.screens.dashboard
+package com.example.repairstoremanager.ui.components
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.*
@@ -9,8 +9,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.example.repairstoremanager.ui.components.PasswordField
-import com.example.repairstoremanager.ui.components.PatternLockCanvas
 import java.text.SimpleDateFormat
 import java.util.*
 
