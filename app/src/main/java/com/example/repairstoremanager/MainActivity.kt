@@ -18,7 +18,10 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 val loginViewModel: LoginViewModel = viewModel()
 
-                NavHost(navController = navController, startDestination = "login") {
+                NavHost(
+                    navController = navController,
+                    startDestination = "dashboard" // Changed from "login" to "dashboard"
+                ) {
                     composable("login") {
                         LoginScreen(
                             viewModel = loginViewModel,
