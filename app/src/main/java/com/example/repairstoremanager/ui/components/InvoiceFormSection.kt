@@ -135,7 +135,9 @@ fun InvoiceFormSection() {
                 onValueChange = { phonePassword = it },
                 modifier = Modifier.fillMaxWidth()
             )
-        } else {
+        }
+
+        if (securityType == "Pattern") {
             Column {
                 Text(
                     "Draw your pattern (minimum 4 dots)",
@@ -147,27 +149,27 @@ fun InvoiceFormSection() {
                     onPatternComplete = { drawn -> pattern = drawn },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .aspectRatio(1f)
+                        .height(300.dp)
                 )
-
-                if (pattern.isNotEmpty()) {
-                    Spacer(Modifier.height(16.dp))
-                    Text("Your pattern preview:", style = MaterialTheme.typography.labelMedium)
-                    PatternLockCanvas(
-                        pattern = pattern,
-                        isInteractive = false,
-                        isPreview = true,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp)
-                    )
-                    Text(
-                        "Pattern: ${pattern.joinToString(" → ")}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
             }
+        }
+
+        if (securityType == "Pattern" && pattern.isNotEmpty()) {
+            Spacer(Modifier.height(16.dp))
+            Text("Your pattern preview:", style = MaterialTheme.typography.labelMedium)
+            PatternLockCanvas(
+                pattern = pattern,
+                isInteractive = false,
+                isPreview = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+            )
+            Text(
+                "Pattern: ${pattern.joinToString(" → ")}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
 
         Spacer(Modifier.height(20.dp))

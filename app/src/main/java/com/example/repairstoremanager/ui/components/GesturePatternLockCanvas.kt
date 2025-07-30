@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun PatternLockCanvas(
+fun GesturePatternLockCanvas(
     onPatternComplete: (List<Int>) -> Unit,
     modifier: Modifier = Modifier,
     dotSize: Dp = 24.dp,
