@@ -1,6 +1,7 @@
 package com.example.repairstoremanager.ui.components
 
 import android.annotation.SuppressLint
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -9,9 +10,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.repairstoremanager.data.model.Customer
+import com.example.repairstoremanager.viewmodel.CustomerViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -41,6 +46,10 @@ fun InvoiceFormSection() {
     var simTray by remember { mutableStateOf(false) }
     var backCover by remember { mutableStateOf(false) }
     var deadPermission by remember { mutableStateOf(false) }
+
+    val viewModel: CustomerViewModel = viewModel()
+    val context = LocalContext.current
+
 
     Column(
         modifier = Modifier
@@ -162,7 +171,37 @@ fun InvoiceFormSection() {
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = { /* Save to Firestore */ },
+            onClick = {
+                val customer = Customer(
+                    invoiceNumber = invoiceNumber,
+                    date = date,
+                    customerName = customerName,
+                    contactNumber = contactNumber,
+                    phoneModel = phoneModel,
+                    problem = problem,
+                    deliveryDate = deliveryDate,
+                    totalAmount = totalAmount,
+                    advanced = advanced,
+                    securityType = securityType,
+                    phonePassword = phonePassword,
+                    pattern = pattern,
+                    battery = battery,
+                    sim = sim,
+                    memory = memory,
+                    simTray = simTray,
+                    backCover = backCover,
+                    deadPermission = deadPermission
+                )
+                viewModel.addCustomer(
+                    customer,
+                    onSuccess = {
+                        Toast.makeText(context, "Customer saved!", Toast.LENGTH_SHORT).show()
+                    },
+                    onError = { error ->
+                        Toast.makeText(context, error, Toast.LENGTH_LONG).show()
+                    }
+                )
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(52.dp)

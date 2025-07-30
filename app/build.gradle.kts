@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.repairstoremanager"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 34 // Match compileSdk unless you need higher
         versionCode = 1
         versionName = "1.0"
@@ -64,7 +64,7 @@ dependencies {
     // Compose + Material 3
     implementation("androidx.compose.material3:material3:1.3.2")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.2") // optional but good
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.2")
     implementation("androidx.navigation:navigation-compose:2.7.3")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.ui:ui")
@@ -73,9 +73,13 @@ dependencies {
     // Firebase BoM
     implementation(platform("com.google.firebase:firebase-bom:34.0.0"))
 
-    // Firebase dependencies without version (BoM handles it)
-    implementation("com.google.firebase:firebase-auth-ktx:22.3.0")
+    // Firebase Modules
+    implementation("com.google.firebase:firebase-auth-ktx:22.3.1")
+    implementation("com.google.firebase:firebase-firestore-ktx:24.9.1")
     implementation("com.google.firebase:firebase-analytics")
+
+    // Coroutines for Firebase await
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 
     // Testing
     testImplementation(libs.junit)
