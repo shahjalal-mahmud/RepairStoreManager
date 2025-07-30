@@ -68,7 +68,12 @@ fun CustomerCard(customer: Customer) {
                     Text("🔐 Pattern:")
                     PatternLockCanvas(
                         pattern = customer.pattern,
-                        modifier = Modifier.padding(top = 8.dp).fillMaxWidth()
+                        isInteractive = false,
+                        isPreview = true,
+                        modifier = Modifier
+                            .padding(top = 8.dp)
+                            .fillMaxWidth()
+                            .height(200.dp)
                     )
                 }
             }
