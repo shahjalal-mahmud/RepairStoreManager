@@ -29,7 +29,8 @@ fun PatternLockCanvas(
     dotSize: Dp = 24.dp,
     dotSpacing: Dp = 80.dp,
     isInteractive: Boolean = true,
-    isPreview: Boolean = false
+    isPreview: Boolean = false,
+    resetKey: Int = 0,
 ) {
     val dotSizePx = with(LocalDensity.current) { dotSize.toPx() }
     val dotRadiusPx = dotSizePx / 2
@@ -46,7 +47,15 @@ fun PatternLockCanvas(
         Offset(startX + col * dotSpacingPx, startY + row * dotSpacingPx)
     }
 
-    var selectedNodes by remember { mutableStateOf(if (isPreview) pattern else emptyList()) }
+    var selectedNodes by remember(resetKey) {
+        mutableStateOf(
+            when {
+                isPreview -> pattern
+                !isInteractive && pattern.isNotEmpty() -> pattern
+                else -> emptyList()
+            }
+        )
+    }
     var currentTouchPosition by remember { mutableStateOf<Offset?>(null) }
     var visibleLines by remember { mutableStateOf(0) }
 

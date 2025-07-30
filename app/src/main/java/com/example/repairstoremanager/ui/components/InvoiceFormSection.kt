@@ -57,6 +57,9 @@ fun InvoiceFormSection() {
     var isLoading by remember { mutableStateOf(false) }
     var resetTrigger by remember { mutableIntStateOf(0) }
 
+    var hasDrawnPattern by remember { mutableStateOf(false) }
+    var patternResetKey by remember { mutableIntStateOf(0) }
+
     val animatedAlpha by animateFloatAsState(
         targetValue = if (resetTrigger % 2 == 0) 1f else 0f,
         animationSpec = tween(300)
@@ -138,38 +141,52 @@ fun InvoiceFormSection() {
         }
 
         if (securityType == "Pattern") {
-            Column {
+            Column(
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Text(
                     "Draw your pattern (minimum 4 dots)",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Spacer(Modifier.height(8.dp))
-                PatternLockCanvas(
-                    onPatternComplete = { drawn -> pattern = drawn },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(300.dp)
-                )
-            }
-        }
 
-        if (securityType == "Pattern" && pattern.isNotEmpty()) {
-            Spacer(Modifier.height(16.dp))
-            Text("Your pattern preview:", style = MaterialTheme.typography.labelMedium)
-            PatternLockCanvas(
-                pattern = pattern,
-                isInteractive = false,
-                isPreview = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-            )
-            Text(
-                "Pattern: ${pattern.joinToString(" → ")}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+                Spacer(Modifier.height(8.dp))
+
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    PatternLockCanvas(
+                        isInteractive = !hasDrawnPattern,
+                        pattern = pattern,
+                        resetKey = patternResetKey,
+                        onPatternComplete = { drawn ->
+                            if (drawn.size >= 4) {
+                                pattern = drawn
+                                hasDrawnPattern = true
+                            }
+                        }
+                    )
+                }
+
+                if (hasDrawnPattern) {
+                    Spacer(Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        Button(
+                            onClick = {
+                                pattern = emptyList()
+                                hasDrawnPattern = false
+                                patternResetKey++
+                            }
+                        ) {
+                            Text("🔄 Try Again")
+                        }
+                    }
+                }
+            }
         }
 
         Spacer(Modifier.height(20.dp))
