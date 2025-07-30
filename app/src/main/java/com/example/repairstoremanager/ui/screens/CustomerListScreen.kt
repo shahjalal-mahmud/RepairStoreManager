@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.repairstoremanager.viewmodel.CustomerViewModel
 import com.example.repairstoremanager.data.model.Customer
+import com.example.repairstoremanager.ui.components.PatternLockCanvas
 
 @Composable
 fun CustomerListScreen(viewModel: CustomerViewModel = viewModel()) {
@@ -33,8 +34,12 @@ fun CustomerListScreen(viewModel: CustomerViewModel = viewModel()) {
 
 @Composable
 fun CustomerCard(customer: Customer) {
+    var expanded by remember { mutableStateOf(false) }
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(4.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
@@ -50,6 +55,23 @@ fun CustomerCard(customer: Customer) {
                 if (customer.simTray) "SIM Tray" else null,
                 if (customer.backCover) "Back Cover" else null
             ).joinToString(", "))
+
+            Spacer(modifier = Modifier.height(8.dp))
+            TextButton(onClick = { expanded = !expanded }) {
+                Text(if (expanded) "🔒 Hide Security Info" else "🔓 Show Security Info")
+            }
+
+            if (expanded) {
+                if (customer.securityType == "Password") {
+                    Text("🔑 Password: ${customer.phonePassword}")
+                } else {
+                    Text("🔐 Pattern:")
+                    PatternLockCanvas(
+                        pattern = customer.pattern,
+                        modifier = Modifier.padding(top = 8.dp).fillMaxWidth()
+                    )
+                }
+            }
         }
     }
 }

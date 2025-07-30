@@ -2,6 +2,8 @@ package com.example.repairstoremanager.ui.components
 
 import android.annotation.SuppressLint
 import android.widget.Toast
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -10,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -28,6 +31,10 @@ fun InvoiceFormSection() {
     val date = remember { SimpleDateFormat("dd MMM yyyy, hh:mm a").format(Date()) }
     val invoiceNumber = "INV-${System.currentTimeMillis().toString().takeLast(5)}"
 
+    val context = LocalContext.current
+    val viewModel: CustomerViewModel = viewModel()
+
+    // Form state
     var customerName by remember { mutableStateOf("") }
     var contactNumber by remember { mutableStateOf("") }
     var phoneModel by remember { mutableStateOf("") }
@@ -47,95 +54,80 @@ fun InvoiceFormSection() {
     var backCover by remember { mutableStateOf(false) }
     var deadPermission by remember { mutableStateOf(false) }
 
-    val viewModel: CustomerViewModel = viewModel()
-    val context = LocalContext.current
+    var isLoading by remember { mutableStateOf(false) }
+    var resetTrigger by remember { mutableIntStateOf(0) }
 
+    val animatedAlpha by animateFloatAsState(
+        targetValue = if (resetTrigger % 2 == 0) 1f else 0f,
+        animationSpec = tween(300)
+    )
+
+    fun clearForm() {
+        customerName = ""
+        contactNumber = ""
+        phoneModel = ""
+        problem = ""
+        deliveryDate = ""
+        totalAmount = ""
+        advanced = ""
+        securityType = "Password"
+        phonePassword = ""
+        pattern = emptyList()
+        battery = false
+        sim = false
+        memory = false
+        simTray = false
+        backCover = false
+        deadPermission = false
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
             .padding(16.dp)
+            .alpha(animatedAlpha)
     ) {
         Card(
             modifier = Modifier.fillMaxWidth(),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text("📅 Date: $date", style = MaterialTheme.typography.bodySmall)
-                Text("📄 Invoice No: $invoiceNumber", style = MaterialTheme.typography.bodySmall)
+            Column(Modifier.padding(16.dp)) {
+                Text("📅 Date: $date", style = MaterialTheme.typography.labelMedium)
+                Text("📄 Invoice No: $invoiceNumber", style = MaterialTheme.typography.labelMedium)
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(Modifier.height(20.dp))
 
         SectionTitle("👤 Customer Info")
-        OutlinedTextField(
-            value = customerName,
-            onValueChange = { customerName = it },
-            label = { Text("Customer Name") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        OutlinedTextField(
-            value = contactNumber,
-            onValueChange = { contactNumber = it },
-            label = { Text("Contact Number") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-            modifier = Modifier.fillMaxWidth()
-        )
+        CustomTextField("Customer Name", customerName) { customerName = it }
+        CustomTextField("Contact Number", contactNumber, KeyboardType.Phone) { contactNumber = it }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(Modifier.height(20.dp))
 
         SectionTitle("📱 Device Info")
-        OutlinedTextField(
-            value = phoneModel,
-            onValueChange = { phoneModel = it },
-            label = { Text("Phone Model") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        OutlinedTextField(
-            value = problem,
-            onValueChange = { problem = it },
-            label = { Text("Problem Description") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        OutlinedTextField(
-            value = deliveryDate,
-            onValueChange = { deliveryDate = it },
-            label = { Text("Expected Delivery Date") },
-            placeholder = { Text("dd-mm-yyyy") },
-            modifier = Modifier.fillMaxWidth()
-        )
+        CustomTextField("Phone Model", phoneModel) { phoneModel = it }
+        CustomTextField("Problem Description", problem) { problem = it }
+        CustomTextField("Expected Delivery Date", deliveryDate) { deliveryDate = it }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(Modifier.height(20.dp))
 
         SectionTitle("💳 Payment Info")
-        OutlinedTextField(
-            value = totalAmount,
-            onValueChange = { totalAmount = it },
-            label = { Text("Total Amount (৳)") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth()
-        )
-        OutlinedTextField(
-            value = advanced,
-            onValueChange = { advanced = it },
-            label = { Text("Advanced Paid (৳)") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth()
-        )
+        CustomTextField("Total Amount (৳)", totalAmount, KeyboardType.Number) { totalAmount = it }
+        CustomTextField("Advanced Paid (৳)", advanced, KeyboardType.Number) { advanced = it }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(Modifier.height(20.dp))
 
         SectionTitle("🔐 Security Type")
         Row(verticalAlignment = Alignment.CenterVertically) {
             RadioButton(selected = securityType == "Password", onClick = { securityType = "Password" })
-            Text("Password", modifier = Modifier.padding(end = 16.dp))
+            Text("Password", Modifier.padding(end = 16.dp))
             RadioButton(selected = securityType == "Pattern", onClick = { securityType = "Pattern" })
             Text("Pattern")
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(Modifier.height(12.dp))
 
         if (securityType == "Password") {
             PasswordField(
@@ -144,21 +136,41 @@ fun InvoiceFormSection() {
                 modifier = Modifier.fillMaxWidth()
             )
         } else {
-            PatternLockCanvas(
-                onPatternComplete = { drawnPattern -> pattern = drawnPattern },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-            )
-            if (pattern.isNotEmpty()) {
+            Column {
                 Text(
-                    text = "Pattern: ${pattern.joinToString(" → ")}",
-                    style = MaterialTheme.typography.bodyMedium
+                    "Draw your pattern (minimum 4 dots)",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                Spacer(Modifier.height(8.dp))
+                PatternLockCanvas(
+                    onPatternComplete = { drawn -> pattern = drawn },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1f)
+                )
+
+                if (pattern.isNotEmpty()) {
+                    Spacer(Modifier.height(16.dp))
+                    Text("Your pattern preview:", style = MaterialTheme.typography.labelMedium)
+                    PatternLockCanvas(
+                        pattern = pattern,
+                        isInteractive = false,
+                        isPreview = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                    )
+                    Text(
+                        "Pattern: ${pattern.joinToString(" → ")}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(Modifier.height(20.dp))
 
         SectionTitle("📦 Accessories & Consent")
         AccessoriesRow("Battery", battery) { battery = it }
@@ -168,11 +180,14 @@ fun InvoiceFormSection() {
         AccessoriesRow("Back Cover", backCover) { backCover = it }
         AccessoriesRow("Dead Permission", deadPermission) { deadPermission = it }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(Modifier.height(24.dp))
 
         Button(
             onClick = {
+                isLoading = true
                 val customer = Customer(
+                    id = "", // or generate UUID.randomUUID().toString()
+                    shopOwnerId = "", // fill if needed
                     invoiceNumber = invoiceNumber,
                     date = date,
                     customerName = customerName,
@@ -195,21 +210,35 @@ fun InvoiceFormSection() {
                 viewModel.addCustomer(
                     customer,
                     onSuccess = {
+                        isLoading = false
                         Toast.makeText(context, "Customer saved!", Toast.LENGTH_SHORT).show()
+                        resetTrigger++
+                        clearForm()
+                        resetTrigger++
                     },
-                    onError = { error ->
-                        Toast.makeText(context, error, Toast.LENGTH_LONG).show()
+                    onError = {
+                        isLoading = false
+                        Toast.makeText(context, it, Toast.LENGTH_LONG).show()
                     }
                 )
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(52.dp)
+                .height(52.dp),
+            enabled = !isLoading
         ) {
-            Text("💾 Save Invoice", fontSize = 18.sp)
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Text("💾 Save Invoice", fontSize = 18.sp)
+            }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(Modifier.height(40.dp))
     }
 }
 
@@ -233,4 +262,21 @@ fun AccessoriesRow(label: String, checked: Boolean, onCheckedChange: (Boolean) -
         Checkbox(checked = checked, onCheckedChange = onCheckedChange)
         Text(label, modifier = Modifier.padding(start = 8.dp))
     }
+}
+@Composable
+fun CustomTextField(
+    label: String,
+    value: String,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    onValueChange: (String) -> Unit
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label) },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType)
+    )
 }
