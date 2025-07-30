@@ -27,6 +27,7 @@ fun LoginScreen(viewModel: LoginViewModel, onLoginSuccess: () -> Unit) {
     if (viewModel.loginSuccess) {
         LaunchedEffect(Unit) {
             onLoginSuccess()
+            viewModel.loginSuccess = false  // ✅ Prevent re-navigation
         }
     }
     Scaffold(

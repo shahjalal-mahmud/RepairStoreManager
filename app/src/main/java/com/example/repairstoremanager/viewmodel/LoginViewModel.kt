@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.repairstoremanager.data.repository.AuthRepository
 import kotlinx.coroutines.launch
 
-class LoginViewModel : ViewModel() {
+class LoginViewModel(private val storeViewModel: StoreViewModel) : ViewModel() {
     var email by mutableStateOf("")
     var password by mutableStateOf("")
     var isLoading by mutableStateOf(false)
@@ -22,6 +22,7 @@ class LoginViewModel : ViewModel() {
             val result = repository.loginUser(email.trim(), password)
             isLoading = false
             if (result.isSuccess) {
+                storeViewModel.loadStoreInfo() // ✅ Load store info
                 loginSuccess = true
             } else {
                 errorMessage = result.exceptionOrNull()?.localizedMessage
