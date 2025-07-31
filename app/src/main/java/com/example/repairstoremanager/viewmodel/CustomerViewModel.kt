@@ -31,4 +31,12 @@ class CustomerViewModel : ViewModel() {
             _customers.value = repository.getAllCustomers()
         }
     }
+
+    fun updateCustomerStatus(customerId: String, newStatus: String) {
+        viewModelScope.launch {
+            repository.updateStatus(customerId, newStatus)
+            fetchCustomers()
+        }
+    }
+
 }

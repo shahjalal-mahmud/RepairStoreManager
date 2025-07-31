@@ -21,4 +21,5 @@ data class Customer(
     val simTray: Boolean = false,
     val backCover: Boolean = false,
     val deadPermission: Boolean = false,
+    val status: String = "Pending",
 )

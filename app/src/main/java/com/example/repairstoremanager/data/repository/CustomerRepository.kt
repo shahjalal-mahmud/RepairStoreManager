@@ -31,4 +31,15 @@ class CustomerRepository {
             .await()
         return snapshot.toObjects(Customer::class.java)
     }
+    suspend fun updateStatus(customerId: String, status: String): Result<Unit> {
+        return try {
+            db.collection("customers").document(customerId)
+                .update("status", status)
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
 }

@@ -224,7 +224,8 @@ fun InvoiceFormSection() {
                     memory = memory,
                     simTray = simTray,
                     backCover = backCover,
-                    deadPermission = deadPermission
+                    deadPermission = deadPermission,
+                    status = "Pending",
                 )
                 viewModel.addCustomer(
                     customer,
