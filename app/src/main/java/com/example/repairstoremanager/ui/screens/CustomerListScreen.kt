@@ -12,24 +12,59 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.repairstoremanager.viewmodel.CustomerViewModel
 import com.example.repairstoremanager.data.model.Customer
+import com.example.repairstoremanager.ui.components.CustomerSearchAndFilterBar
+import com.example.repairstoremanager.ui.components.CustomerSearchFilterSortBar
 import com.example.repairstoremanager.ui.components.PatternLockCanvas
 
 @Composable
 fun CustomerListScreen(viewModel: CustomerViewModel = viewModel()) {
     val customerList by viewModel.customers.collectAsState()
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedFilter by remember { mutableStateOf("All") }
+    var selectedSort by remember { mutableStateOf("None") }
 
+    // 1️⃣ Filtered and sorted list
+    val filteredList = customerList
+        .filter {
+            (searchQuery.isBlank() || it.customerName.contains(searchQuery, true)
+                    || it.phoneModel.contains(searchQuery, true)
+                    || it.contactNumber.contains(searchQuery, true))
+        }
+        .filter {
+            selectedFilter == "All" || it.status == selectedFilter
+        }
+        .let { list ->
+            when (selectedSort) {
+                "Name (A–Z)" -> list.sortedBy { it.customerName }
+                "Total Amount (High → Low)" -> list.sortedByDescending { it.totalAmount }
+                "Total Amount (Low → High)" -> list.sortedBy { it.totalAmount }
+                "Newest First" -> list.sortedByDescending { it.createdAt } // Ensure `createdAt` exists
+                "Oldest First" -> list.sortedBy { it.createdAt }
+                else -> list
+            }
+        }
     LaunchedEffect(Unit) {
         viewModel.fetchCustomers()
     }
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        items(customerList) { customer ->
-            CustomerCard(customer)
+    Column(modifier = Modifier.padding(16.dp)) {
+        CustomerSearchFilterSortBar(
+            searchQuery = searchQuery,
+            onSearchChange = { searchQuery = it },
+            selectedFilter = selectedFilter,
+            onFilterChange = { selectedFilter = it },
+            selectedSort = selectedSort,
+            onSortChange = { selectedSort = it }
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(filteredList) { customer ->
+                CustomerCard(customer = customer, viewModel = viewModel)
+            }
         }
     }
 }
