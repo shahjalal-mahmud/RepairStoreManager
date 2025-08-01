@@ -102,18 +102,24 @@ fun CustomerCard(customer: Customer, viewModel: CustomerViewModel = viewModel())
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 4.dp, vertical = 2.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            .padding(horizontal = 4.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = MaterialTheme.shapes.medium
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+
+            // Header: Name and Status
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Text(
                     text = "👤 ${customer.customerName}",
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.weight(1f)
                 )
-
                 StatusDropdown(
                     selectedStatus = selectedStatus,
                     options = statusOptions,
@@ -124,20 +130,23 @@ fun CustomerCard(customer: Customer, viewModel: CustomerViewModel = viewModel())
                 )
             }
 
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(8.dp))
 
-            Text("🕓 Created: ${customer.date}", style = MaterialTheme.typography.labelSmall)
+            // Info Section
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("📱 ${customer.phoneModel}", style = MaterialTheme.typography.bodyMedium)
+                Text("🛠️ Problem: ${customer.problem}", style = MaterialTheme.typography.bodySmall)
+                Text("📞 Contact: ${customer.contactNumber}", style = MaterialTheme.typography.bodySmall)
+                Text("💳 Paid: ${customer.advanced} / Total: ${customer.totalAmount}", style = MaterialTheme.typography.bodySmall)
 
-            Spacer(Modifier.height(4.dp))
-            if (customer.status == "Pending" || customer.status == "Repaired") {
-                Text("📦 Delivery Date: ${customer.deliveryDate}", style = MaterialTheme.typography.labelSmall)
+                if (customer.status == "Pending" || customer.status == "Repaired") {
+                    Text("📦 Delivery Date: ${customer.deliveryDate}", style = MaterialTheme.typography.bodySmall)
+                }
+
+                Text("🕓 Created: ${customer.date}", style = MaterialTheme.typography.labelSmall)
             }
 
             Spacer(Modifier.height(8.dp))
-            Text("📱 ${customer.phoneModel}", style = MaterialTheme.typography.bodyMedium)
-            Text("🛠️ Problem: ${customer.problem}", style = MaterialTheme.typography.bodySmall)
-            Text("📞 Contact: ${customer.contactNumber}", style = MaterialTheme.typography.bodySmall)
-            Text("💳 Paid: ${customer.advanced} / Total: ${customer.totalAmount}", style = MaterialTheme.typography.bodySmall)
 
             AccessoriesBadges(
                 battery = customer.battery,
@@ -148,13 +157,14 @@ fun CustomerCard(customer: Customer, viewModel: CustomerViewModel = viewModel())
                 deadPermission = customer.deadPermission
             )
 
-            Spacer(modifier = Modifier.height(6.dp))
-
+            // Security Info Toggle
+            Spacer(Modifier.height(8.dp))
             TextButton(onClick = { expanded = !expanded }) {
                 Text(if (expanded) "🔒 Hide Security Info" else "🔓 Show Security Info")
             }
 
             if (expanded) {
+                Spacer(Modifier.height(4.dp))
                 if (customer.securityType == "Password") {
                     Text("🔑 Password: ${customer.phonePassword}", style = MaterialTheme.typography.bodySmall)
                 } else {
@@ -173,6 +183,7 @@ fun CustomerCard(customer: Customer, viewModel: CustomerViewModel = viewModel())
         }
     }
 }
+
 @Composable
 fun StatusDropdown(
     selectedStatus: String,
