@@ -16,7 +16,8 @@ class CustomerViewModel : ViewModel() {
 
     fun addCustomer(customer: Customer, onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
-            val result = repository.addCustomer(customer)
+            val customerWithTimestamp = customer.copy(createdAt = System.currentTimeMillis())
+            val result = repository.addCustomer(customerWithTimestamp)
             if (result.isSuccess) {
                 fetchCustomers()
                 onSuccess()

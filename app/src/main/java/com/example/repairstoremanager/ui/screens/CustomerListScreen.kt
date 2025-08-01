@@ -1,20 +1,45 @@
 package com.example.repairstoremanager.ui.screens
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.repairstoremanager.viewmodel.CustomerViewModel
 import com.example.repairstoremanager.data.model.Customer
-import com.example.repairstoremanager.ui.components.CustomerSearchAndFilterBar
+import com.example.repairstoremanager.ui.components.AccessoriesBadges
 import com.example.repairstoremanager.ui.components.CustomerSearchFilterSortBar
 import com.example.repairstoremanager.ui.components.PatternLockCanvas
+import com.example.repairstoremanager.viewmodel.CustomerViewModel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun CustomerListScreen(viewModel: CustomerViewModel = viewModel()) {
@@ -36,13 +61,14 @@ fun CustomerListScreen(viewModel: CustomerViewModel = viewModel()) {
         .let { list ->
             when (selectedSort) {
                 "Name (A–Z)" -> list.sortedBy { it.customerName }
-                "Total Amount (High → Low)" -> list.sortedByDescending { it.totalAmount }
-                "Total Amount (Low → High)" -> list.sortedBy { it.totalAmount }
+                "Total Amount (High → Low)" -> list.sortedByDescending { it.totalAmount.toDoubleOrNull() ?: 0.0 }
+                "Total Amount (Low → High)" -> list.sortedBy { it.totalAmount.toDoubleOrNull() ?: 0.0 }
                 "Newest First" -> list.sortedByDescending { it.createdAt } // Ensure `createdAt` exists
                 "Oldest First" -> list.sortedBy { it.createdAt }
                 else -> list
             }
         }
+
     LaunchedEffect(Unit) {
         viewModel.fetchCustomers()
     }
@@ -72,60 +98,72 @@ fun CustomerListScreen(viewModel: CustomerViewModel = viewModel()) {
 @Composable
 fun CustomerCard(customer: Customer, viewModel: CustomerViewModel = viewModel()) {
     var expanded by remember { mutableStateOf(false) }
-    var selectedStatus by remember { mutableStateOf(customer.status) }
-
+    val selectedStatus = customer.status
     val statusOptions = listOf("Pending", "Repaired", "Delivered", "Cancelled")
     val statusColor = statusToColor(selectedStatus)
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(4.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+            .padding(horizontal = 4.dp, vertical = 2.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            // Customer name + status button row
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = "👤 ${customer.customerName}",
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.weight(1f)
                 )
 
-                Spacer(modifier = Modifier.width(8.dp))
-
                 StatusDropdown(
                     selectedStatus = selectedStatus,
                     options = statusOptions,
                     onStatusChange = { newStatus ->
-                        selectedStatus = newStatus
                         viewModel.updateCustomerStatus(customer.id, newStatus)
                     },
                     statusColor = statusColor
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(Modifier.height(4.dp))
 
-            Text("📱 ${customer.phoneModel} | Problem: ${customer.problem}")
-            Text("📞 ${customer.contactNumber}")
-            Text("💳 Paid: ${customer.advanced} / Total: ${customer.totalAmount}")
+            val formattedDate = remember(customer.createdAt) {
+                SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault()).format(Date(customer.createdAt))
+            }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Text("🕓 Created: $formattedDate", style = MaterialTheme.typography.labelSmall)
+
+            Spacer(Modifier.height(4.dp))
+            if (customer.status == "Pending" || customer.status == "Repaired") {
+                Text("📦 Delivery Date: ${customer.deliveryDate}", style = MaterialTheme.typography.labelSmall)
+            }
+
+            Spacer(Modifier.height(8.dp))
+            Text("📱 ${customer.phoneModel}", style = MaterialTheme.typography.bodyMedium)
+            Text("🛠️ Problem: ${customer.problem}", style = MaterialTheme.typography.bodySmall)
+            Text("📞 Contact: ${customer.contactNumber}", style = MaterialTheme.typography.bodySmall)
+            Text("💳 Paid: ${customer.advanced} / Total: ${customer.totalAmount}", style = MaterialTheme.typography.bodySmall)
+
+            AccessoriesBadges(
+                battery = customer.battery,
+                sim = customer.sim,
+                memory = customer.memory,
+                simTray = customer.simTray,
+                backCover = customer.backCover,
+                deadPermission = customer.deadPermission
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
             TextButton(onClick = { expanded = !expanded }) {
                 Text(if (expanded) "🔒 Hide Security Info" else "🔓 Show Security Info")
             }
 
             if (expanded) {
                 if (customer.securityType == "Password") {
-                    Text("🔑 Password: ${customer.phonePassword}")
+                    Text("🔑 Password: ${customer.phonePassword}", style = MaterialTheme.typography.bodySmall)
                 } else {
                     Text("🔐 Pattern:")
                     PatternLockCanvas(
@@ -135,35 +173,9 @@ fun CustomerCard(customer: Customer, viewModel: CustomerViewModel = viewModel())
                         modifier = Modifier
                             .padding(top = 8.dp)
                             .fillMaxWidth()
-                            .height(200.dp)
+                            .height(180.dp)
                     )
                 }
-            }
-        }
-    }
-}
-
-@Composable
-fun DropdownMenuBox(
-    selectedStatus: String,
-    options: List<String>,
-    onStatusChange: (String) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Box {
-        TextButton(onClick = { expanded = true }) {
-            Text("📋 $selectedStatus ⬇️")
-        }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            options.forEach { status ->
-                DropdownMenuItem(
-                    text = { Text(status) },
-                    onClick = {
-                        onStatusChange(status)
-                        expanded = false
-                    }
-                )
             }
         }
     }

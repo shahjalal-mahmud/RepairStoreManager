@@ -83,6 +83,18 @@ dependencies {
 
     implementation("io.coil-kt:coil-compose:2.7.0")
     implementation(libs.ui)
+    implementation(libs.androidx.runtime)
+
+    // Material 3 (you already have this)
+    implementation("androidx.compose.material3:material3:1.3.2")
+
+    // Material 3 Icons (recommended)
+    implementation("androidx.compose.material:material-icons-extended:1.7.8")
+
+    // Optional: If you still need the older Material icons
+    implementation("androidx.compose.material:material-icons-core:1.7.8")
+    implementation("androidx.compose.material:material-icons-extended:1.7.0")
+
 
     // Testing
     testImplementation(libs.junit)
