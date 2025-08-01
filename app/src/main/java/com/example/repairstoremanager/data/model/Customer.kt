@@ -22,5 +22,5 @@ data class Customer(
     val backCover: Boolean = false,
     val deadPermission: Boolean = false,
     val status: String = "Pending",
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = 0L
 )

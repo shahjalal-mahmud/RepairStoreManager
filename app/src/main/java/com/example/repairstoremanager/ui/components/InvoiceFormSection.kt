@@ -4,10 +4,13 @@ import android.annotation.SuppressLint
 import android.widget.Toast
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,6 +25,7 @@ import com.example.repairstoremanager.data.model.Customer
 import com.example.repairstoremanager.viewmodel.CustomerViewModel
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("SimpleDateFormat")
@@ -112,7 +116,40 @@ fun InvoiceFormSection() {
         SectionTitle("📱 Device Info")
         CustomTextField("Phone Model", phoneModel) { phoneModel = it }
         CustomTextField("Problem Description", problem) { problem = it }
-        CustomTextField("Expected Delivery Date", deliveryDate) { deliveryDate = it }
+        val calendar = remember { Calendar.getInstance() }
+
+        val datePickerDialog = remember {
+            android.app.DatePickerDialog(
+                context,
+                { _, year, month, dayOfMonth ->
+                    calendar.set(year, month, dayOfMonth)
+                    val sdf = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+                    deliveryDate = sdf.format(calendar.time)
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+            )
+        }
+
+        OutlinedTextField(
+            value = deliveryDate,
+            onValueChange = {}, // Read-only
+            label = { Text("Expected Delivery Date") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            readOnly = true,
+            trailingIcon = {
+                IconButton(onClick = { datePickerDialog.show() }) {
+                    Icon(
+                        imageVector = Icons.Default.CalendarToday,
+                        contentDescription = "Select Date"
+                    )
+                }
+            }
+        )
+
 
         Spacer(Modifier.height(20.dp))
 

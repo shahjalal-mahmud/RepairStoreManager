@@ -37,9 +37,6 @@ import com.example.repairstoremanager.ui.components.AccessoriesBadges
 import com.example.repairstoremanager.ui.components.CustomerSearchFilterSortBar
 import com.example.repairstoremanager.ui.components.PatternLockCanvas
 import com.example.repairstoremanager.viewmodel.CustomerViewModel
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @Composable
 fun CustomerListScreen(viewModel: CustomerViewModel = viewModel()) {
@@ -129,11 +126,7 @@ fun CustomerCard(customer: Customer, viewModel: CustomerViewModel = viewModel())
 
             Spacer(Modifier.height(4.dp))
 
-            val formattedDate = remember(customer.createdAt) {
-                SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault()).format(Date(customer.createdAt))
-            }
-
-            Text("🕓 Created: $formattedDate", style = MaterialTheme.typography.labelSmall)
+            Text("🕓 Created: ${customer.date}", style = MaterialTheme.typography.labelSmall)
 
             Spacer(Modifier.height(4.dp))
             if (customer.status == "Pending" || customer.status == "Repaired") {
