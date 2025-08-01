@@ -8,6 +8,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.repairstoremanager.ui.navigation.Navigation
 import com.example.repairstoremanager.ui.theme.RepairStoreManagerTheme
 import com.example.repairstoremanager.viewmodel.StoreViewModel
+import com.example.repairstoremanager.worker.WorkScheduler
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -17,6 +18,7 @@ class MainActivity : ComponentActivity() {
             RepairStoreManagerTheme {
                 val navController = rememberNavController()
                 val storeViewModel: StoreViewModel = viewModel()
+                WorkScheduler.scheduleDailyReminder(applicationContext, hour = 9, minute = 0)
                 Navigation(navController = navController, storeViewModel = storeViewModel)
             }
         }

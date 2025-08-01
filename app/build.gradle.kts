@@ -94,6 +94,7 @@ dependencies {
     // Optional: If you still need the older Material icons
     implementation("androidx.compose.material:material-icons-core:1.7.8")
     implementation("androidx.compose.material:material-icons-extended:1.7.0")
+    implementation(libs.androidx.work.runtime.ktx)
 
 
     // Testing

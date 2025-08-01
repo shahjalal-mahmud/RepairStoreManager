@@ -7,12 +7,18 @@ import com.example.repairstoremanager.data.repository.CustomerRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 class CustomerViewModel : ViewModel() {
     private val repository = CustomerRepository()
 
     private val _customers = MutableStateFlow<List<Customer>>(emptyList())
     val customers: StateFlow<List<Customer>> = _customers
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading
 
     fun addCustomer(customer: Customer, onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
@@ -30,7 +36,9 @@ class CustomerViewModel : ViewModel() {
 
     fun fetchCustomers() {
         viewModelScope.launch {
+            _isLoading.value = true
             _customers.value = repository.getAllCustomers()
+            _isLoading.value = false
         }
     }
 
@@ -40,5 +48,31 @@ class CustomerViewModel : ViewModel() {
             fetchCustomers()
         }
     }
+    private fun getToday(): String {
+        return SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date())
+    }
+
+    private fun getTomorrow(): String {
+        val cal = Calendar.getInstance()
+        cal.add(Calendar.DATE, 1)
+        return SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(cal.time)
+    }
+
+    val totalCustomersCount: Int
+        get() = customers.value.size
+
+    val todaysInvoicesCount: Int
+        get() = customers.value.count {
+            it.date.startsWith(getToday())
+        }
+
+    val pendingDevicesCount: Int
+        get() = customers.value.count { it.status.equals("Pending", ignoreCase = true) }
+
+    val todayDeliveryList: List<Customer>
+        get() = customers.value.filter { it.deliveryDate == getToday() }
+
+    val tomorrowDeliveryList: List<Customer>
+        get() = customers.value.filter { it.deliveryDate == getTomorrow() }
 
 }
