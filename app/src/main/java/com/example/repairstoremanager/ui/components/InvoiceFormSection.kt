@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.repairstoremanager.data.model.Customer
+import com.example.repairstoremanager.util.POSPrinterHelper
 import com.example.repairstoremanager.viewmodel.CustomerViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -62,6 +63,12 @@ fun InvoiceFormSection() {
 
     var hasDrawnPattern by remember { mutableStateOf(false) }
     var patternResetKey by remember { mutableIntStateOf(0) }
+
+    val printer = remember { POSPrinterHelper() }
+    var currentCustomer by remember { mutableStateOf<Customer?>(null) }
+
+    val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var showPrintSheet by remember { mutableStateOf(false) }
 
     val animatedAlpha by animateFloatAsState(
         targetValue = if (resetTrigger % 2 == 0) 1f else 0f,
@@ -268,6 +275,8 @@ fun InvoiceFormSection() {
                     onSuccess = {
                         isLoading = false
                         Toast.makeText(context, "Customer saved!", Toast.LENGTH_SHORT).show()
+                        currentCustomer = customer // <-- Save for preview & print
+                        showPrintSheet = true
                         resetTrigger++
                         clearForm()
                         resetTrigger++
@@ -295,6 +304,13 @@ fun InvoiceFormSection() {
         }
 
         Spacer(Modifier.height(40.dp))
+
+        if (showPrintSheet && currentCustomer != null) {
+            InvoicePrintBottomSheet(
+                customer = currentCustomer!!,
+                onDismiss = { showPrintSheet = false }
+            )
+        }
     }
 }
 
