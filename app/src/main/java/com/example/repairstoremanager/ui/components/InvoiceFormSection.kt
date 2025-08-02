@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.repairstoremanager.data.model.Customer
 import com.example.repairstoremanager.util.POSPrinterHelper
+import com.example.repairstoremanager.util.SmsHelper
 import com.example.repairstoremanager.viewmodel.CustomerViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -280,6 +281,12 @@ fun InvoiceFormSection() {
                         resetTrigger++
                         clearForm()
                         resetTrigger++
+                        SmsHelper.sendSms(
+                            context,
+                            customer.contactNumber,
+                            "📱 Hello ${customer.customerName}, your device has been received for repair. " +
+                                    "Expected delivery date: ${customer.deliveryDate}. Status: Pending."
+                        )
                     },
                     onError = {
                         isLoading = false

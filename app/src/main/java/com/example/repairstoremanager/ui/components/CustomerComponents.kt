@@ -8,6 +8,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.repairstoremanager.data.model.Customer
 import com.example.repairstoremanager.viewmodel.CustomerViewModel
@@ -18,6 +19,7 @@ fun CustomerCard(customer: Customer, viewModel: CustomerViewModel) {
     val selectedStatus = customer.status
     val statusOptions = listOf("Pending", "Repaired", "Delivered", "Cancelled")
     val statusColor = statusToColor(selectedStatus)
+    val context = LocalContext.current
 
     Card(
         modifier = Modifier
@@ -42,7 +44,7 @@ fun CustomerCard(customer: Customer, viewModel: CustomerViewModel) {
                     selectedStatus = selectedStatus,
                     options = statusOptions,
                     onStatusChange = { newStatus ->
-                        viewModel.updateCustomerStatus(customer.id, newStatus)
+                        viewModel.updateCustomerStatus(customer.id, newStatus, customer, context)
                     },
                     statusColor = statusColor
                 )

@@ -1,9 +1,11 @@
 package com.example.repairstoremanager.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.repairstoremanager.data.model.Customer
 import com.example.repairstoremanager.data.repository.CustomerRepository
+import com.example.repairstoremanager.util.SmsHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -42,12 +44,24 @@ class CustomerViewModel : ViewModel() {
         }
     }
 
-    fun updateCustomerStatus(customerId: String, newStatus: String) {
+    fun updateCustomerStatus(customerId: String, newStatus: String, customer: Customer, context: Context) {
         viewModelScope.launch {
             repository.updateStatus(customerId, newStatus)
             fetchCustomers()
+
+            val message = when (newStatus) {
+                "Repaired" -> "✅ Hello ${customer.customerName}, your device has been repaired. Please collect it."
+                "Delivered" -> "🙏 Hello ${customer.customerName}, your device has been delivered. Thank you for visiting!"
+                "Cancelled" -> "❌ Hello ${customer.customerName}, your repair request has been cancelled. Let us know if we can help again."
+                else -> null
+            }
+
+            message?.let {
+                SmsHelper.sendSms(context, customer.contactNumber, it)
+            }
         }
     }
+
     private fun getToday(): String {
         return SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date())
     }

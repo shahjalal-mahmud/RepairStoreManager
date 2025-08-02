@@ -10,12 +10,25 @@ class CustomerRepository {
     private val auth = FirebaseAuth.getInstance()
     private fun getUserId(): String? = auth.currentUser?.uid
 
+    private fun formatPhoneNumber(number: String): String {
+        return when {
+            number.startsWith("+") -> number
+            number.startsWith("0") -> "+88$number"
+            else -> number // fallback
+        }
+    }
+
     suspend fun addCustomer(customer: Customer): Result<Unit> {
         return try {
             val uid = getUserId() ?: return Result.failure(Exception("User not logged in"))
             val customerId = db.collection("customers").document().id
+            val formattedCustomer = customer.copy(
+                id = customerId,
+                shopOwnerId = uid,
+                contactNumber = formatPhoneNumber(customer.contactNumber)
+            )
             db.collection("customers").document(customerId)
-                .set(customer.copy(id = customerId, shopOwnerId = uid))
+                .set(formattedCustomer)
                 .await()
             Result.success(Unit)
         } catch (e: Exception) {
