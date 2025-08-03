@@ -1,30 +1,18 @@
-// ui/components/StoreInfoSection.kt
 package com.example.repairstoremanager.ui.components
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.example.repairstoremanager.R
 import com.example.repairstoremanager.viewmodel.StoreViewModel
@@ -33,76 +21,97 @@ import com.example.repairstoremanager.viewmodel.StoreViewModel
 fun StoreInfoSection(viewModel: StoreViewModel, onLogout: () -> Unit) {
     val info = viewModel.storeInfo
     val isEditing = viewModel.isEditMode
-
     var showDialog by remember { mutableStateOf(false) }
 
-    Column(
+    Card(
         modifier = Modifier
-            .fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .fillMaxWidth()
+            .padding(16.dp),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        // Logo (replace with image picker logic later)
-        Box(
+        Column(
             modifier = Modifier
-                .size(100.dp)
-                .align(Alignment.CenterHorizontally)
+                .padding(24.dp)
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Image(
-                painter = rememberAsyncImagePainter(info.logoUrl.ifEmpty { R.drawable.om_icon }),
-                contentDescription = "Store Logo",
-                modifier = Modifier.fillMaxSize()
-            )
-        }
-
-        // Editable Fields
-        EditableTextField("Owner", info.ownerName, isEditing) { viewModel.updateOwnerName(it) }
-        EditableTextField("Address", info.address, isEditing) { viewModel.updateAddress(it) }
-        EditableTextField("Phone", info.phone, isEditing) { viewModel.updatePhone(it) }
-        EditableTextField("Email", info.email, isEditing) { viewModel.updateEmail(it) }
-        EditableTextField("Working Hours", info.workingHours, isEditing) { viewModel.updateWorkingHours(it) }
-
-        // Buttons
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Button(onClick = {
-                if (isEditing) viewModel.updateStoreInfo()
-                else viewModel.toggleEditMode()
-            }) {
-                Text(if (isEditing) "Save" else "Update Info")
-            }
-
-            Button(onClick = {
-                viewModel.logout {
-                    onLogout()
-                }
-            }) {
-                Text("Logout")
-            }
-        }
-
-        Button(onClick = { showDialog = true }) {
-            Text("Change Password")
-        }
-
-        if (showDialog) {
-            ChangePasswordDialog(
-                onDismiss = { showDialog = false },
-                onSubmit = { newPassword ->
-                    viewModel.changePassword(newPassword) { error ->
-                        showDialog = false
-                        viewModel.message = error ?: "Password changed successfully"
+            // Store Logo
+            Box(
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(CircleShape)
+                    .clickable(enabled = isEditing) {
+                        // TODO: Add image picker logic
                     }
-                }
+            ) {
+                Image(
+                    painter = rememberAsyncImagePainter(info.logoUrl.ifEmpty { R.drawable.om_icon }),
+                    contentDescription = "Store Logo",
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+
+            // Title
+            Text(
+                text = "Store Information",
+                style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, fontWeight = FontWeight.Bold)
             )
-        }
 
-        Spacer(modifier = Modifier.height(32.dp))
+            // Fields
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                EditableTextField("Store Name", info.storeName, isEditing) { viewModel.updateStoreName(it) }
+                EditableTextField("Owner Name", info.ownerName, isEditing) { viewModel.updateOwnerName(it) }
+                EditableTextField("Address", info.address, isEditing) { viewModel.updateAddress(it) }
+                EditableTextField("Phone Number", info.phone, isEditing) { viewModel.updatePhone(it) }
+                EditableTextField("Email", info.email, isEditing) { viewModel.updateEmail(it) }
+                EditableTextField("Working Hours", info.workingHours, isEditing) { viewModel.updateWorkingHours(it) }
+            }
 
-        viewModel.message?.let {
-            Text(it, color = MaterialTheme.colorScheme.primary)
+            // Action Buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Button(onClick = {
+                    if (isEditing) viewModel.updateStoreInfo()
+                    viewModel.toggleEditMode()
+                }) {
+                    Text(if (isEditing) "Save" else "Edit Info")
+                }
+
+                OutlinedButton(onClick = {
+                    viewModel.logout { onLogout() }
+                }) {
+                    Text("Logout")
+                }
+            }
+
+            TextButton(onClick = { showDialog = true }) {
+                Text("Change Password")
+            }
+
+            viewModel.message?.let {
+                Text(
+                    text = it,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontSize = 14.sp
+                )
+            }
         }
+    }
+
+    if (showDialog) {
+        ChangePasswordDialog(
+            onDismiss = { showDialog = false },
+            onSubmit = { newPassword ->
+                viewModel.changePassword(newPassword) { error ->
+                    showDialog = false
+                    viewModel.message = error ?: "Password changed successfully"
+                }
+            }
+        )
     }
 }
 
@@ -113,10 +122,18 @@ fun EditableTextField(label: String, value: String, isEditable: Boolean, onValue
             value = value,
             onValueChange = onValueChange,
             label = { Text(label) },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
         )
     } else {
-        Text("• $label: $value")
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = "$label: ",
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.width(130.dp)
+            )
+            Text(text = value)
+        }
     }
 }
 

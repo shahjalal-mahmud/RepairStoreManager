@@ -62,7 +62,9 @@ class StoreViewModel : ViewModel() {
             onResult(result.exceptionOrNull()?.message)
         }
     }
-
+    fun updateStoreName(newValue: String) {
+        storeInfo = storeInfo.copy(storeName = newValue)
+    }
     fun updateOwnerName(newValue: String) {
         storeInfo = storeInfo.copy(ownerName = newValue)
     }
