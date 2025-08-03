@@ -1,17 +1,47 @@
 package com.example.repairstoremanager.ui.components
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.content.pm.PackageManager
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -19,14 +49,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.repairstoremanager.data.model.Customer
-import com.example.repairstoremanager.util.POSPrinterHelper
 import com.example.repairstoremanager.util.SmsHelper
 import com.example.repairstoremanager.viewmodel.CustomerViewModel
+import com.example.repairstoremanager.viewmodel.StoreViewModel
 import java.text.SimpleDateFormat
-import java.util.*
 import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("SimpleDateFormat")
@@ -65,11 +97,10 @@ fun InvoiceFormSection() {
     var hasDrawnPattern by remember { mutableStateOf(false) }
     var patternResetKey by remember { mutableIntStateOf(0) }
 
-    val printer = remember { POSPrinterHelper() }
     var currentCustomer by remember { mutableStateOf<Customer?>(null) }
 
-    val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showPrintSheet by remember { mutableStateOf(false) }
+    val storeViewModel: StoreViewModel = viewModel()
 
     val animatedAlpha by animateFloatAsState(
         targetValue = if (resetTrigger % 2 == 0) 1f else 0f,
@@ -94,6 +125,20 @@ fun InvoiceFormSection() {
         backCover = false
         deadPermission = false
     }
+    val smsPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (!granted) {
+            Toast.makeText(context, "Please allow SMS permission", Toast.LENGTH_SHORT).show()
+        }
+    }
+    LaunchedEffect(Unit) {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS)
+            != PackageManager.PERMISSION_GRANTED) {
+            smsPermissionLauncher.launch(Manifest.permission.SEND_SMS)
+        }
+    }
+
 
     Column(
         modifier = Modifier
@@ -281,12 +326,15 @@ fun InvoiceFormSection() {
                         resetTrigger++
                         clearForm()
                         resetTrigger++
-                        SmsHelper.sendSms(
-                            context,
-                            customer.contactNumber,
-                            "📱 Hello ${customer.customerName}, your device has been received for repair. " +
-                                    "Expected delivery date: ${customer.deliveryDate}. Status: Pending."
-                        )
+                        if (storeViewModel.autoSmsEnabled) {
+                            SmsHelper.sendSms(
+                                context,
+                                customer.contactNumber,
+                                "📱 Hello ${customer.customerName}, your device has been received for repair. " +
+                                        "Expected delivery date: ${customer.deliveryDate}. Status: Pending.",
+                                simSlotIndex = storeViewModel.selectedSimSlot
+                            )
+                        }
                     },
                     onError = {
                         isLoading = false

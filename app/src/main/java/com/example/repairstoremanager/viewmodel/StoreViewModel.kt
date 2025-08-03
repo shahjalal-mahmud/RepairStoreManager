@@ -1,5 +1,10 @@
 package com.example.repairstoremanager.viewmodel
 
+import android.Manifest
+import android.content.Context
+import android.telephony.SubscriptionInfo
+import android.telephony.SubscriptionManager
+import androidx.annotation.RequiresPermission
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,6 +13,7 @@ import com.example.repairstoremanager.data.repository.StoreRepository
 import kotlinx.coroutines.launch
 
 class StoreViewModel : ViewModel() {
+
     private val repository = StoreRepository()
 
     var storeInfo by mutableStateOf(StoreInfo())
@@ -15,6 +21,11 @@ class StoreViewModel : ViewModel() {
 
     var isEditMode by mutableStateOf(false)
     var message by mutableStateOf<String?>(null)
+
+    var autoSmsEnabled by mutableStateOf(true)
+    var selectedSimSlot by mutableIntStateOf(0)
+
+    val simList = mutableStateListOf<SubscriptionInfo>()
 
     init {
         loadStoreInfo()
@@ -45,7 +56,6 @@ class StoreViewModel : ViewModel() {
         onLogoutComplete()
     }
 
-    // suspend function for password change
     fun changePassword(newPassword: String, onResult: (String?) -> Unit) {
         viewModelScope.launch {
             val result = repository.changePassword(newPassword)
@@ -71,5 +81,23 @@ class StoreViewModel : ViewModel() {
 
     fun updateWorkingHours(newValue: String) {
         storeInfo = storeInfo.copy(workingHours = newValue)
+    }
+
+    fun updateAutoSmsEnabled(enabled: Boolean) {
+        autoSmsEnabled = enabled
+    }
+
+    // <-- Remove this manual setter to avoid clash
+    // fun setSelectedSimSlot(slot: Int) {
+    //    selectedSimSlot = slot
+    // }
+
+    @RequiresPermission(Manifest.permission.READ_PHONE_STATE)
+    fun loadSimList(context: Context) {
+        val subscriptionManager =
+            context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as SubscriptionManager
+        val sims = subscriptionManager.activeSubscriptionInfoList ?: emptyList()
+        simList.clear()
+        simList.addAll(sims)
     }
 }
