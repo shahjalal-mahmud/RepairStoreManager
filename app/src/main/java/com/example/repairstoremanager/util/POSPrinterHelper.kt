@@ -1,10 +1,11 @@
 package com.example.repairstoremanager.util
 
+import android.Manifest
 import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
+import androidx.annotation.RequiresPermission
 import java.io.OutputStream
-import java.util.*
+import java.util.UUID
 
 class POSPrinterHelper {
 
@@ -12,23 +13,28 @@ class POSPrinterHelper {
     private var bluetoothSocket: BluetoothSocket? = null
     private var outputStream: OutputStream? = null
 
-    fun connectToPrinter(printerName: String = "PT210"): Boolean {
+    @RequiresPermission(allOf = [Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN])
+    fun connectToPrinter(printerName: String = "PT-210_00D1"): Boolean {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
         if (bluetoothAdapter == null || !bluetoothAdapter!!.isEnabled) return false
 
-        val device: BluetoothDevice? = bluetoothAdapter?.bondedDevices?.firstOrNull {
+        val device = bluetoothAdapter?.bondedDevices?.firstOrNull {
             it.name.contains(printerName, ignoreCase = true)
-        }
+        } ?: return false
 
-        device?.let {
-            val uuid = it.uuids?.get(0)?.uuid ?: UUID.randomUUID()
-            bluetoothSocket = it.createRfcommSocketToServiceRecord(uuid)
+        return try {
+            // Common Serial Port UUID
+            val uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
+            bluetoothSocket = device.createRfcommSocketToServiceRecord(uuid)
+
+            bluetoothAdapter?.cancelDiscovery() // Very important
             bluetoothSocket?.connect()
             outputStream = bluetoothSocket?.outputStream
-            return true
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
         }
-
-        return false
     }
 
     fun disconnect() {
