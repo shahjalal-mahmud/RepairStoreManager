@@ -7,19 +7,17 @@ plugins {
 
 android {
     namespace = "com.example.repairstoremanager"
-    compileSdk = 36 // Consider using 34 unless you need specific 36 features
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.repairstoremanager"
         minSdk = 26
-        targetSdk = 34 // Match compileSdk unless you need higher
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        vectorDrawables {
-            useSupportLibrary = true
-        }
+        vectorDrawables.useSupportLibrary = true
     }
 
     buildTypes {
@@ -30,28 +28,30 @@ android {
                 "proguard-rules.pro"
             )
         }
-        // Consider adding debug build type configuration
         debug {
             versionNameSuffix = "-DEBUG"
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
     }
+
     buildFeatures {
         compose = true
     }
+
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.3" // Should match your Compose version
+        kotlinCompilerExtensionVersion = "1.5.3"
     }
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-        }
+
+    packaging.resources {
+        excludes += "/META-INF/{AL2.0,LGPL2.1}"
     }
 }
 
@@ -61,47 +61,40 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
 
-    // Compose + Material 3
-    implementation("androidx.compose.material3:material3:1.3.2")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.2")
-    implementation("androidx.navigation:navigation-compose:2.7.3")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-graphics")
+    // Compose + Material3
+    implementation(libs.androidx.material3)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.ui.graphics)
 
-    // Firebase BoM
-    implementation(platform("com.google.firebase:firebase-bom:34.0.0"))
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth.ktx)
+    implementation(libs.firebase.firestore.ktx)
+    implementation(libs.firebase.analytics.ktx)
+    implementation(libs.firebase.storage.ktx)
 
-    // Firebase Modules
-    implementation("com.google.firebase:firebase-auth-ktx:22.3.1")
-    implementation("com.google.firebase:firebase-firestore-ktx:24.9.1")
-    implementation("com.google.firebase:firebase-analytics")
+    // Coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
 
-    // Coroutines for Firebase await
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+    // Coil
+    implementation(libs.coil.compose)
 
-    implementation("io.coil-kt:coil-compose:2.7.0")
-    implementation(libs.ui)
-    implementation(libs.androidx.runtime)
+    // Material Icons
+    implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.androidx.compose.material.icons.core)
 
-    // Material 3 (you already have this)
-    implementation("androidx.compose.material3:material3:1.3.2")
-
-    // Material 3 Icons (recommended)
-    implementation("androidx.compose.material:material-icons-extended:1.7.8")
-
-    // Optional: If you still need the older Material icons
-    implementation("androidx.compose.material:material-icons-core:1.7.8")
-    implementation("androidx.compose.material:material-icons-extended:1.7.0")
+    // WorkManager
     implementation(libs.androidx.work.runtime.ktx)
-
 
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.compose.bom) // Optional
     androidTestImplementation(libs.androidx.ui.test.junit4)
 
     // Debug

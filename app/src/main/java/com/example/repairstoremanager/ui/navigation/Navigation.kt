@@ -5,6 +5,7 @@ import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.repairstoremanager.data.repository.AuthRepository
 import com.example.repairstoremanager.ui.screens.AddCustomerScreen
 import com.example.repairstoremanager.ui.screens.CustomerListScreen
 import com.example.repairstoremanager.ui.screens.DashboardScreen
@@ -18,10 +19,19 @@ fun Navigation(
     navController: NavHostController,
     storeViewModel: StoreViewModel
 ) {
-    NavHost(navController = navController, startDestination = "login") {
+    val authRepository = remember { AuthRepository() }
+
+    // ✅ Decide start destination based on login status
+    val startDestination = if (authRepository.isUserLoggedIn()) {
+        BottomNavItem.Dashboard.route
+    } else {
+        "login"
+    }
+
+    NavHost(navController = navController, startDestination = startDestination) {
 
         composable("login") {
-            val loginViewModel = remember { LoginViewModel(storeViewModel) } // ✅ Inject dependency
+            val loginViewModel = remember { LoginViewModel(storeViewModel) }
             LoginScreen(
                 viewModel = loginViewModel,
                 onLoginSuccess = {
@@ -51,7 +61,7 @@ fun Navigation(
                     storeViewModel = storeViewModel,
                     onLogout = {
                         navController.navigate("login") {
-                            popUpTo(0) { inclusive = true } // ✅ Clear backstack on logout
+                            popUpTo(0) { inclusive = true }
                         }
                     }
                 )

@@ -2,6 +2,8 @@ package com.example.repairstoremanager.viewmodel
 
 import android.Manifest
 import android.content.Context
+import android.graphics.BitmapFactory
+import android.net.Uri
 import android.telephony.SubscriptionInfo
 import android.telephony.SubscriptionManager
 import androidx.annotation.RequiresPermission
@@ -10,7 +12,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.repairstoremanager.data.model.StoreInfo
 import com.example.repairstoremanager.data.repository.StoreRepository
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
+import java.util.Base64
 
 class StoreViewModel : ViewModel() {
 
@@ -26,6 +32,40 @@ class StoreViewModel : ViewModel() {
     var selectedSimSlot by mutableIntStateOf(0)
 
     val simList = mutableStateListOf<SubscriptionInfo>()
+    var logoUri by mutableStateOf<Uri?>(null)
+
+    fun onLogoPicked(uri: Uri, context: Context) {
+        logoUri = uri
+        uploadLogoAsBase64(uri, context)
+    }
+
+    private fun uploadLogoAsBase64(uri: Uri, context: Context) {
+        try {
+            val inputStream = context.contentResolver.openInputStream(uri)
+            val imageBytes = inputStream?.readBytes()
+            inputStream?.close()
+
+            if (imageBytes != null) {
+                val base64String = Base64.getEncoder().encodeToString(imageBytes)
+                val userId = Firebase.auth.currentUser?.uid ?: return
+
+                Firebase.firestore.collection("stores")
+                    .document(userId)
+                    .update("logoBase64", base64String)
+                    .addOnSuccessListener {
+                        storeInfo = storeInfo.copy(logoBase64 = base64String)
+                        message = "Logo updated"
+                    }
+                    .addOnFailureListener {
+                        message = "Failed to update logo"
+                    }
+            } else {
+                message = "Failed to read image"
+            }
+        } catch (e: Exception) {
+            message = "Image error: ${e.message}"
+        }
+    }
 
     init {
         loadStoreInfo()
@@ -62,9 +102,11 @@ class StoreViewModel : ViewModel() {
             onResult(result.exceptionOrNull()?.message)
         }
     }
+
     fun updateStoreName(newValue: String) {
         storeInfo = storeInfo.copy(storeName = newValue)
     }
+
     fun updateOwnerName(newValue: String) {
         storeInfo = storeInfo.copy(ownerName = newValue)
     }
@@ -88,11 +130,6 @@ class StoreViewModel : ViewModel() {
     fun updateAutoSmsEnabled(enabled: Boolean) {
         autoSmsEnabled = enabled
     }
-
-    // <-- Remove this manual setter to avoid clash
-    // fun setSelectedSimSlot(slot: Int) {
-    //    selectedSimSlot = slot
-    // }
 
     @RequiresPermission(Manifest.permission.READ_PHONE_STATE)
     fun loadSimList(context: Context) {

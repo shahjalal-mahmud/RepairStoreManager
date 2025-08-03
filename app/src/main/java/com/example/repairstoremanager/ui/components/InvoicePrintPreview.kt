@@ -6,7 +6,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
-import androidx.compose.material3.Divider
+import androidx.compose.material3.DividerDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -23,7 +24,7 @@ fun InvoicePrintPreview(customer: Customer) {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text("Repair Store Manager", fontSize = 20.sp)
-            Divider()
+            HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
             Text("Invoice No: ${customer.invoiceNumber}")
             Text("Date: ${customer.date}")
             Spacer(Modifier.height(8.dp))
@@ -47,7 +48,11 @@ fun InvoicePrintPreview(customer: Customer) {
             if (customer.simTray) Text("✔ SIM Tray")
             if (customer.backCover) Text("✔ Back Cover")
             if (customer.deadPermission) Text("☠ Permission for Dead Risk")
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 8.dp),
+                thickness = DividerDefaults.Thickness,
+                color = DividerDefaults.color
+            )
             Text("Thank you!", fontSize = 18.sp)
         }
     }
