@@ -52,7 +52,6 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.repairstoremanager.data.model.Customer
-import com.example.repairstoremanager.util.SmsHelper
 import com.example.repairstoremanager.viewmodel.CustomerViewModel
 import com.example.repairstoremanager.viewmodel.StoreViewModel
 import java.text.SimpleDateFormat
@@ -318,23 +317,16 @@ fun InvoiceFormSection() {
                 )
                 viewModel.addCustomer(
                     customer,
+                    context = context,
+                    simSlotIndex = storeViewModel.selectedSimSlot,
+                    autoSmsEnabled = storeViewModel.autoSmsEnabled,
                     onSuccess = {
                         isLoading = false
                         Toast.makeText(context, "Customer saved!", Toast.LENGTH_SHORT).show()
-                        currentCustomer = customer // <-- Save for preview & print
+                        currentCustomer = customer
                         showPrintSheet = true
-                        resetTrigger++
                         clearForm()
                         resetTrigger++
-                        if (storeViewModel.autoSmsEnabled) {
-                            SmsHelper.sendSms(
-                                context,
-                                customer.contactNumber,
-                                "📱 Hello ${customer.customerName}, your device has been received for repair. " +
-                                        "Expected delivery date: ${customer.deliveryDate}. Status: Pending.",
-                                simSlotIndex = storeViewModel.selectedSimSlot
-                            )
-                        }
                     },
                     onError = {
                         isLoading = false

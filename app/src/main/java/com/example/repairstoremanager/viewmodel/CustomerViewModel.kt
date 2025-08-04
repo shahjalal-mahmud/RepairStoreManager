@@ -22,7 +22,14 @@ class CustomerViewModel : ViewModel() {
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading
 
-    fun addCustomer(customer: Customer, onSuccess: () -> Unit, onError: (String) -> Unit) {
+    fun addCustomer(
+        customer: Customer,
+        context: Context,
+        simSlotIndex: Int = 0,
+        autoSmsEnabled: Boolean = true,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
         viewModelScope.launch {
             val timestamp = if (customer.createdAt == 0L) System.currentTimeMillis() else customer.createdAt
             val customerWithTimestamp = customer.copy(createdAt = timestamp)
@@ -30,6 +37,12 @@ class CustomerViewModel : ViewModel() {
             if (result.isSuccess) {
                 fetchCustomers()
                 onSuccess()
+
+                if (autoSmsEnabled) {
+                    val message = "📱 Hello ${customer.customerName}, your device has been received for repair. " +
+                            "Expected delivery date: ${customer.deliveryDate}. Status: Pending."
+                    SmsHelper.sendSms(context, customer.contactNumber, message, simSlotIndex)
+                }
             } else {
                 onError(result.exceptionOrNull()?.message ?: "Unknown error")
             }
@@ -44,20 +57,28 @@ class CustomerViewModel : ViewModel() {
         }
     }
 
-    fun updateCustomerStatus(customerId: String, newStatus: String, customer: Customer, context: Context) {
+    fun updateCustomerStatus(
+        customerId: String,
+        newStatus: String,
+        customer: Customer,
+        context: Context,
+        simSlotIndex: Int = 0,
+        autoSmsEnabled: Boolean = true
+    ) {
         viewModelScope.launch {
             repository.updateStatus(customerId, newStatus)
             fetchCustomers()
 
-            val message = when (newStatus) {
-                "Repaired" -> "✅ Hello ${customer.customerName}, your device has been repaired. Please collect it."
-                "Delivered" -> "🙏 Hello ${customer.customerName}, your device has been delivered. Thank you for visiting!"
-                "Cancelled" -> "❌ Hello ${customer.customerName}, your repair request has been cancelled. Let us know if we can help again."
-                else -> null
-            }
+            if (autoSmsEnabled) {
+                val message = when (newStatus) {
+                    "Repaired" -> "✅ Hello ${customer.customerName}, your device has been repaired. Please collect it."
+                    "Delivered" -> "🙏 Hello ${customer.customerName}, your device has been delivered. Thank you for visiting!"
+                    "Cancelled" -> "❌ Hello ${customer.customerName}, your repair request has been cancelled. Let us know if we can help again."
+                    "Pending" -> "📥 Hello ${customer.customerName}, your device repair status is set to Pending. We will keep you updated."
+                    else -> "ℹ️ Hello ${customer.customerName}, your device status is now: $newStatus."
+                }
 
-            message?.let {
-                SmsHelper.sendSms(context, customer.contactNumber, it)
+                SmsHelper.sendSms(context, customer.contactNumber, message, simSlotIndex)
             }
         }
     }

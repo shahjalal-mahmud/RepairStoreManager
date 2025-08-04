@@ -16,20 +16,24 @@ import com.example.repairstoremanager.util.SmsHelper
 
 class MainActivity : ComponentActivity() {
 
-    private val requestSmsPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-            if (isGranted) {
-                Toast.makeText(this, "SMS permission granted!", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(this, "SMS permission denied.", Toast.LENGTH_SHORT).show()
-            }
+    private val requestSmsPermissionsLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            val granted = permissions[Manifest.permission.SEND_SMS] == true &&
+                    permissions[Manifest.permission.READ_PHONE_STATE] == true
+            Toast.makeText(
+                this,
+                if (granted) "SMS permissions granted!" else "SMS permissions denied.",
+                Toast.LENGTH_SHORT
+            ).show()
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        if (!SmsHelper.hasSmsPermission(this)) {
-            requestSmsPermissionLauncher.launch(Manifest.permission.SEND_SMS)
+        if (!SmsHelper.hasAllSmsPermissions(this)) {
+            requestSmsPermissionsLauncher.launch(
+                arrayOf(Manifest.permission.SEND_SMS, Manifest.permission.READ_PHONE_STATE)
+            )
         }
 
         WorkScheduler.scheduleDailyReminder(applicationContext, hour = 9, minute = 0)
