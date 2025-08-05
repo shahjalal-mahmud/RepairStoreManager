@@ -16,19 +16,22 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.repairstoremanager.ui.components.ReminderTimePicker
 import com.example.repairstoremanager.ui.components.StoreInfoSection
 import com.example.repairstoremanager.viewmodel.StoreViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     navController: NavHostController,
-    storeViewModel: StoreViewModel,
+    storeViewModel: StoreViewModel = viewModel(),
     onLogout: () -> Unit
 ) {
     val context = LocalContext.current
 
+    // Permission launcher to read phone state for SIM info
     val simPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
@@ -47,88 +50,105 @@ fun ProfileScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
-    ) {
-        // Store Info
-        StoreInfoSection(
-            viewModel = storeViewModel,
-            onLogout = onLogout
-        )
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        "Profile",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            )
+        }
+    ) { paddingValues ->
 
-        // Delivery Reminder Card
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(4.dp)
+        val scrollState = rememberScrollState()
+
+        Box(
+            modifier = Modifier
+                .padding(paddingValues)
+                .fillMaxSize()
         ) {
             Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    text = "Delivery Reminder",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-                )
-                ReminderTimePicker(storeViewModel = storeViewModel)
-            }
-        }
-
-        // Auto SMS Card
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(4.dp)
-        ) {
-            Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(horizontal = 16.dp, vertical = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                Text("Enable Auto SMS", style = MaterialTheme.typography.bodyLarge)
-                Switch(
-                    checked = storeViewModel.autoSmsEnabled,
-                    onCheckedChange = { storeViewModel.updateAutoSmsEnabled(it) }
-                )
-            }
-        }
-
-        // SIM Selection
-        if (storeViewModel.simList.isNotEmpty()) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.cardElevation(4.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                // Store Info Section with nice card styling
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = CardDefaults.cardElevation(6.dp)
                 ) {
-                    Text(
-                        text = "Preferred SIM for SMS",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                    StoreInfoSection(
+                        viewModel = storeViewModel,
+                        onLogout = onLogout,
+                        modifier = Modifier
                     )
-                    storeViewModel.simList.forEachIndexed { index, sim ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp)
+                }
+
+                // Delivery Reminder Card
+                ReminderTimePicker(storeViewModel = storeViewModel)
+
+                // Auto SMS Card
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = CardDefaults.cardElevation(6.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp, vertical = 20.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("Enable Auto SMS", style = MaterialTheme.typography.bodyLarge)
+                        Switch(
+                            checked = storeViewModel.autoSmsEnabled,
+                            onCheckedChange = { storeViewModel.updateAutoSmsEnabled(it) }
+                        )
+                    }
+                }
+
+                // SIM Selection Card (only if SIM list available)
+                if (storeViewModel.simList.isNotEmpty()) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.cardElevation(6.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(24.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            RadioButton(
-                                selected = storeViewModel.selectedSimSlot == index,
-                                onClick = { storeViewModel.selectedSimSlot = index }
-                            )
                             Text(
-                                text = sim.displayName?.toString() ?: "SIM ${index + 1}",
-                                style = MaterialTheme.typography.bodyMedium
+                                text = "Preferred SIM for SMS",
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                             )
+                            storeViewModel.simList.forEachIndexed { index, sim ->
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp)
+                                ) {
+                                    RadioButton(
+                                        selected = storeViewModel.selectedSimSlot == index,
+                                        onClick = { storeViewModel.selectedSimSlot = index }
+                                    )
+                                    Text(
+                                        text = sim.displayName?.toString() ?: "SIM ${index + 1}",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
+                            }
                         }
                     }
                 }
