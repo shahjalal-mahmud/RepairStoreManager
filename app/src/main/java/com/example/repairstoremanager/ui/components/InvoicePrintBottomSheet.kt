@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
@@ -35,30 +36,27 @@ fun InvoicePrintBottomSheet(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
-    val printer = POSPrinterHelper()
+    val printer = POSPrinterHelper(context) // Pass context here
     val coroutineScope = rememberCoroutineScope()
 
-    // Bluetooth permission launcher
+    // Bluetooth permission launcher for multiple permissions
     val bluetoothPermissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val allGranted = permissions.all { it.value }
+        if (allGranted) {
             startPrinting(printer, customer, storeInfo, context, onDismiss, coroutineScope)
         } else {
             Toast.makeText(
                 context,
-                "Bluetooth permission required for printing",
+                "Bluetooth permissions required for printing",
                 Toast.LENGTH_LONG
             ).show()
         }
     }
 
-    // Check if we need to request permission
-    val needBluetoothPermission = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.BLUETOOTH_CONNECT
-            ) != PackageManager.PERMISSION_GRANTED
+    // Check if we need to request permissions
+    val needBluetoothPermissions = checkBluetoothPermissions(context)
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -86,8 +84,8 @@ fun InvoicePrintBottomSheet(
 
             Button(
                 onClick = {
-                    if (needBluetoothPermission) {
-                        bluetoothPermissionLauncher.launch(Manifest.permission.BLUETOOTH_CONNECT)
+                    if (needBluetoothPermissions) {
+                        requestBluetoothPermissions(bluetoothPermissionLauncher)
                     } else {
                         startPrinting(printer, customer, storeInfo, context, onDismiss, coroutineScope)
                     }
@@ -103,10 +101,44 @@ fun InvoicePrintBottomSheet(
     }
 }
 
+private fun checkBluetoothPermissions(context: Context): Boolean {
+    val requiredPermissions = mutableListOf<String>().apply {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            add(Manifest.permission.BLUETOOTH_CONNECT)
+            add(Manifest.permission.BLUETOOTH_SCAN)
+        } else {
+            // For Android 10 and 11, we need location permissions
+            add(Manifest.permission.ACCESS_FINE_LOCATION)
+            add(Manifest.permission.ACCESS_COARSE_LOCATION)
+        }
+    }
+
+    return requiredPermissions.any {
+        ContextCompat.checkSelfPermission(context, it) != PackageManager.PERMISSION_GRANTED
+    }
+}
+
+private fun requestBluetoothPermissions(
+    launcher: ActivityResultLauncher<Array<String>>
+) {
+    val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        arrayOf(
+            Manifest.permission.BLUETOOTH_CONNECT,
+            Manifest.permission.BLUETOOTH_SCAN
+        )
+    } else {
+        arrayOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        )
+    }
+    launcher.launch(permissions)
+}
+
 private fun startPrinting(
     printer: POSPrinterHelper,
     customer: Customer,
-    storeInfo: StoreInfo, // ✅ CORRECT TYPE
+    storeInfo: StoreInfo,
     context: Context,
     onDismiss: () -> Unit,
     coroutineScope: CoroutineScope
@@ -115,21 +147,34 @@ private fun startPrinting(
         try {
             if (printer.connectToPrinter()) {
                 val invoiceText = buildInvoiceText(customer, storeInfo)
-                printer.printText(invoiceText) // <- Fixed: use invoiceText
+                if (printer.printText(invoiceText)) {
+                    Toast.makeText(
+                        context,
+                        "Printed successfully!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    onDismiss()
+                } else {
+                    Toast.makeText(
+                        context,
+                        "Printing failed - no data sent",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
                 printer.disconnect()
-                Toast.makeText(
-                    context,
-                    "Printed successfully!",
-                    Toast.LENGTH_SHORT
-                ).show()
-                onDismiss()
             } else {
                 Toast.makeText(
                     context,
-                    "Printer not found",
+                    "Printer connection failed",
                     Toast.LENGTH_LONG
                 ).show()
             }
+        } catch (e: SecurityException) {
+            Toast.makeText(
+                context,
+                "Permission denied: ${e.message}",
+                Toast.LENGTH_LONG
+            ).show()
         } catch (e: Exception) {
             Toast.makeText(
                 context,
