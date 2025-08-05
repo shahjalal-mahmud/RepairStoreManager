@@ -65,8 +65,8 @@ class CustomerViewModel : ViewModel() {
                 onSuccess(savedCustomer ?: customer) // Return the saved customer or fallback to original
 
                 if (autoSmsEnabled) {
-                    val message = "📱 Hello ${customer.customerName}, your device has been received for repair. " +
-                            "Expected delivery date: ${customer.deliveryDate}. Status: Pending."
+                    val message = "প্রিয় ${customer.customerName}, আপনার ডিভাইসটি মেরামতের জন্য গ্রহণ করা হয়েছে। " +
+                            "প্রত্যাশিত ডেলিভারি তারিখ: ${customer.deliveryDate}। স্ট্যাটাস: Pending।\n\n📌 নোট: অনুগ্রহ করে ২ মাসের মধ্যে আপনার ডিভাইস সংগ্রহ করুন। অন্যথায়, আমরা ডিভাইসের কোনো গ্যারান্টি দিতে পারব না।"
                     SmsHelper.sendSms(context, customer.contactNumber, message, simSlotIndex)
                 }
             } else {
@@ -88,12 +88,14 @@ class CustomerViewModel : ViewModel() {
             fetchCustomers()
 
             if (autoSmsEnabled) {
+                val note = "\n\n📌 নোট: অনুগ্রহ করে ২ মাসের মধ্যে আপনার ডিভাইস সংগ্রহ করুন। অন্যথায়, আমরা ডিভাইসের কোনো গ্যারান্টি দিতে পারব না।"
+
                 val message = when (newStatus) {
-                    "Repaired" -> "✅ Hello ${customer.customerName}, your device has been repaired. Please collect it."
-                    "Delivered" -> "🙏 Hello ${customer.customerName}, your device has been delivered. Thank you for visiting!"
-                    "Cancelled" -> "❌ Hello ${customer.customerName}, your repair request has been cancelled. Let us know if we can help again."
-                    "Pending" -> "📥 Hello ${customer.customerName}, your device repair status is set to Pending. We will keep you updated."
-                    else -> "ℹ️ Hello ${customer.customerName}, your device status is now: $newStatus."
+                    "Repaired" -> "প্রিয় ${customer.customerName}, আপনার ডিভাইসটি মেরামত করা হয়েছে। অনুগ্রহ করে ডিভাইসটি সংগ্রহ করুন।$note"
+                    "Delivered" -> "প্রিয় ${customer.customerName}, আপনার ডিভাইসটি ডেলিভারি দেওয়া হয়েছে। আমাদের সেবার জন্য ধন্যবাদ!"
+                    "Cancelled" -> "প্রিয় ${customer.customerName}, আপনার রিপেয়ার অনুরোধ বাতিল করা হয়েছে। ভবিষ্যতে আবার যোগাযোগ করুন।"
+                    "Pending" -> "প্রিয় ${customer.customerName}, আপনার ডিভাইসটি রিপেয়ারের জন্য গ্রহণ করা হয়েছে। বর্তমান অবস্থা: Pending।$note"
+                    else -> "প্রিয় ${customer.customerName}, আপনার ডিভাইসের স্ট্যাটাস এখন: $newStatus।$note"
                 }
 
                 SmsHelper.sendSms(context, customer.contactNumber, message, simSlotIndex)
