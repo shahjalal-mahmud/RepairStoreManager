@@ -93,6 +93,10 @@ class StoreViewModel : ViewModel() {
             }
         }
     }
+    fun updateReminderTime(hour: Int?, minute: Int?) {
+        storeInfo = storeInfo.copy(reminderHour = hour, reminderMinute = minute)
+        updateStoreInfo() // reuses existing save logic
+    }
 
     fun logout(onLogoutComplete: () -> Unit) {
         repository.logout()

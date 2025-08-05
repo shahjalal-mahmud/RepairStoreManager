@@ -8,5 +8,7 @@ data class StoreInfo(
     val address: String = "",
     val phone: String = "",
     val email: String = "",
-    val workingHours: String = ""
+    val workingHours: String = "",
+    val reminderHour: Int? = null,
+    val reminderMinute: Int? = null,
 )

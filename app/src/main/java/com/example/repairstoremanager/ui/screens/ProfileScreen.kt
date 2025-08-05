@@ -74,7 +74,7 @@ fun ProfileScreen(
                     text = "Delivery Reminder",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
-                ReminderTimePicker()
+                ReminderTimePicker(storeViewModel = storeViewModel)
             }
         }
 
