@@ -2,7 +2,6 @@ package com.example.repairstoremanager.viewmodel
 
 import android.content.Context
 import android.widget.Toast
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.repairstoremanager.data.model.Customer
@@ -21,8 +20,27 @@ class CustomerViewModel : ViewModel() {
 
     private val _customers = MutableStateFlow<List<Customer>>(emptyList())
     val customers: StateFlow<List<Customer>> = _customers
+
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading
+
+    private val _hasError = MutableStateFlow(false)
+    val hasError: StateFlow<Boolean> = _hasError
+
+    fun fetchCustomers() {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _hasError.value = false
+            try {
+                _customers.value = repository.getAllCustomers()
+            } catch (e: Exception) {
+                _hasError.value = true
+                _customers.value = emptyList()
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
 
     fun addCustomer(
         customer: Customer,
@@ -54,14 +72,6 @@ class CustomerViewModel : ViewModel() {
             } else {
                 onError(result.exceptionOrNull()?.message ?: "Unknown error")
             }
-        }
-    }
-
-    fun fetchCustomers() {
-        viewModelScope.launch {
-            _isLoading.value = true
-            _customers.value = repository.getAllCustomers()
-            _isLoading.value = false
         }
     }
 

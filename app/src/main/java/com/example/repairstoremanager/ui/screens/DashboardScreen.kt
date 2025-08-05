@@ -1,28 +1,13 @@
 package com.example.repairstoremanager.ui.screens
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import android.annotation.SuppressLint
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -31,11 +16,14 @@ import com.example.repairstoremanager.data.model.Customer
 import com.example.repairstoremanager.ui.components.CustomerCard
 import com.example.repairstoremanager.viewmodel.CustomerViewModel
 
+@SuppressLint("UnusedBoxWithConstraintsScope")
+@RequiresApi(Build.VERSION_CODES.S)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(viewModel: CustomerViewModel = viewModel()) {
     val scrollState = rememberScrollState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val hasError by viewModel.hasError.collectAsState(false)
 
     LaunchedEffect(Unit) {
         viewModel.fetchCustomers()
@@ -43,48 +31,88 @@ fun DashboardScreen(viewModel: CustomerViewModel = viewModel()) {
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Dashboard", style = MaterialTheme.typography.headlineSmall) })
+            TopAppBar(
+                title = {
+                    Text("Dashboard", style = MaterialTheme.typography.titleLarge)
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            )
         }
-    ) { padding ->
-        if (isLoading) {
-            // 👇 Centered loading screen
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(16.dp)
-                    .verticalScroll(scrollState)
-            ) {
-                // Metrics Cards
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    DashboardMetricCard("Total Customers", viewModel.totalCustomersCount, Modifier.weight(1f))
-                    DashboardMetricCard("Today's Invoices", viewModel.todaysInvoicesCount, Modifier.weight(1f))
-                    DashboardMetricCard("Pending Devices", viewModel.pendingDevicesCount, Modifier.weight(1f))
+    ) { paddingValues ->
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            when {
+                isLoading -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
                 }
 
-                Spacer(Modifier.height(24.dp))
+                hasError -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("Something went wrong.", style = MaterialTheme.typography.bodyMedium)
+                            Spacer(Modifier.height(8.dp))
+                            Button(onClick = { viewModel.fetchCustomers() }) {
+                                Text("Retry")
+                            }
+                        }
+                    }
+                }
 
-                // Today’s Deliveries
-                DashboardDeliverySection("Today’s Deliveries", viewModel.todayDeliveryList, viewModel)
+                else -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp)
+                            .verticalScroll(scrollState)
+                    ) {
+                        // 🔢 Metrics Row
+                        DashboardMetricsRow(viewModel)
 
-                Spacer(Modifier.height(16.dp))
+                        Spacer(Modifier.height(24.dp))
 
-                // Tomorrow’s Deliveries
-                DashboardDeliverySection("Tomorrow’s Deliveries", viewModel.tomorrowDeliveryList, viewModel)
+                        // 📦 Deliveries
+                        DashboardDeliverySection("Today’s Deliveries", viewModel.todayDeliveryList, viewModel)
+
+                        Spacer(Modifier.height(16.dp))
+
+                        DashboardDeliverySection("Tomorrow’s Deliveries", viewModel.tomorrowDeliveryList, viewModel)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@SuppressLint("UnusedBoxWithConstraintsScope")
+@Composable
+fun DashboardMetricsRow(viewModel: CustomerViewModel) {
+    BoxWithConstraints {
+        val isCompact = maxWidth < 600.dp
+        if (isCompact) {
+            // 📱 Small screens - vertical layout
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                DashboardMetricCard("Total Customers", viewModel.totalCustomersCount)
+                DashboardMetricCard("Today's Invoices", viewModel.todaysInvoicesCount)
+                DashboardMetricCard("Pending Devices", viewModel.pendingDevicesCount)
+            }
+        } else {
+            // 💻 Large screens - horizontal layout
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                DashboardMetricCard("Total Customers", viewModel.totalCustomersCount, Modifier.weight(1f))
+                DashboardMetricCard("Today's Invoices", viewModel.todaysInvoicesCount, Modifier.weight(1f))
+                DashboardMetricCard("Pending Devices", viewModel.pendingDevicesCount, Modifier.weight(1f))
             }
         }
     }
@@ -93,23 +121,33 @@ fun DashboardScreen(viewModel: CustomerViewModel = viewModel()) {
 @Composable
 fun DashboardMetricCard(title: String, count: Int, modifier: Modifier = Modifier) {
     Card(
-        modifier = modifier.height(100.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        )
+        modifier = modifier
+            .height(100.dp)
+            .fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(4.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(12.dp),
+                .padding(16.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = title, style = MaterialTheme.typography.labelMedium)
-            Text(text = count.toString(), style = MaterialTheme.typography.headlineSmall)
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            Text(
+                text = count.toString(),
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.S)
 @Composable
 fun DashboardDeliverySection(
     title: String,
@@ -124,7 +162,11 @@ fun DashboardDeliverySection(
     )
 
     if (customers.isEmpty()) {
-        Text("No devices scheduled.", style = MaterialTheme.typography.bodyMedium)
+        Text(
+            text = "No devices scheduled.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.outline
+        )
     } else {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             customers.forEach { customer ->
