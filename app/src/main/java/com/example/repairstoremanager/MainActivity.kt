@@ -19,6 +19,30 @@ import com.example.repairstoremanager.viewmodel.StoreViewModel
 import com.example.repairstoremanager.worker.WorkScheduler
 
 class MainActivity : ComponentActivity() {
+    // Add these permission constants at the top of MainActivity
+    private val BLUETOOTH_PERMISSIONS = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        arrayOf(
+            Manifest.permission.BLUETOOTH_CONNECT,
+            Manifest.permission.BLUETOOTH_SCAN
+        )
+    } else {
+        arrayOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        )
+    }
+
+    private fun hasBluetoothPermissions(): Boolean {
+        return BLUETOOTH_PERMISSIONS.all {
+            ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    private fun requestBluetoothPermissions() {
+        if (!hasBluetoothPermissions()) {
+            requestBluetoothPermissionsLauncher.launch(BLUETOOTH_PERMISSIONS)
+        }
+    }
 
     private val requestSmsPermissionsLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
