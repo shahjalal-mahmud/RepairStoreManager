@@ -1,6 +1,7 @@
 package com.example.repairstoremanager.viewmodel
 
 import android.content.Context
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.repairstoremanager.data.model.Customer
@@ -27,7 +28,7 @@ class CustomerViewModel : ViewModel() {
         context: Context,
         simSlotIndex: Int = 0,
         autoSmsEnabled: Boolean = true,
-        onSuccess: () -> Unit,
+        onSuccess: (Customer) -> Unit,  // Changed to accept Customer parameter
         onError: (String) -> Unit
     ) {
         viewModelScope.launch {
@@ -36,7 +37,13 @@ class CustomerViewModel : ViewModel() {
             val result = repository.addCustomer(customerWithTimestamp)
             if (result.isSuccess) {
                 fetchCustomers()
-                onSuccess()
+                // Get the last added customer (which will have the invoice number)
+                val savedCustomer = _customers.value.lastOrNull {
+                    it.customerName == customer.customerName &&
+                            it.contactNumber == customer.contactNumber &&
+                            it.date == customer.date
+                }
+                onSuccess(savedCustomer ?: customer) // Return the saved customer or fallback to original
 
                 if (autoSmsEnabled) {
                     val message = "📱 Hello ${customer.customerName}, your device has been received for repair. " +

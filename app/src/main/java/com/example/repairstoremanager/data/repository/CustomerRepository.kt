@@ -22,17 +22,43 @@ class CustomerRepository {
         return try {
             val uid = getUserId() ?: return Result.failure(Exception("User not logged in"))
             val customerId = db.collection("customers").document().id
+
+            val invoiceNumber = getNextInvoiceNumber()
+
             val formattedCustomer = customer.copy(
                 id = customerId,
                 shopOwnerId = uid,
+                invoiceNumber = invoiceNumber,
                 contactNumber = formatPhoneNumber(customer.contactNumber)
             )
+
             db.collection("customers").document(customerId)
                 .set(formattedCustomer)
                 .await()
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    private suspend fun getNextInvoiceNumber(): String {
+        val counterDocRef = db.collection("metadata").document("counters")
+        return try {
+            db.runTransaction { transaction ->
+                val snapshot = transaction.get(counterDocRef)
+                val current = snapshot.getLong("lastInvoiceNumber") ?: 0L
+                val next = current + 1
+                transaction.update(counterDocRef, "lastInvoiceNumber", next)
+                "INV-${String.format("%06d", next)}"
+            }.await()
+        } catch (e: Exception) {
+            // Fallback if transaction fails
+            val snapshot = counterDocRef.get().await()
+            val current = snapshot.getLong("lastInvoiceNumber") ?: 0L
+            val next = current + 1
+            counterDocRef.update("lastInvoiceNumber", next).await()
+            "INV-${String.format("%06d", next)}"
         }
     }
 

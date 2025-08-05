@@ -1,5 +1,7 @@
 package com.example.repairstoremanager.ui.components
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,6 +35,7 @@ import com.example.repairstoremanager.data.model.Customer
 import com.example.repairstoremanager.viewmodel.CustomerViewModel
 import com.example.repairstoremanager.viewmodel.StoreViewModel
 
+@RequiresApi(Build.VERSION_CODES.S)
 @Composable
 fun CustomerCard(customer: Customer, viewModel: CustomerViewModel) {
     var expanded by remember { mutableStateOf(false) }
@@ -41,6 +44,8 @@ fun CustomerCard(customer: Customer, viewModel: CustomerViewModel) {
     val statusColor = statusToColor(selectedStatus)
     val context = LocalContext.current
     val storeViewModel: StoreViewModel = viewModel()
+
+    var showPrintSheet by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier
@@ -89,6 +94,7 @@ fun CustomerCard(customer: Customer, viewModel: CustomerViewModel) {
                     Text("\uD83D\uDCE6 Delivery Date: ${customer.deliveryDate}", style = MaterialTheme.typography.bodySmall)
                 }
                 Text("\uD83D\uDD52 Created: ${customer.date}", style = MaterialTheme.typography.labelSmall)
+                Text("📄 Invoice No: ${customer.invoiceNumber}", style = MaterialTheme.typography.bodySmall)
             }
 
             Spacer(Modifier.height(8.dp))
@@ -123,6 +129,22 @@ fun CustomerCard(customer: Customer, viewModel: CustomerViewModel) {
                             .height(180.dp)
                     )
                 }
+            }
+            TextButton(
+                onClick = {
+                    showPrintSheet = true
+                },
+                modifier = Modifier.padding(top = 8.dp)
+            ) {
+                Text("🖨 Print Invoice")
+            }
+
+            if (showPrintSheet) {
+                InvoicePrintBottomSheet(
+                    customer = customer,
+                    storeInfo = storeViewModel.storeInfo,
+                    onDismiss = { showPrintSheet = false }
+                )
             }
         }
     }

@@ -2,10 +2,13 @@ package com.example.repairstoremanager.ui.components
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.DatePickerDialog
 import android.content.pm.PackageManager
+import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
@@ -59,13 +62,13 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
+@RequiresApi(Build.VERSION_CODES.S)
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("SimpleDateFormat")
 @Composable
 fun InvoiceFormSection() {
     val scrollState = rememberScrollState()
     val date = remember { SimpleDateFormat("dd MMM yyyy, hh:mm a").format(Date()) }
-    val invoiceNumber = "INV-${System.currentTimeMillis().toString().takeLast(5)}"
 
     val context = LocalContext.current
     val viewModel: CustomerViewModel = viewModel()
@@ -139,222 +142,236 @@ fun InvoiceFormSection() {
     }
 
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(16.dp)
-            .alpha(animatedAlpha)
+    Box(
+        modifier = Modifier.fillMaxSize(),
     ) {
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-        ) {
-            Column(Modifier.padding(16.dp)) {
-                Text("📅 Date: $date", style = MaterialTheme.typography.labelMedium)
-                Text("📄 Invoice No: $invoiceNumber", style = MaterialTheme.typography.labelMedium)
-            }
-        }
-
-        Spacer(Modifier.height(20.dp))
-
-        SectionTitle("👤 Customer Info")
-        CustomTextField("Customer Name", customerName) { customerName = it }
-        CustomTextField("Contact Number", contactNumber, KeyboardType.Phone) { contactNumber = it }
-
-        Spacer(Modifier.height(20.dp))
-
-        SectionTitle("📱 Device Info")
-        CustomTextField("Phone Model", phoneModel) { phoneModel = it }
-        CustomTextField("Problem Description", problem) { problem = it }
-        val calendar = remember { Calendar.getInstance() }
-
-        val datePickerDialog = remember {
-            android.app.DatePickerDialog(
-                context,
-                { _, year, month, dayOfMonth ->
-                    calendar.set(year, month, dayOfMonth)
-                    val sdf = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
-                    deliveryDate = sdf.format(calendar.time)
-                },
-                calendar.get(Calendar.YEAR),
-                calendar.get(Calendar.MONTH),
-                calendar.get(Calendar.DAY_OF_MONTH)
-            )
-        }
-
-        OutlinedTextField(
-            value = deliveryDate,
-            onValueChange = {}, // Read-only
-            label = { Text("Expected Delivery Date") },
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp),
-            readOnly = true,
-            trailingIcon = {
-                IconButton(onClick = { datePickerDialog.show() }) {
-                    Icon(
-                        imageVector = Icons.Default.CalendarToday,
-                        contentDescription = "Select Date"
-                    )
-                }
-            }
-        )
-
-
-        Spacer(Modifier.height(20.dp))
-
-        SectionTitle("💳 Payment Info")
-        CustomTextField("Total Amount (৳)", totalAmount, KeyboardType.Number) { totalAmount = it }
-        CustomTextField("Advanced Paid (৳)", advanced, KeyboardType.Number) { advanced = it }
-
-        Spacer(Modifier.height(20.dp))
-
-        SectionTitle("🔐 Security Type")
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            RadioButton(selected = securityType == "Password", onClick = { securityType = "Password" })
-            Text("Password", Modifier.padding(end = 16.dp))
-            RadioButton(selected = securityType == "Pattern", onClick = { securityType = "Pattern" })
-            Text("Pattern")
-        }
-
-        Spacer(Modifier.height(12.dp))
-
-        if (securityType == "Password") {
-            PasswordField(
-                value = phonePassword,
-                onValueChange = { phonePassword = it },
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-
-        if (securityType == "Pattern") {
-            Column(
-                modifier = Modifier.fillMaxWidth()
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(16.dp)
+                .alpha(animatedAlpha)
+        ) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
-                Text(
-                    "Draw your pattern (minimum 4 dots)",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                Column(Modifier.padding(16.dp)) {
+                    Text("📅 Date: $date", style = MaterialTheme.typography.labelMedium)
+                }
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            SectionTitle("👤 Customer Info")
+            CustomTextField("Customer Name", customerName) { customerName = it }
+            CustomTextField("Contact Number", contactNumber, KeyboardType.Phone) {
+                contactNumber = it
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            SectionTitle("📱 Device Info")
+            CustomTextField("Phone Model", phoneModel) { phoneModel = it }
+            CustomTextField("Problem Description", problem) { problem = it }
+            val calendar = remember { Calendar.getInstance() }
+
+            val datePickerDialog = remember {
+                DatePickerDialog(
+                    context,
+                    { _, year, month, dayOfMonth ->
+                        calendar.set(year, month, dayOfMonth)
+                        val sdf = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+                        deliveryDate = sdf.format(calendar.time)
+                    },
+                    calendar.get(Calendar.YEAR),
+                    calendar.get(Calendar.MONTH),
+                    calendar.get(Calendar.DAY_OF_MONTH)
                 )
+            }
 
-                Spacer(Modifier.height(8.dp))
+            OutlinedTextField(
+                value = deliveryDate,
+                onValueChange = {}, // Read-only
+                label = { Text("Expected Delivery Date") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                readOnly = true,
+                trailingIcon = {
+                    IconButton(onClick = { datePickerDialog.show() }) {
+                        Icon(
+                            imageVector = Icons.Default.CalendarToday,
+                            contentDescription = "Select Date"
+                        )
+                    }
+                }
+            )
 
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
+
+            Spacer(Modifier.height(20.dp))
+
+            SectionTitle("💳 Payment Info")
+            CustomTextField("Total Amount (৳)", totalAmount, KeyboardType.Number) {
+                totalAmount = it
+            }
+            CustomTextField("Advanced Paid (৳)", advanced, KeyboardType.Number) { advanced = it }
+
+            Spacer(Modifier.height(20.dp))
+
+            SectionTitle("🔐 Security Type")
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RadioButton(
+                    selected = securityType == "Password",
+                    onClick = { securityType = "Password" })
+                Text("Password", Modifier.padding(end = 16.dp))
+                RadioButton(
+                    selected = securityType == "Pattern",
+                    onClick = { securityType = "Pattern" })
+                Text("Pattern")
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            if (securityType == "Password") {
+                PasswordField(
+                    value = phonePassword,
+                    onValueChange = { phonePassword = it },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            if (securityType == "Pattern") {
+                Column(
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    PatternLockCanvas(
-                        isInteractive = !hasDrawnPattern,
-                        pattern = pattern,
-                        resetKey = patternResetKey,
-                        onPatternComplete = { drawn ->
-                            if (drawn.size >= 4) {
-                                pattern = drawn
-                                hasDrawnPattern = true
+                    Text(
+                        "Draw your pattern (minimum 4 dots)",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Spacer(Modifier.height(8.dp))
+
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        PatternLockCanvas(
+                            isInteractive = !hasDrawnPattern,
+                            pattern = pattern,
+                            resetKey = patternResetKey,
+                            onPatternComplete = { drawn ->
+                                if (drawn.size >= 4) {
+                                    pattern = drawn
+                                    hasDrawnPattern = true
+                                }
                             }
+                        )
+                    }
+
+                    if (hasDrawnPattern) {
+                        Spacer(Modifier.height(12.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            Button(
+                                onClick = {
+                                    pattern = emptyList()
+                                    hasDrawnPattern = false
+                                    patternResetKey++
+                                }
+                            ) {
+                                Text("🔄 Try Again")
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            SectionTitle("📦 Accessories & Consent")
+            AccessoriesRow("Battery", battery) { battery = it }
+            AccessoriesRow("SIM", sim) { sim = it }
+            AccessoriesRow("Memory", memory) { memory = it }
+            AccessoriesRow("SIM Tray", simTray) { simTray = it }
+            AccessoriesRow("Back Cover", backCover) { backCover = it }
+            AccessoriesRow("Dead Permission", deadPermission) { deadPermission = it }
+
+            Spacer(Modifier.height(24.dp))
+
+            Button(
+                onClick = {
+                    isLoading = true
+                    val newCustomer = Customer(
+                        id = "", // will be generated by Firestore
+                        shopOwnerId = "", // will be set in repository
+                        invoiceNumber = "", // will be generated in repository
+                        date = date,
+                        customerName = customerName,
+                        contactNumber = contactNumber,
+                        phoneModel = phoneModel,
+                        problem = problem,
+                        deliveryDate = deliveryDate,
+                        totalAmount = totalAmount,
+                        advanced = advanced,
+                        securityType = securityType,
+                        phonePassword = phonePassword,
+                        pattern = pattern,
+                        battery = battery,
+                        sim = sim,
+                        memory = memory,
+                        simTray = simTray,
+                        backCover = backCover,
+                        deadPermission = deadPermission,
+                        status = "Pending",
+                    )
+
+                    viewModel.addCustomer(
+                        newCustomer,
+                        context = context,
+                        simSlotIndex = storeViewModel.selectedSimSlot,
+                        autoSmsEnabled = storeViewModel.autoSmsEnabled,
+                        onSuccess = { savedCustomer ->  // Now receives the saved customer
+                            isLoading = false
+                            Toast.makeText(context, "Customer saved!", Toast.LENGTH_SHORT).show()
+                            currentCustomer =
+                                savedCustomer  // Set the currentCustomer with the returned customer
+                            showPrintSheet = true
+                            clearForm()
+                            resetTrigger++
+                        },
+                        onError = {
+                            isLoading = false
+                            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
                         }
                     )
-                }
-
-                if (hasDrawnPattern) {
-                    Spacer(Modifier.height(12.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        Button(
-                            onClick = {
-                                pattern = emptyList()
-                                hasDrawnPattern = false
-                                patternResetKey++
-                            }
-                        ) {
-                            Text("🔄 Try Again")
-                        }
-                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                enabled = !isLoading
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text("💾 Save Invoice", fontSize = 18.sp)
                 }
             }
+
+            Spacer(Modifier.height(40.dp))
         }
-
-        Spacer(Modifier.height(20.dp))
-
-        SectionTitle("📦 Accessories & Consent")
-        AccessoriesRow("Battery", battery) { battery = it }
-        AccessoriesRow("SIM", sim) { sim = it }
-        AccessoriesRow("Memory", memory) { memory = it }
-        AccessoriesRow("SIM Tray", simTray) { simTray = it }
-        AccessoriesRow("Back Cover", backCover) { backCover = it }
-        AccessoriesRow("Dead Permission", deadPermission) { deadPermission = it }
-
-        Spacer(Modifier.height(24.dp))
-
-        Button(
-            onClick = {
-                isLoading = true
-                val customer = Customer(
-                    id = "", // or generate UUID.randomUUID().toString()
-                    shopOwnerId = "", // fill if needed
-                    invoiceNumber = invoiceNumber,
-                    date = date,
-                    customerName = customerName,
-                    contactNumber = contactNumber,
-                    phoneModel = phoneModel,
-                    problem = problem,
-                    deliveryDate = deliveryDate,
-                    totalAmount = totalAmount,
-                    advanced = advanced,
-                    securityType = securityType,
-                    phonePassword = phonePassword,
-                    pattern = pattern,
-                    battery = battery,
-                    sim = sim,
-                    memory = memory,
-                    simTray = simTray,
-                    backCover = backCover,
-                    deadPermission = deadPermission,
-                    status = "Pending",
-                )
-                viewModel.addCustomer(
-                    customer,
-                    context = context,
-                    simSlotIndex = storeViewModel.selectedSimSlot,
-                    autoSmsEnabled = storeViewModel.autoSmsEnabled,
-                    onSuccess = {
-                        isLoading = false
-                        Toast.makeText(context, "Customer saved!", Toast.LENGTH_SHORT).show()
-                        currentCustomer = customer
-                        showPrintSheet = true
-                        clearForm()
-                        resetTrigger++
-                    },
-                    onError = {
-                        isLoading = false
-                        Toast.makeText(context, it, Toast.LENGTH_LONG).show()
-                    }
-                )
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp),
-            enabled = !isLoading
-        ) {
-            if (isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    strokeWidth = 2.dp
-                )
-            } else {
-                Text("💾 Save Invoice", fontSize = 18.sp)
-            }
-        }
-
-        Spacer(Modifier.height(40.dp))
-
+        // Bottom sheet (outside the scrollable content)
         if (showPrintSheet && currentCustomer != null) {
             InvoicePrintBottomSheet(
                 customer = currentCustomer!!,
+                storeInfo = storeViewModel.storeInfo,
                 onDismiss = { showPrintSheet = false }
             )
         }
