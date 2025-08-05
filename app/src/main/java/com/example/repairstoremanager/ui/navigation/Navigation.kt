@@ -1,5 +1,7 @@
 package com.example.repairstoremanager.ui.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
@@ -9,11 +11,13 @@ import com.example.repairstoremanager.data.repository.AuthRepository
 import com.example.repairstoremanager.ui.screens.AddCustomerScreen
 import com.example.repairstoremanager.ui.screens.CustomerListScreen
 import com.example.repairstoremanager.ui.screens.DashboardScreen
+import com.example.repairstoremanager.ui.screens.ForgotPasswordScreen
 import com.example.repairstoremanager.ui.screens.LoginScreen
 import com.example.repairstoremanager.ui.screens.ProfileScreen
 import com.example.repairstoremanager.viewmodel.LoginViewModel
 import com.example.repairstoremanager.viewmodel.StoreViewModel
 
+@RequiresApi(Build.VERSION_CODES.S)
 @Composable
 fun Navigation(
     navController: NavHostController,
@@ -38,6 +42,9 @@ fun Navigation(
                     navController.navigate(BottomNavItem.Dashboard.route) {
                         popUpTo("login") { inclusive = true }
                     }
+                },
+                onNavigateToForgotPassword = {
+                    navController.navigate("forgot_password")
                 }
             )
         }
@@ -67,5 +74,11 @@ fun Navigation(
                 )
             }
         }
+        composable("forgot_password") {
+            ForgotPasswordScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
     }
 }

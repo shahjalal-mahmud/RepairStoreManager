@@ -1,9 +1,11 @@
 package com.example.repairstoremanager.viewmodel
 
+import android.content.Context
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.repairstoremanager.data.repository.AuthRepository
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
 class LoginViewModel(private val storeViewModel: StoreViewModel) : ViewModel() {
@@ -33,3 +35,24 @@ class LoginViewModel(private val storeViewModel: StoreViewModel) : ViewModel() {
         }
     }
 }
+
+class ForgotPasswordViewModel : ViewModel() {
+    var email by mutableStateOf("")
+    var message by mutableStateOf<String?>(null)
+    var error by mutableStateOf<String?>(null)
+
+    private val auth = FirebaseAuth.getInstance()
+
+    fun sendResetLink(context: Context) {
+        message = null
+        error = null
+        auth.sendPasswordResetEmail(email.trim())
+            .addOnSuccessListener {
+                message = "Reset link sent to your email."
+            }
+            .addOnFailureListener {
+                error = it.localizedMessage
+            }
+    }
+}
+
