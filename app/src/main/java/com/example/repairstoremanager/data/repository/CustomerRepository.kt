@@ -80,5 +80,15 @@ class CustomerRepository {
             Result.failure(e)
         }
     }
+    suspend fun updateCustomer(customer: Customer): Result<Unit> {
+        return try {
+            db.collection("customers").document(customer.id)
+                .set(customer)
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 
 }

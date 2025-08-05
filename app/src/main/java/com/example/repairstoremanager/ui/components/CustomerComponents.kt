@@ -7,17 +7,20 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -39,33 +42,67 @@ import com.example.repairstoremanager.viewmodel.StoreViewModel
 @Composable
 fun CustomerCard(customer: Customer, viewModel: CustomerViewModel) {
     var expanded by remember { mutableStateOf(false) }
-    val selectedStatus = customer.status
-    val statusOptions = listOf("Pending", "Repaired", "Delivered", "Cancelled")
-    val statusColor = statusToColor(selectedStatus)
+    var isEditing by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val storeViewModel: StoreViewModel = viewModel()
+
+    // Editable Fields
+    var name by remember { mutableStateOf(customer.customerName) }
+    var phone by remember { mutableStateOf(customer.contactNumber) }
+    var model by remember { mutableStateOf(customer.phoneModel) }
+    var problem by remember { mutableStateOf(customer.problem) }
+    var delivery by remember { mutableStateOf(customer.deliveryDate) }
+    var total by remember { mutableStateOf(customer.totalAmount) }
+    var paid by remember { mutableStateOf(customer.advanced) }
+
+    var battery by remember { mutableStateOf(customer.battery) }
+    var sim by remember { mutableStateOf(customer.sim) }
+    var memory by remember { mutableStateOf(customer.memory) }
+    var simTray by remember { mutableStateOf(customer.simTray) }
+    var backCover by remember { mutableStateOf(customer.backCover) }
+    var deadPermission by remember { mutableStateOf(customer.deadPermission) }
+
+    val statusOptions = listOf("Pending", "Repaired", "Delivered", "Cancelled")
+    val selectedStatus = customer.status
+    val statusColor = statusToColor(selectedStatus)
 
     var showPrintSheet by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 4.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = MaterialTheme.shapes.medium
+            .padding(8.dp),
+        elevation = CardDefaults.cardElevation(4.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Header Row
             Row(
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = "\uD83D\uDC64 ${customer.customerName}",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.weight(1f)
-                )
+                if (isEditing) {
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = { Text("Name") },
+                        modifier = Modifier.weight(1f)
+                    )
+                } else {
+                    Text(
+                        text = "\uD83D\uDC64 ${customer.customerName}",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
                 StatusDropdown(
                     selectedStatus = selectedStatus,
                     options = statusOptions,
@@ -83,60 +120,125 @@ fun CustomerCard(customer: Customer, viewModel: CustomerViewModel) {
                 )
             }
 
-            Spacer(Modifier.height(8.dp))
-
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("\uD83D\uDCF1 ${customer.phoneModel}", style = MaterialTheme.typography.bodyMedium)
-                Text("\uD83D\uDEE0️ Problem: ${customer.problem}", style = MaterialTheme.typography.bodySmall)
-                Text("\uD83D\uDCDE Contact: ${customer.contactNumber}", style = MaterialTheme.typography.bodySmall)
-                Text("\uD83D\uDCB3 Paid: ${customer.advanced} / Total: ${customer.totalAmount}", style = MaterialTheme.typography.bodySmall)
-                if (customer.status == "Pending" || customer.status == "Repaired") {
-                    Text("\uD83D\uDCE6 Delivery Date: ${customer.deliveryDate}", style = MaterialTheme.typography.bodySmall)
+            // Editable Fields
+            if (isEditing) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(value = model, onValueChange = { model = it }, label = { Text("Phone Model") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = problem, onValueChange = { problem = it }, label = { Text("Problem") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Contact") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = paid, onValueChange = { paid = it }, label = { Text("Paid Amount") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = total, onValueChange = { total = it }, label = { Text("Total Amount") }, modifier = Modifier.fillMaxWidth())
+                    if (selectedStatus in listOf("Pending", "Repaired")) {
+                        OutlinedTextField(value = delivery, onValueChange = { delivery = it }, label = { Text("Delivery Date") }, modifier = Modifier.fillMaxWidth())
+                    }
                 }
-                Text("\uD83D\uDD52 Created: ${customer.date}", style = MaterialTheme.typography.labelSmall)
-                Text("📄 Invoice No: ${customer.invoiceNumber}", style = MaterialTheme.typography.bodySmall)
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("\uD83D\uDCF1 ${customer.phoneModel}", style = MaterialTheme.typography.bodyMedium)
+                    Text("\uD83D\uDEE0️ Problem: ${customer.problem}", style = MaterialTheme.typography.bodySmall)
+                    Text("\uD83D\uDCDE Contact: ${customer.contactNumber}", style = MaterialTheme.typography.bodySmall)
+                    Text("\uD83D\uDCB3 Paid: ${customer.advanced} / Total: ${customer.totalAmount}", style = MaterialTheme.typography.bodySmall)
+                    if (selectedStatus in listOf("Pending", "Repaired")) {
+                        Text("\uD83D\uDCE6 Delivery: ${customer.deliveryDate}", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
             }
 
-            Spacer(Modifier.height(8.dp))
+            Text("\uD83D\uDD52 Created: ${customer.date}", style = MaterialTheme.typography.labelSmall)
+            Text("📄 Invoice No: ${customer.invoiceNumber}", style = MaterialTheme.typography.bodySmall)
 
-            AccessoriesBadges(
-                battery = customer.battery,
-                sim = customer.sim,
-                memory = customer.memory,
-                simTray = customer.simTray,
-                backCover = customer.backCover,
-                deadPermission = customer.deadPermission
-            )
+            // Accessories
+            if (isEditing) {
+                AccessoryCheckboxes(
+                    battery, { battery = it },
+                    sim, { sim = it },
+                    memory, { memory = it },
+                    simTray, { simTray = it },
+                    backCover, { backCover = it },
+                    deadPermission, { deadPermission = it }
+                )
+            } else {
+                AccessoriesBadges(
+                    battery = customer.battery,
+                    sim = customer.sim,
+                    memory = customer.memory,
+                    simTray = customer.simTray,
+                    backCover = customer.backCover,
+                    deadPermission = customer.deadPermission
+                )
+            }
 
-            Spacer(Modifier.height(8.dp))
+            // Security Info Toggle
             TextButton(onClick = { expanded = !expanded }) {
                 Text(if (expanded) "\uD83D\uDD12 Hide Security Info" else "\uD83D\uDD13 Show Security Info")
             }
 
             if (expanded) {
-                Spacer(Modifier.height(4.dp))
                 if (customer.securityType == "Password") {
                     Text("\uD83D\uDD11 Password: ${customer.phonePassword}", style = MaterialTheme.typography.bodySmall)
                 } else {
-                    Text("\uD83D\uDD10 Pattern:")
+                    Text("\uD83D\uDD10 Pattern:", style = MaterialTheme.typography.bodySmall)
                     PatternLockCanvas(
                         pattern = customer.pattern,
                         isInteractive = false,
                         isPreview = true,
                         modifier = Modifier
-                            .padding(top = 8.dp)
                             .fillMaxWidth()
                             .height(180.dp)
                     )
                 }
             }
-            TextButton(
-                onClick = {
-                    showPrintSheet = true
-                },
-                modifier = Modifier.padding(top = 8.dp)
-            ) {
-                Text("🖨 Print Invoice")
+
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 8.dp),
+                thickness = 1.dp,
+                color = DividerDefaults.color
+            )
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                if (isEditing) {
+                    TextButton(
+                        onClick = {
+                            val updated = customer.copy(
+                                customerName = name,
+                                contactNumber = phone,
+                                phoneModel = model,
+                                problem = problem,
+                                deliveryDate = delivery,
+                                advanced = paid,
+                                totalAmount = total,
+                                battery = battery,
+                                sim = sim,
+                                memory = memory,
+                                simTray = simTray,
+                                backCover = backCover,
+                                deadPermission = deadPermission
+                            )
+                            viewModel.updateCustomer(
+                                updatedCustomer = updated,
+                                context = context,
+                                onSuccess = { isEditing = false },
+                                onError = {}
+                            )
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("💾 Save")
+                    }
+                    TextButton(
+                        onClick = { isEditing = false },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("❌ Cancel")
+                    }
+                } else {
+                    TextButton(onClick = { isEditing = true }, modifier = Modifier.weight(1f)) {
+                        Text("✏️ Edit")
+                    }
+                    TextButton(onClick = { showPrintSheet = true }, modifier = Modifier.weight(1f)) {
+                        Text("🖨 Print")
+                    }
+                }
             }
 
             if (showPrintSheet) {
