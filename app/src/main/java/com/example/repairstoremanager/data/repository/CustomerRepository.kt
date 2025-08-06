@@ -8,7 +8,7 @@ import kotlinx.coroutines.tasks.await
 class CustomerRepository {
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
-    private fun getUserId(): String? = auth.currentUser?.uid
+    fun getUserId(): String? = auth.currentUser?.uid
 
     private fun formatPhoneNumber(number: String): String {
         return when {
@@ -43,21 +43,32 @@ class CustomerRepository {
     }
 
     private suspend fun getNextInvoiceNumber(): String {
+        val uid = getUserId() ?: throw Exception("User not logged in")
         val counterDocRef = db.collection("metadata").document("counters")
+
         return try {
             db.runTransaction { transaction ->
                 val snapshot = transaction.get(counterDocRef)
-                val current = snapshot.getLong("lastInvoiceNumber") ?: 0L
+                val counters = snapshot.get("invoiceCounters") as? Map<String, Long> ?: mutableMapOf()
+                val current = counters[uid] ?: 0L
                 val next = current + 1
-                transaction.update(counterDocRef, "lastInvoiceNumber", next)
+
+                // Update the specific user's counter
+                val updatedCounters = counters.toMutableMap().apply {
+                    this[uid] = next
+                }
+
+                transaction.update(counterDocRef, "invoiceCounters", updatedCounters)
                 "INV-${String.format("%06d", next)}"
             }.await()
         } catch (e: Exception) {
             // Fallback if transaction fails
             val snapshot = counterDocRef.get().await()
-            val current = snapshot.getLong("lastInvoiceNumber") ?: 0L
+            val counters = snapshot.get("invoiceCounters") as? Map<String, Long> ?: mutableMapOf()
+            val current = counters[uid] ?: 0L
             val next = current + 1
-            counterDocRef.update("lastInvoiceNumber", next).await()
+
+            counterDocRef.update("invoiceCounters.${uid}", next).await()
             "INV-${String.format("%06d", next)}"
         }
     }
@@ -90,5 +101,17 @@ class CustomerRepository {
             Result.failure(e)
         }
     }
+    suspend fun peekNextInvoiceNumber(): String {
+        val uid = getUserId() ?: throw Exception("User not logged in")
+        val counterDocRef = db.collection("metadata").document("counters")
 
+        return try {
+            val snapshot = counterDocRef.get().await()
+            val counters = snapshot.get("invoiceCounters") as? Map<String, Long> ?: mutableMapOf()
+            val current = counters[uid] ?: 0L
+            "INV-${String.format("%06d", current + 1)}"
+        } catch (e: Exception) {
+            "INV-000001" // Fallback
+        }
+    }
 }

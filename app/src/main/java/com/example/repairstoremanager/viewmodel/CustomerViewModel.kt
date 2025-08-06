@@ -52,17 +52,24 @@ class CustomerViewModel : ViewModel() {
     ) {
         viewModelScope.launch {
             val timestamp = if (customer.createdAt == 0L) System.currentTimeMillis() else customer.createdAt
-            val customerWithTimestamp = customer.copy(createdAt = timestamp)
+            val customerWithTimestamp = customer.copy(
+                createdAt = timestamp,
+                invoiceNumber = currentInvoiceNumber.value ?: ""
+            )
             val result = repository.addCustomer(customerWithTimestamp)
             if (result.isSuccess) {
                 fetchCustomers()
-                // Get the last added customer (which will have the invoice number)
+                fetchNextInvoiceNumber() // Refresh for next customer
                 val savedCustomer = _customers.value.lastOrNull {
                     it.customerName == customer.customerName &&
                             it.contactNumber == customer.contactNumber &&
                             it.date == customer.date
                 }
-                onSuccess(savedCustomer ?: customer) // Return the saved customer or fallback to original
+                // Return the customer with the invoice number we used
+                onSuccess(customerWithTimestamp.copy(
+                    id = _customers.value.lastOrNull()?.id ?: "",
+                    shopOwnerId = repository.getUserId() ?: ""
+                ))
 
                 if (autoSmsEnabled) {
                     val message = "প্রিয় ${customer.customerName}, আপনার ডিভাইসটি মেরামতের জন্য গ্রহণ করা হয়েছে। " +
@@ -117,6 +124,18 @@ class CustomerViewModel : ViewModel() {
             } else {
                 Toast.makeText(context, "Failed to update customer", Toast.LENGTH_SHORT).show()
                 onError(result.exceptionOrNull()?.message ?: "Unknown error")
+            }
+        }
+    }
+    private val _currentInvoiceNumber = MutableStateFlow<String?>(null)
+    val currentInvoiceNumber: StateFlow<String?> = _currentInvoiceNumber
+
+    fun fetchNextInvoiceNumber() {
+        viewModelScope.launch {
+            try {
+                _currentInvoiceNumber.value = repository.peekNextInvoiceNumber()
+            } catch (e: Exception) {
+                _currentInvoiceNumber.value = null
             }
         }
     }

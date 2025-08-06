@@ -9,8 +9,6 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -19,15 +17,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -68,16 +68,16 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
     var backCover by remember { mutableStateOf(false) }
     var deadPermission by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
-    var resetTrigger by remember { mutableIntStateOf(0) }
     var hasDrawnPattern by remember { mutableStateOf(false) }
     var patternResetKey by remember { mutableIntStateOf(0) }
     var currentCustomer by remember { mutableStateOf<Customer?>(null) }
     var showPrintSheet by remember { mutableStateOf(false) }
 
-    val animatedAlpha by animateFloatAsState(
-        targetValue = if (resetTrigger % 2 == 0) 1f else 0f,
-        animationSpec = tween(300)
-    )
+    val currentInvoiceNumber by viewModel.currentInvoiceNumber.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.fetchNextInvoiceNumber()
+    }
 
     val calendar = remember { Calendar.getInstance() }
     val datePickerDialog = remember {
@@ -111,6 +111,8 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
         simTray = false
         backCover = false
         deadPermission = false
+        hasDrawnPattern = false
+        patternResetKey++ // This will reset the pattern lock
     }
 
     val smsPermissionLauncher = rememberLauncherForActivityResult(
@@ -134,8 +136,14 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
                 .fillMaxSize()
                 .verticalScroll(scrollState)
                 .padding(16.dp)
-                .alpha(animatedAlpha)
         ) {
+            currentInvoiceNumber?.let { invoiceNum ->
+                Text(
+                    text = "Invoice #: $invoiceNum",
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+            }
             CustomerInfoSection(
                 customerName = customerName,
                 contactNumber = contactNumber,
@@ -212,7 +220,7 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
                     val newCustomer = Customer(
                         id = "",
                         shopOwnerId = "",
-                        invoiceNumber = "",
+                        invoiceNumber = currentInvoiceNumber ?: "",
                         date = date,
                         customerName = customerName,
                         contactNumber = contactNumber,
@@ -244,7 +252,6 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
                             currentCustomer = savedCustomer
                             showPrintSheet = true
                             clearForm()
-                            resetTrigger++
                         },
                         onError = {
                             isLoading = false
@@ -260,7 +267,12 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
 
         if (showPrintSheet && currentCustomer != null) {
             InvoicePrintBottomSheet(
-                customer = currentCustomer!!,
+                customer = currentCustomer!!.copy(
+                    invoiceNumber = currentCustomer!!.invoiceNumber.ifEmpty {
+                        // Fallback if somehow empty
+                        viewModel.currentInvoiceNumber.value ?: "INV-000000"
+                    }
+                ),
                 storeInfo = storeViewModel.storeInfo,
                 onDismiss = { showPrintSheet = false }
             )
