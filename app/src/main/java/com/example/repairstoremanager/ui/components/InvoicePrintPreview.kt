@@ -20,9 +20,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.repairstoremanager.data.model.Customer
+import com.example.repairstoremanager.data.model.StoreInfo
 
 @Composable
-fun InvoicePrintPreview(customer: Customer) {
+fun InvoicePrintPreview(customer: Customer, storeInfo: StoreInfo) {
     val due = (customer.totalAmount.toIntOrNull() ?: 0) - (customer.advanced.toIntOrNull() ?: 0)
 
     Card(
@@ -35,16 +36,16 @@ fun InvoicePrintPreview(customer: Customer) {
             modifier = Modifier.padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Header
+            // Header - using storeInfo from Firestore
             Text(
-                text = "TECH CARE CENTER",
+                text = storeInfo.storeName.uppercase(),
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
             )
             Text(
-                text = "Device Repair Service",
+                text = storeInfo.address,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

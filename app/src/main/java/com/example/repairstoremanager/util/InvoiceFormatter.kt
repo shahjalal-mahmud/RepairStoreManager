@@ -16,7 +16,7 @@ fun buildInvoiceText(customer: Customer, storeInfo: StoreInfo): String {
     return buildString {
         appendLine("     ${storeInfo.storeName.uppercase().take(24)}")
         appendLine("  ${storeInfo.address.take(30)}")
-        appendLine("     Call: ${storeInfo.phone.take(15)}")
+        appendLine("       Call: ${storeInfo.phone.take(15)}")
         appendLine("--------------------------------")
         appendLine("INVOICE: ${customer.invoiceNumber.padEnd(10)}")  
         appendLine("DATE   : ${customer.date}")
@@ -36,8 +36,8 @@ fun buildInvoiceText(customer: Customer, storeInfo: StoreInfo): String {
         appendLine("Advance: ${customer.advanced.padStart(10)}")
         appendLine("--------------------------------")
         appendLine("Due    : ${due.toString().padStart(10)}")
-        appendLine("--------------------------------")
         if (accessories.isNotEmpty()) {
+            appendLine("--------------------------------")
             appendLine("Accessories: ${accessories.joinToString(",")}")
         }
         if (customer.deadPermission) {

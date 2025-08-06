@@ -78,7 +78,7 @@ fun InvoicePrintBottomSheet(
                     .weight(1f)
                     .verticalScroll(rememberScrollState())
             ) {
-                InvoicePrintPreview(customer = customer)
+                InvoicePrintPreview(customer = customer, storeInfo = storeInfo)
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
