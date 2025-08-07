@@ -55,7 +55,7 @@ fun CustomerSearchFilterSortBar(
         OutlinedTextField(
             value = searchQuery,
             onValueChange = onSearchChange,
-            placeholder = { Text("Search by name, phone or model") },
+            placeholder = { Text("Search by name, phone, model or invoice") },
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
             modifier = Modifier
                 .fillMaxWidth()

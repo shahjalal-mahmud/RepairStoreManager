@@ -35,9 +35,11 @@ fun CustomerListScreen(viewModel: CustomerViewModel = viewModel()) {
 
     val filteredList = customerList
         .filter {
-            (searchQuery.isBlank() || it.customerName.contains(searchQuery, true)
-                    || it.phoneModel.contains(searchQuery, true)
-                    || it.contactNumber.contains(searchQuery, true))
+            (searchQuery.isBlank() ||
+                    it.customerName.contains(searchQuery, true) ||
+                    it.phoneModel.contains(searchQuery, true) ||
+                    it.contactNumber.contains(searchQuery, true) ||
+                    it.invoiceNumber?.contains(searchQuery, true) == true) // Add invoice number search
         }
         .filter {
             selectedFilter == "All" || it.status == selectedFilter
