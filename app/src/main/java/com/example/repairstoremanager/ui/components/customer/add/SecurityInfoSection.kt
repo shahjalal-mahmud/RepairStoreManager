@@ -1,4 +1,4 @@
-package com.example.repairstoremanager.ui.components
+package com.example.repairstoremanager.ui.components.customer.add
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.repairstoremanager.ui.components.customer.common.SectionTitle
 
 @Composable
 fun SecurityInfoSection(

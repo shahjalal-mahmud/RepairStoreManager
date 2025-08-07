@@ -1,4 +1,4 @@
-package com.example.repairstoremanager.ui.components
+package com.example.repairstoremanager.ui.components.customer.add
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -33,6 +33,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.repairstoremanager.data.model.Customer
+import com.example.repairstoremanager.ui.components.customer.common.AccessoriesSection
+import com.example.repairstoremanager.ui.components.customer.invoice.InvoicePrintBottomSheet
 import com.example.repairstoremanager.viewmodel.CustomerViewModel
 import com.example.repairstoremanager.viewmodel.StoreViewModel
 import java.text.SimpleDateFormat

@@ -1,4 +1,4 @@
-package com.example.repairstoremanager.ui.components
+package com.example.repairstoremanager.ui.components.customer.invoice
 
 import android.Manifest
 import android.content.Context

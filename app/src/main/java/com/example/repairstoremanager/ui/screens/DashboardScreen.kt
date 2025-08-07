@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.repairstoremanager.data.model.Customer
-import com.example.repairstoremanager.ui.components.CustomerCard
+import com.example.repairstoremanager.ui.components.customer.list.CustomerCard
 import com.example.repairstoremanager.viewmodel.CustomerViewModel
 
 @SuppressLint("UnusedBoxWithConstraintsScope")

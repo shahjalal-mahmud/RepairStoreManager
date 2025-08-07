@@ -1,4 +1,4 @@
-package com.example.repairstoremanager.ui.components
+package com.example.repairstoremanager.ui.components.customer.list
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box

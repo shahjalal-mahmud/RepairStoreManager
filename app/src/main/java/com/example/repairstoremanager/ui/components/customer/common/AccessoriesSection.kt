@@ -1,4 +1,4 @@
-package com.example.repairstoremanager.ui.components
+package com.example.repairstoremanager.ui.components.customer.common
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row

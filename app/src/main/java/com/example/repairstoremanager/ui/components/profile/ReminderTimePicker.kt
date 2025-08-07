@@ -1,5 +1,6 @@
-package com.example.repairstoremanager.ui.components
+package com.example.repairstoremanager.ui.components.profile
 
+import android.app.TimePickerDialog
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
@@ -73,7 +74,7 @@ fun ReminderTimePicker(
             ) {
                 Button(
                     onClick = {
-                        val timePickerDialog = android.app.TimePickerDialog(
+                        val timePickerDialog = TimePickerDialog(
                             context,
                             { _, pickedHour, pickedMinute ->
                                 selectedHour = pickedHour

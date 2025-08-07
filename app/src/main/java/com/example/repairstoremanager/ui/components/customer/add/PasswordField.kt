@@ -1,4 +1,4 @@
-package com.example.repairstoremanager.ui.components
+package com.example.repairstoremanager.ui.components.customer.add
 
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text

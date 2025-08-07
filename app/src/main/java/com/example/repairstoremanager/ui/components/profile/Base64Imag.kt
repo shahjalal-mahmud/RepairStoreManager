@@ -1,4 +1,4 @@
-package com.example.repairstoremanager.ui.components
+package com.example.repairstoremanager.ui.components.profile
 
 import android.graphics.BitmapFactory
 import android.util.Base64

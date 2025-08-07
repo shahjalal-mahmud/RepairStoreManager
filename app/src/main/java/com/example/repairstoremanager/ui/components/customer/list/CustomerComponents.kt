@@ -1,4 +1,4 @@
-package com.example.repairstoremanager.ui.components
+package com.example.repairstoremanager.ui.components.customer.list
 
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -35,6 +35,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.repairstoremanager.data.model.Customer
+import com.example.repairstoremanager.ui.components.customer.common.AccessoriesBadges
+import com.example.repairstoremanager.ui.components.customer.common.AccessoryCheckboxes
+import com.example.repairstoremanager.ui.components.customer.invoice.InvoicePrintBottomSheet
+import com.example.repairstoremanager.ui.components.customer.add.PatternLockCanvas
 import com.example.repairstoremanager.viewmodel.CustomerViewModel
 import com.example.repairstoremanager.viewmodel.StoreViewModel
 
