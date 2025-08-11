@@ -1,4 +1,4 @@
-package com.example.repairstoremanager.ui.components.customer.add
+package com.example.repairstoremanager.ui.components.profile
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -42,7 +42,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
-import com.example.repairstoremanager.ui.components.profile.Base64Image
 import com.example.repairstoremanager.viewmodel.StoreViewModel
 
 @Composable

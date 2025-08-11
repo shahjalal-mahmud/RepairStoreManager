@@ -19,7 +19,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.repairstoremanager.ui.components.profile.ReminderTimePicker
-import com.example.repairstoremanager.ui.components.customer.add.StoreInfoSection
+import com.example.repairstoremanager.ui.components.profile.StoreInfoSection
 import com.example.repairstoremanager.viewmodel.StoreViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)

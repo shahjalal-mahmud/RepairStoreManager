@@ -74,6 +74,7 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
     var patternResetKey by remember { mutableIntStateOf(0) }
     var currentCustomer by remember { mutableStateOf<Customer?>(null) }
     var showPrintSheet by remember { mutableStateOf(false) }
+    var isSaved by remember { mutableStateOf(false) }
 
     val currentInvoiceNumber by viewModel.currentInvoiceNumber.collectAsState()
 
@@ -114,7 +115,70 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
         backCover = false
         deadPermission = false
         hasDrawnPattern = false
-        patternResetKey++ // This will reset the pattern lock
+        patternResetKey++
+        isSaved = false
+    }
+
+    fun validateForm(): Boolean {
+        return customerName.isNotBlank() &&
+                contactNumber.isNotBlank() &&
+                phoneModel.isNotBlank() &&
+                problem.isNotBlank()
+    }
+
+    fun saveCustomer(showPrintAfterSave: Boolean = false) {
+        if (!validateForm()) {
+            Toast.makeText(context, "Please fill all required fields", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (isLoading) return // Prevent multiple saves
+
+        isLoading = true
+        val newCustomer = Customer(
+            id = "",
+            shopOwnerId = "",
+            invoiceNumber = currentInvoiceNumber ?: "",
+            date = date,
+            customerName = customerName,
+            contactNumber = contactNumber,
+            phoneModel = phoneModel,
+            problem = problem,
+            deliveryDate = deliveryDate,
+            totalAmount = totalAmount,
+            advanced = advanced,
+            securityType = securityType,
+            phonePassword = phonePassword,
+            pattern = pattern,
+            battery = battery,
+            sim = sim,
+            memory = memory,
+            simTray = simTray,
+            backCover = backCover,
+            deadPermission = deadPermission,
+            status = "Pending",
+        )
+
+        viewModel.addCustomer(
+            newCustomer,
+            context = context,
+            simSlotIndex = storeViewModel.selectedSimSlot,
+            autoSmsEnabled = storeViewModel.autoSmsEnabled,
+            onSuccess = { savedCustomer ->
+                isLoading = false
+                Toast.makeText(context, "Customer saved!", Toast.LENGTH_SHORT).show()
+                currentCustomer = savedCustomer
+                isSaved = true
+                if (showPrintAfterSave) {
+                    showPrintSheet = true
+                }
+                clearForm()
+            },
+            onError = {
+                isLoading = false
+                Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+            }
+        )
     }
 
     val smsPermissionLauncher = rememberLauncherForActivityResult(
@@ -217,51 +281,10 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
 
             SaveCustomerButton(
                 isLoading = isLoading,
-                onClick = {
-                    isLoading = true
-                    val newCustomer = Customer(
-                        id = "",
-                        shopOwnerId = "",
-                        invoiceNumber = currentInvoiceNumber ?: "",
-                        date = date,
-                        customerName = customerName,
-                        contactNumber = contactNumber,
-                        phoneModel = phoneModel,
-                        problem = problem,
-                        deliveryDate = deliveryDate,
-                        totalAmount = totalAmount,
-                        advanced = advanced,
-                        securityType = securityType,
-                        phonePassword = phonePassword,
-                        pattern = pattern,
-                        battery = battery,
-                        sim = sim,
-                        memory = memory,
-                        simTray = simTray,
-                        backCover = backCover,
-                        deadPermission = deadPermission,
-                        status = "Pending",
-                    )
-
-                    viewModel.addCustomer(
-                        newCustomer,
-                        context = context,
-                        simSlotIndex = storeViewModel.selectedSimSlot,
-                        autoSmsEnabled = storeViewModel.autoSmsEnabled,
-                        onSuccess = { savedCustomer ->
-                            isLoading = false
-                            Toast.makeText(context, "Customer saved!", Toast.LENGTH_SHORT).show()
-                            currentCustomer = savedCustomer
-                            showPrintSheet = true
-                            clearForm()
-                        },
-                        onError = {
-                            isLoading = false
-                            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
-                        }
-                    )
-                },
-                enabled = !isLoading
+                onSaveClick = { saveCustomer(false) },
+                onSaveAndPrintClick = { saveCustomer(true) },
+                onPreviewClick = { showPrintSheet = true },
+                isSaved = isSaved
             )
 
             Spacer(Modifier.height(40.dp))
@@ -271,7 +294,6 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
             InvoicePrintBottomSheet(
                 customer = currentCustomer!!.copy(
                     invoiceNumber = currentCustomer!!.invoiceNumber.ifEmpty {
-                        // Fallback if somehow empty
                         viewModel.currentInvoiceNumber.value ?: "INV-000000"
                     }
                 ),
