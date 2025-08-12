@@ -34,16 +34,15 @@ fun ReminderTimePicker(
     modifier: Modifier = Modifier,
     context: Context = LocalContext.current
 ) {
-    val storeInfo = storeViewModel.storeInfo
-    val hour = storeInfo.reminderHour ?: 9
-    val minute = storeInfo.reminderMinute ?: 0
-    var selectedHour by remember { mutableStateOf(hour) }
-    var selectedMinute by remember { mutableStateOf(minute) }
-    var isReminderEnabled by remember { mutableStateOf(true) }
+    val prefs = context.getSharedPreferences("reminder_prefs", Context.MODE_PRIVATE)
+    var selectedHour by remember { mutableStateOf(prefs.getInt("hour", 9)) }
+    var selectedMinute by remember { mutableStateOf(prefs.getInt("minute", 0)) }
+    var isReminderEnabled by remember { mutableStateOf(prefs.contains("hour")) }
 
     LaunchedEffect(Unit) {
-        WorkScheduler.cancelReminder(context) // Avoid duplicates
-        WorkScheduler.scheduleDailyReminder(context, hour, minute)
+        if (isReminderEnabled) {
+            WorkScheduler.scheduleDailyReminder(context, selectedHour, selectedMinute)
+        }
     }
 
     Card(
@@ -72,6 +71,7 @@ fun ReminderTimePicker(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
+
                 Button(
                     onClick = {
                         val timePickerDialog = TimePickerDialog(
@@ -79,12 +79,7 @@ fun ReminderTimePicker(
                             { _, pickedHour, pickedMinute ->
                                 selectedHour = pickedHour
                                 selectedMinute = pickedMinute
-
-                                WorkScheduler.cancelReminder(context)
-                                WorkScheduler.scheduleDailyReminder(context, pickedHour, pickedMinute)
-
-                                storeViewModel.updateReminderTime(pickedHour, pickedMinute)
-
+                                storeViewModel.updateReminderTime(context, pickedHour, pickedMinute)
                                 isReminderEnabled = true
                                 Toast.makeText(
                                     context,
@@ -105,9 +100,8 @@ fun ReminderTimePicker(
 
                 Button(
                     onClick = {
-                        WorkScheduler.cancelReminder(context)
+                        storeViewModel.cancelReminderTime(context)
                         isReminderEnabled = false
-                        storeViewModel.updateReminderTime(null, null)
                         Toast.makeText(context, "Reminder cancelled", Toast.LENGTH_SHORT).show()
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer),

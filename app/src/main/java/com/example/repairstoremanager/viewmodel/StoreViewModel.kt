@@ -15,6 +15,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.repairstoremanager.data.model.StoreInfo
 import com.example.repairstoremanager.data.repository.StoreRepository
+import com.example.repairstoremanager.worker.WorkScheduler
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -93,9 +94,18 @@ class StoreViewModel : ViewModel() {
             }
         }
     }
-    fun updateReminderTime(hour: Int?, minute: Int?) {
-        storeInfo = storeInfo.copy(reminderHour = hour, reminderMinute = minute)
-        updateStoreInfo() // reuses existing save logic
+    fun updateReminderTime(context: Context, hour: Int, minute: Int) {
+        val prefs = context.getSharedPreferences("reminder_prefs", Context.MODE_PRIVATE)
+        prefs.edit().putInt("hour", hour).putInt("minute", minute).apply()
+
+        WorkScheduler.scheduleDailyReminder(context, hour, minute)
+        WorkScheduler.triggerWorkerImmediately(context)
+    }
+
+    fun cancelReminderTime(context: Context) {
+        val prefs = context.getSharedPreferences("reminder_prefs", Context.MODE_PRIVATE)
+        prefs.edit().remove("hour").remove("minute").apply()
+        WorkScheduler.cancelReminder(context)
     }
 
     fun logout(onLogoutComplete: () -> Unit) {

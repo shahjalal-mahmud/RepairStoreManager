@@ -1,6 +1,7 @@
 package com.example.repairstoremanager
 
 import android.Manifest
+import android.app.AlarmManager
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -31,16 +32,19 @@ class MainActivity : ComponentActivity() {
             ).show()
         }
 
-    private val requestBluetoothPermissionsLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        val allGranted = permissions.all { it.value }
-        if (allGranted) {
-            Toast.makeText(this, "Bluetooth permissions granted", Toast.LENGTH_SHORT).show()
-        } else {
-            Toast.makeText(this, "Bluetooth permissions denied - some features may not work", Toast.LENGTH_LONG).show()
+    private val requestBluetoothPermissionsLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            val allGranted = permissions.all { it.value }
+            if (allGranted) {
+                Toast.makeText(this, "Bluetooth permissions granted", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(
+                    this,
+                    "Bluetooth permissions denied - some features may not work",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
         }
-    }
 
     private fun checkBluetoothPermissions() {
         val requiredPermissions = mutableListOf<String>().apply {
@@ -48,7 +52,6 @@ class MainActivity : ComponentActivity() {
                 add(Manifest.permission.BLUETOOTH_CONNECT)
                 add(Manifest.permission.BLUETOOTH_SCAN)
             } else {
-                // For Android 10 and 11, we need location permissions for Bluetooth
                 add(Manifest.permission.ACCESS_FINE_LOCATION)
                 add(Manifest.permission.ACCESS_COARSE_LOCATION)
             }
@@ -64,10 +67,17 @@ class MainActivity : ComponentActivity() {
     }
 
     @RequiresApi(Build.VERSION_CODES.S)
+    private fun checkExactAlarmPermission() {
+        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
+        if (!alarmManager.canScheduleExactAlarms()) {
+            Toast.makeText(this, "Grant exact alarm permission in settings", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.S)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Check and request all necessary permissions
         if (!SmsHelper.hasAllSmsPermissions(this)) {
             requestSmsPermissionsLauncher.launch(
                 arrayOf(
@@ -78,8 +88,11 @@ class MainActivity : ComponentActivity() {
             )
         }
 
-        // Check Bluetooth permissions
         checkBluetoothPermissions()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            checkExactAlarmPermission()
+        }
 
         WorkScheduler.scheduleDailyReminder(applicationContext, hour = 9, minute = 0)
 
