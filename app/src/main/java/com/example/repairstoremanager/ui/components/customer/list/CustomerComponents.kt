@@ -39,7 +39,7 @@ import com.example.repairstoremanager.ui.components.customer.common.AccessoriesB
 import com.example.repairstoremanager.ui.components.customer.common.AccessoryCheckboxes
 import com.example.repairstoremanager.ui.components.customer.invoice.InvoicePrintBottomSheet
 import com.example.repairstoremanager.ui.components.customer.add.PatternLockCanvas
-import com.example.repairstoremanager.util.SmsHelper
+import com.example.repairstoremanager.util.MessageHelper
 import com.example.repairstoremanager.viewmodel.CustomerViewModel
 import com.example.repairstoremanager.viewmodel.StoreViewModel
 
@@ -115,10 +115,6 @@ fun CustomerCard(customer: Customer, viewModel: CustomerViewModel) {
                         viewModel.updateCustomerStatus(
                             customerId = customer.id,
                             newStatus = newStatus,
-                            customer = customer,
-                            context = context,
-                            simSlotIndex = storeViewModel.selectedSimSlot,
-                            autoSmsEnabled = storeViewModel.autoSmsEnabled
                         )
                     },
                     statusColor = statusColor
@@ -241,22 +237,33 @@ fun CustomerCard(customer: Customer, viewModel: CustomerViewModel) {
                         onClick = { isEditing = true },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("✏️ Edit")
+                        Text("Edit")
                     }
+                    // SMS Button
                     TextButton(
                         onClick = {
                             val message = viewModel.getStatusMessage(customer)
-                            SmsHelper.sendSmsViaIntent(context, customer.contactNumber, message)
+                            MessageHelper.sendSmsViaIntent(context, customer.contactNumber, message)
                         },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("📱 SMS")
+                        Text("SMS")
+                    }
+                    // WhatsApp Button
+                    TextButton(
+                        onClick = {
+                            val message = viewModel.getStatusMessage(customer)
+                            MessageHelper.sendWhatsAppMessage(context, customer.contactNumber, message)
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("WhatsApp")
                     }
                     TextButton(
                         onClick = { showPrintSheet = true },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("🖨 Print")
+                        Text("Print")
                     }
                 }
             }

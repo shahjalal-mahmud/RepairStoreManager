@@ -27,10 +27,8 @@ class CustomerViewModel : ViewModel() {
     val hasError: StateFlow<Boolean> = _hasError
 
     private val _phoneModelHistory = MutableStateFlow<Set<String>>(emptySet())
-    val phoneModelHistory: StateFlow<Set<String>> = _phoneModelHistory
 
     private val _problemHistory = MutableStateFlow<Set<String>>(emptySet())
-    val problemHistory: StateFlow<Set<String>> = _problemHistory
 
     private val _userPhoneModels = MutableStateFlow<Set<String>>(emptySet())
     val userPhoneModels: StateFlow<Set<String>> = _userPhoneModels
@@ -60,9 +58,6 @@ class CustomerViewModel : ViewModel() {
 
     fun addCustomer(
         customer: Customer,
-        context: Context,
-        simSlotIndex: Int = 0,
-        autoSmsEnabled: Boolean = true,
         onSuccess: (Customer) -> Unit,  // Changed to accept Customer parameter
         onError: (String) -> Unit
     ) {
@@ -95,10 +90,6 @@ class CustomerViewModel : ViewModel() {
     fun updateCustomerStatus(
         customerId: String,
         newStatus: String,
-        customer: Customer,
-        context: Context,
-        simSlotIndex: Int = 0,
-        autoSmsEnabled: Boolean = true
     ) {
         viewModelScope.launch {
             repository.updateStatus(customerId, newStatus)
@@ -125,11 +116,11 @@ class CustomerViewModel : ViewModel() {
     }
 
     fun getStatusMessage(customer: Customer): String {
-        val note = "\n\n📌 নোট: অনুগ্রহ করে ২ মাসের মধ্যে আপনার ডিভাইস সংগ্রহ করুন। অন্যথায়, আমরা ডিভাইসের কোনো গ্যারান্টি দিতে পারব না."
+        val note = "\n\nনোট: অনুগ্রহ করে ৩০ দিনের মধ্যে আপনার ডিভাইস সংগ্রহ করুন। অন্যথায়, আমরা ডিভাইসের কোনো গ্যারান্টি দিতে পারব না."
 
         return when (customer.status) {
             "Repaired" -> "প্রিয় ${customer.customerName}, আপনার ডিভাইসটি মেরামত করা হয়েছে। অনুগ্রহ করে ডিভাইসটি সংগ্রহ করুন।$note"
-            "Delivered" -> "প্রিয় ${customer.customerName}, আপনার ডিভাইসটি ডেলিভারি দেওয়া হয়েছে। আমাদের সেবার জন্য ধন্যবাদ!"
+            "Delivered" -> "প্রিয় ${customer.customerName}, আপনার ডিভাইসটি ডেলিভারি দেওয়া হয়েছে। ধন্যবাদ!"
             "Cancelled" -> "প্রিয় ${customer.customerName}, আপনার রিপেয়ার অনুরোধ বাতিল করা হয়েছে। ভবিষ্যতে আবার যোগাযোগ করুন।"
             "Pending" -> "প্রিয় ${customer.customerName}, আপনার ডিভাইসটি রিপেয়ারের জন্য গ্রহণ করা হয়েছে। বর্তমান অবস্থা: Pending।$note"
             else -> "প্রিয় ${customer.customerName}, আপনার ডিভাইসের স্ট্যাটাস এখন: ${customer.status}।$note"

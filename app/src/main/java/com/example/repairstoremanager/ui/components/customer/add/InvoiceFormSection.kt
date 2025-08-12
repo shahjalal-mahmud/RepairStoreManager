@@ -101,17 +101,6 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
         )
     }
 
-    // Combine with historical data
-    val phoneModelSuggestions by viewModel.phoneModelHistory.collectAsState()
-    val allPhoneModelSuggestions = remember(phoneModelSuggestions) {
-        phoneModelSuggestions + commonPhoneModels
-    }
-
-    val problemSuggestions by viewModel.problemHistory.collectAsState()
-    val allProblemSuggestions = remember(problemSuggestions) {
-        problemSuggestions + commonProblems
-    }
-
     LaunchedEffect(Unit) {
         viewModel.fetchNextInvoiceNumber()
     }
@@ -183,9 +172,6 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
 
         viewModel.addCustomer(
             newCustomer,
-            context = context,
-            simSlotIndex = storeViewModel.selectedSimSlot,
-            autoSmsEnabled = storeViewModel.autoSmsEnabled,
             onSuccess = { savedCustomer ->
                 isLoading = false
                 Toast.makeText(context, "Customer saved!", Toast.LENGTH_SHORT).show()

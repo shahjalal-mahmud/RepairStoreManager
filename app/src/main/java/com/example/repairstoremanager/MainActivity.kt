@@ -15,22 +15,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.repairstoremanager.ui.navigation.Navigation
 import com.example.repairstoremanager.ui.theme.RepairStoreManagerTheme
-import com.example.repairstoremanager.util.SmsHelper
 import com.example.repairstoremanager.viewmodel.StoreViewModel
 import com.example.repairstoremanager.worker.WorkScheduler
 
 class MainActivity : ComponentActivity() {
-
-    private val requestSmsPermissionsLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
-            val granted = permissions[Manifest.permission.SEND_SMS] == true &&
-                    permissions[Manifest.permission.READ_PHONE_STATE] == true
-            Toast.makeText(
-                this,
-                if (granted) "SMS permissions granted!" else "SMS permissions denied.",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
 
     private val requestBluetoothPermissionsLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
@@ -77,16 +65,6 @@ class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.S)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        if (!SmsHelper.hasAllSmsPermissions(this)) {
-            requestSmsPermissionsLauncher.launch(
-                arrayOf(
-                    Manifest.permission.SEND_SMS,
-                    Manifest.permission.READ_PHONE_STATE,
-                    Manifest.permission.READ_PHONE_NUMBERS
-                )
-            )
-        }
 
         checkBluetoothPermissions()
 
