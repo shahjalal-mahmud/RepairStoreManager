@@ -3,7 +3,9 @@ package com.example.repairstoremanager.util
 import android.Manifest
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.telephony.SmsManager
 import android.telephony.SubscriptionManager
@@ -28,6 +30,7 @@ object SmsHelper {
         )
     }
 
+    // For automatic SMS sending (if you still want to keep this)
     fun sendSms(context: Context, phoneNumber: String, message: String, simSlotIndex: Int = 0) {
         if (!hasAllSmsPermissions(context)) {
             Toast.makeText(context, "SMS permissions missing", Toast.LENGTH_SHORT).show()
@@ -48,6 +51,16 @@ object SmsHelper {
         } catch (e: Exception) {
             Toast.makeText(context, "SMS failed: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
         }
+    }
+
+    // New method for sending SMS via intent
+    fun sendSmsViaIntent(context: Context, phoneNumber: String, message: String) {
+        val formattedNumber = formatPhoneNumber(phoneNumber)
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            data = Uri.parse("smsto:$formattedNumber")
+            putExtra("sms_body", message)
+        }
+        context.startActivity(intent)
     }
 
     private fun formatPhoneNumber(number: String): String {

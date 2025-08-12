@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.repairstoremanager.data.model.Customer
 import com.example.repairstoremanager.data.repository.CustomerRepository
-import com.example.repairstoremanager.util.SmsHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -87,12 +86,6 @@ class CustomerViewModel : ViewModel() {
                     id = _customers.value.lastOrNull()?.id ?: "",
                     shopOwnerId = repository.getUserId() ?: ""
                 ))
-
-                if (autoSmsEnabled) {
-                    val message = "প্রিয় ${customer.customerName}, আপনার ডিভাইসটি মেরামতের জন্য গ্রহণ করা হয়েছে। " +
-                            "প্রত্যাশিত ডেলিভারি তারিখ: ${customer.deliveryDate}। স্ট্যাটাস: Pending।\n\n📌 নোট: অনুগ্রহ করে ২ মাসের মধ্যে আপনার ডিভাইস সংগ্রহ করুন। অন্যথায়, আমরা ডিভাইসের কোনো গ্যারান্টি দিতে পারব না।"
-                    SmsHelper.sendSms(context, customer.contactNumber, message, simSlotIndex)
-                }
             } else {
                 onError(result.exceptionOrNull()?.message ?: "Unknown error")
             }
@@ -110,20 +103,6 @@ class CustomerViewModel : ViewModel() {
         viewModelScope.launch {
             repository.updateStatus(customerId, newStatus)
             fetchCustomers()
-
-            if (autoSmsEnabled) {
-                val note = "\n\n📌 নোট: অনুগ্রহ করে ২ মাসের মধ্যে আপনার ডিভাইস সংগ্রহ করুন। অন্যথায়, আমরা ডিভাইসের কোনো গ্যারান্টি দিতে পারব না।"
-
-                val message = when (newStatus) {
-                    "Repaired" -> "প্রিয় ${customer.customerName}, আপনার ডিভাইসটি মেরামত করা হয়েছে। অনুগ্রহ করে ডিভাইসটি সংগ্রহ করুন।$note"
-                    "Delivered" -> "প্রিয় ${customer.customerName}, আপনার ডিভাইসটি ডেলিভারি দেওয়া হয়েছে। আমাদের সেবার জন্য ধন্যবাদ!"
-                    "Cancelled" -> "প্রিয় ${customer.customerName}, আপনার রিপেয়ার অনুরোধ বাতিল করা হয়েছে। ভবিষ্যতে আবার যোগাযোগ করুন।"
-                    "Pending" -> "প্রিয় ${customer.customerName}, আপনার ডিভাইসটি রিপেয়ারের জন্য গ্রহণ করা হয়েছে। বর্তমান অবস্থা: Pending।$note"
-                    else -> "প্রিয় ${customer.customerName}, আপনার ডিভাইসের স্ট্যাটাস এখন: $newStatus।$note"
-                }
-
-                SmsHelper.sendSms(context, customer.contactNumber, message, simSlotIndex)
-            }
         }
     }
     fun updateCustomer(
@@ -142,6 +121,18 @@ class CustomerViewModel : ViewModel() {
                 Toast.makeText(context, "Failed to update customer", Toast.LENGTH_SHORT).show()
                 onError(result.exceptionOrNull()?.message ?: "Unknown error")
             }
+        }
+    }
+
+    fun getStatusMessage(customer: Customer): String {
+        val note = "\n\n📌 নোট: অনুগ্রহ করে ২ মাসের মধ্যে আপনার ডিভাইস সংগ্রহ করুন। অন্যথায়, আমরা ডিভাইসের কোনো গ্যারান্টি দিতে পারব না."
+
+        return when (customer.status) {
+            "Repaired" -> "প্রিয় ${customer.customerName}, আপনার ডিভাইসটি মেরামত করা হয়েছে। অনুগ্রহ করে ডিভাইসটি সংগ্রহ করুন।$note"
+            "Delivered" -> "প্রিয় ${customer.customerName}, আপনার ডিভাইসটি ডেলিভারি দেওয়া হয়েছে। আমাদের সেবার জন্য ধন্যবাদ!"
+            "Cancelled" -> "প্রিয় ${customer.customerName}, আপনার রিপেয়ার অনুরোধ বাতিল করা হয়েছে। ভবিষ্যতে আবার যোগাযোগ করুন।"
+            "Pending" -> "প্রিয় ${customer.customerName}, আপনার ডিভাইসটি রিপেয়ারের জন্য গ্রহণ করা হয়েছে। বর্তমান অবস্থা: Pending।$note"
+            else -> "প্রিয় ${customer.customerName}, আপনার ডিভাইসের স্ট্যাটাস এখন: ${customer.status}।$note"
         }
     }
     private val _currentInvoiceNumber = MutableStateFlow<String?>(null)

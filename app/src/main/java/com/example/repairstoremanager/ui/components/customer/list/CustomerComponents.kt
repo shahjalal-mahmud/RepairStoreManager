@@ -39,6 +39,7 @@ import com.example.repairstoremanager.ui.components.customer.common.AccessoriesB
 import com.example.repairstoremanager.ui.components.customer.common.AccessoryCheckboxes
 import com.example.repairstoremanager.ui.components.customer.invoice.InvoicePrintBottomSheet
 import com.example.repairstoremanager.ui.components.customer.add.PatternLockCanvas
+import com.example.repairstoremanager.util.SmsHelper
 import com.example.repairstoremanager.viewmodel.CustomerViewModel
 import com.example.repairstoremanager.viewmodel.StoreViewModel
 
@@ -236,10 +237,25 @@ fun CustomerCard(customer: Customer, viewModel: CustomerViewModel) {
                         Text("❌ Cancel")
                     }
                 } else {
-                    TextButton(onClick = { isEditing = true }, modifier = Modifier.weight(1f)) {
+                    TextButton(
+                        onClick = { isEditing = true },
+                        modifier = Modifier.weight(1f)
+                    ) {
                         Text("✏️ Edit")
                     }
-                    TextButton(onClick = { showPrintSheet = true }, modifier = Modifier.weight(1f)) {
+                    TextButton(
+                        onClick = {
+                            val message = viewModel.getStatusMessage(customer)
+                            SmsHelper.sendSmsViaIntent(context, customer.contactNumber, message)
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("📱 SMS")
+                    }
+                    TextButton(
+                        onClick = { showPrintSheet = true },
+                        modifier = Modifier.weight(1f)
+                    ) {
                         Text("🖨 Print")
                     }
                 }
