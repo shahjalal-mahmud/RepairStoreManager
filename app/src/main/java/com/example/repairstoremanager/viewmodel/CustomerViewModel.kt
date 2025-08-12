@@ -27,12 +27,29 @@ class CustomerViewModel : ViewModel() {
     private val _hasError = MutableStateFlow(false)
     val hasError: StateFlow<Boolean> = _hasError
 
+    private val _phoneModelHistory = MutableStateFlow<Set<String>>(emptySet())
+    val phoneModelHistory: StateFlow<Set<String>> = _phoneModelHistory
+
+    private val _problemHistory = MutableStateFlow<Set<String>>(emptySet())
+    val problemHistory: StateFlow<Set<String>> = _problemHistory
+
+    private val _userPhoneModels = MutableStateFlow<Set<String>>(emptySet())
+    val userPhoneModels: StateFlow<Set<String>> = _userPhoneModels
+
+    private val _userProblems = MutableStateFlow<Set<String>>(emptySet())
+    val userProblems: StateFlow<Set<String>> = _userProblems
+
     fun fetchCustomers() {
         viewModelScope.launch {
             _isLoading.value = true
             _hasError.value = false
             try {
-                _customers.value = repository.getAllCustomers()
+                val customers = repository.getAllCustomers()
+                _customers.value = customers
+
+                // Populate history sets
+                _phoneModelHistory.value = customers.map { it.phoneModel }.toSet()
+                _problemHistory.value = customers.map { it.problem }.toSet()
             } catch (e: Exception) {
                 _hasError.value = true
                 _customers.value = emptyList()
@@ -148,6 +165,13 @@ class CustomerViewModel : ViewModel() {
         val cal = Calendar.getInstance()
         cal.add(Calendar.DATE, 1)
         return SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(cal.time)
+    }
+    fun addUserPhoneModel(model: String) {
+        _userPhoneModels.value = _userPhoneModels.value + model
+    }
+
+    fun addUserProblem(problem: String) {
+        _userProblems.value = _userProblems.value + problem
     }
 
     val totalCustomersCount: Int

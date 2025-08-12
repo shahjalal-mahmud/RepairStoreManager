@@ -75,8 +75,42 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
     var currentCustomer by remember { mutableStateOf<Customer?>(null) }
     var showPrintSheet by remember { mutableStateOf(false) }
     var isSaved by remember { mutableStateOf(false) }
+    val userPhoneModels by viewModel.userPhoneModels.collectAsState()
+    val userProblems by viewModel.userProblems.collectAsState()
 
     val currentInvoiceNumber by viewModel.currentInvoiceNumber.collectAsState()
+
+    // Common phone models
+    val commonPhoneModels = remember {
+        setOf(
+            "Samsung", "iPhone", "Xiaomi", "Itel", "Symphony",
+            "Walton", "Vivo", "Oppo", "Tecno", "Realme",
+            "OnePlus", "Nokia", "Huawei", "Motorola", "LG"
+        )
+    }
+
+    // Common problems
+    val commonProblems = remember {
+        setOf(
+            "IC", "Network", "Display",
+            "Charging Port(C)", "Charging Port(Lightning)",
+            "Charging Port(B)", "Body Frame",
+            "Keypad Switch", "Slide Switch", "Flashing",
+            "FRP Unlocking", "Screen Unlocking", "Battery",
+            "Water Damage", "Speaker Issue", "Microphone Issue"
+        )
+    }
+
+    // Combine with historical data
+    val phoneModelSuggestions by viewModel.phoneModelHistory.collectAsState()
+    val allPhoneModelSuggestions = remember(phoneModelSuggestions) {
+        phoneModelSuggestions + commonPhoneModels
+    }
+
+    val problemSuggestions by viewModel.problemHistory.collectAsState()
+    val allProblemSuggestions = remember(problemSuggestions) {
+        problemSuggestions + commonProblems
+    }
 
     LaunchedEffect(Unit) {
         viewModel.fetchNextInvoiceNumber()
@@ -119,19 +153,7 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
         isSaved = false
     }
 
-    fun validateForm(): Boolean {
-        return customerName.isNotBlank() &&
-                contactNumber.isNotBlank() &&
-                phoneModel.isNotBlank() &&
-                problem.isNotBlank()
-    }
-
     fun saveCustomer(showPrintAfterSave: Boolean = false) {
-        if (!validateForm()) {
-            Toast.makeText(context, "Please fill all required fields", Toast.LENGTH_SHORT).show()
-            return
-        }
-
         if (isLoading) return // Prevent multiple saves
 
         isLoading = true
@@ -225,7 +247,13 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
                 deliveryDate = deliveryDate,
                 onPhoneModelChange = { phoneModel = it },
                 onProblemChange = { problem = it },
-                onDeliveryDateClick = { datePickerDialog.show() }
+                onAddPhoneModel = { viewModel.addUserPhoneModel(it) },
+                onAddProblem = { viewModel.addUserProblem(it) },
+                onDeliveryDateClick = { datePickerDialog.show() },
+                commonPhoneModels = commonPhoneModels,
+                userPhoneModels = userPhoneModels,
+                commonProblems = commonProblems,
+                userProblems = userProblems
             )
 
             Spacer(Modifier.height(20.dp))

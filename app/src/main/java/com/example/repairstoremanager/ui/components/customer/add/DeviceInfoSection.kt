@@ -23,13 +23,39 @@ fun DeviceInfoSection(
     deliveryDate: String,
     onPhoneModelChange: (String) -> Unit,
     onProblemChange: (String) -> Unit,
+    onAddPhoneModel: (String) -> Unit,
+    onAddProblem: (String) -> Unit,
     onDeliveryDateClick: () -> Unit,
+    commonPhoneModels: Set<String>,
+    userPhoneModels: Set<String>,
+    commonProblems: Set<String>,
+    userProblems: Set<String>,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
         SectionTitle("📱 Device Info")
-        CustomTextField("Phone Model", phoneModel, onValueChange = onPhoneModelChange)
-        CustomTextField("Problem Description", problem, onValueChange = onProblemChange)
+
+        // Phone model with enhanced suggestions
+        SuggestionTextField(
+            value = phoneModel,
+            onValueChange = onPhoneModelChange,
+            label = "Phone Model",
+            commonItems = commonPhoneModels,
+            userItems = userPhoneModels,
+            onAddUserItem = onAddPhoneModel,
+            modifier = Modifier.padding(vertical = 4.dp)
+        )
+
+        // Problem description with enhanced suggestions
+        SuggestionTextField(
+            value = problem,
+            onValueChange = onProblemChange,
+            label = "Problem Description",
+            commonItems = commonProblems,
+            userItems = userProblems,
+            onAddUserItem = onAddProblem,
+            modifier = Modifier.padding(vertical = 4.dp)
+        )
 
         OutlinedTextField(
             value = deliveryDate,
