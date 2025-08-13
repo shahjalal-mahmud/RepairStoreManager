@@ -35,6 +35,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.repairstoremanager.data.model.Customer
 import com.example.repairstoremanager.ui.components.customer.common.AccessoriesSection
 import com.example.repairstoremanager.ui.components.customer.invoice.InvoicePrintBottomSheet
+import com.example.repairstoremanager.ui.components.customer.media.CaptureMediaSection
 import com.example.repairstoremanager.viewmodel.CustomerViewModel
 import com.example.repairstoremanager.viewmodel.StoreViewModel
 import java.text.SimpleDateFormat
@@ -273,6 +274,9 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
                     patternResetKey++
                 }
             )
+            Spacer(Modifier.height(20.dp))
+
+            CaptureMediaSection(customerId = currentInvoiceNumber ?: "temp")
 
             Spacer(Modifier.height(20.dp))
 

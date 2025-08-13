@@ -1,17 +1,26 @@
 package com.example.repairstoremanager.ui.components.customer.list
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -19,26 +28,35 @@ import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.repairstoremanager.data.model.Customer
 import com.example.repairstoremanager.ui.components.customer.common.AccessoriesBadges
 import com.example.repairstoremanager.ui.components.customer.common.AccessoryCheckboxes
 import com.example.repairstoremanager.ui.components.customer.invoice.InvoicePrintBottomSheet
 import com.example.repairstoremanager.ui.components.customer.add.PatternLockCanvas
+import com.example.repairstoremanager.ui.components.customer.media.CustomerMediaViewer
+import com.example.repairstoremanager.ui.components.customer.media.VideoThumbnail
+import com.example.repairstoremanager.util.MediaStorageHelper
 import com.example.repairstoremanager.util.MessageHelper
 import com.example.repairstoremanager.viewmodel.CustomerViewModel
 import com.example.repairstoremanager.viewmodel.StoreViewModel
@@ -72,6 +90,18 @@ fun CustomerCard(customer: Customer, viewModel: CustomerViewModel) {
     val statusColor = statusToColor(selectedStatus)
 
     var showPrintSheet by remember { mutableStateOf(false) }
+    var showMedia by remember { mutableStateOf(false) }
+    val mediaList by remember(customer.invoiceNumber) {
+        derivedStateOf {
+            try {
+                MediaStorageHelper.getMediaForCustomer(context, customer.invoiceNumber)
+            } catch (e: Exception) {
+                Log.e("CustomerCard", "Error loading media: ${e.message}")
+                emptyList()
+            }
+        }
+    }
+
 
     Card(
         modifier = Modifier
@@ -189,12 +219,76 @@ fun CustomerCard(customer: Customer, viewModel: CustomerViewModel) {
                     )
                 }
             }
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 8.dp),
+                thickness = 1.dp,
+                color = DividerDefaults.color
+            )
+            if (mediaList.isNotEmpty()) {
+                val firstMedia = mediaList.first()
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(150.dp) // Slightly taller for better visibility
+                        .clip(RoundedCornerShape(8.dp)) // Rounded corners
+                        .clickable { showMedia = true }
+                        .background(Color.LightGray.copy(alpha = 0.2f)) // Light background
+                ) {
+                    if (firstMedia.toString().contains(".mp4")) {
+                        // Video thumbnail with play button
+                        VideoThumbnail(
+                            uri = firstMedia,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        Icon(
+                            Icons.Default.PlayArrow,
+                            contentDescription = "Play video",
+                            tint = Color.White,
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .size(48.dp)
+                                .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                        )
+                    } else {
+                        // Image display
+                        AsyncImage(
+                            model = firstMedia,
+                            contentDescription = "Customer device media",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+
+                    // Badge showing count of additional media
+                    if (mediaList.size > 1) {
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(8.dp)
+                                .background(
+                                    Color.Black.copy(alpha = 0.7f),
+                                    RoundedCornerShape(50)
+                                )
+                        ) {
+                            Text(
+                                text = "+${mediaList.size - 1}",
+                                color = Color.White,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+            }
 
             HorizontalDivider(
                 modifier = Modifier.padding(vertical = 8.dp),
                 thickness = 1.dp,
                 color = DividerDefaults.color
             )
+
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                 if (isEditing) {
@@ -266,6 +360,17 @@ fun CustomerCard(customer: Customer, viewModel: CustomerViewModel) {
                         Text("Print")
                     }
                 }
+            }
+            TextButton(onClick = { showMedia = true }) {
+                Text("📷 Media")
+            }
+
+            if (showMedia) {
+                CustomerMediaViewer(
+                    context = context,
+                    customerId = customer.invoiceNumber,
+                    onClose = { showMedia = false }
+                )
             }
 
             if (showPrintSheet) {
