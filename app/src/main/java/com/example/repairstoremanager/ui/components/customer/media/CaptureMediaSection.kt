@@ -2,30 +2,44 @@ package com.example.repairstoremanager.ui.components.customer.media
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -36,21 +50,45 @@ import com.example.repairstoremanager.util.MediaStorageHelper
 @Composable
 fun CaptureMediaSection(
     customerId: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    clearSignal: Int = 0,
+    onMediaCaptured: (List<Uri>, List<Uri>) -> Unit
 ) {
     val context = LocalContext.current
     val images = remember { mutableStateListOf<Uri>() }
     val videos = remember { mutableStateListOf<Uri>() }
+    var showMediaPickerDialog by remember { mutableStateOf(false) }
 
-    // Multiple photo capture
-    val takePictureLauncher = rememberLauncherForActivityResult(
+    // Notify parent when media changes
+    LaunchedEffect(images, videos) {
+        onMediaCaptured(images.toList(), videos.toList())
+    }
+
+    // Clear when clearSignal changes
+    LaunchedEffect(clearSignal) {
+        images.clear()
+        videos.clear()
+        onMediaCaptured(emptyList(), emptyList())
+    }
+
+    // Multiple photo selection from gallery
+    val pickMultiplePhotosLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 10)
+    ) { uris ->
+        if (uris.isNotEmpty()) {
+            images.addAll(uris)
+        }
+    }
+
+    // Camera launcher for multiple photos
+    val takePhotoLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         if (success) {
-            Toast.makeText(context, "Photo saved", Toast.LENGTH_SHORT).show()
-        } else {
-            images.removeLastOrNull() // Remove if capture failed
-            Toast.makeText(context, "Photo capture failed", Toast.LENGTH_SHORT).show()
+            tempImageUri?.let { uri ->
+                images.add(uri)
+                tempImageUri = null
+            }
         }
     }
 
@@ -59,9 +97,12 @@ fun CaptureMediaSection(
         contract = ActivityResultContracts.CaptureVideo()
     ) { success ->
         if (success) {
-            Toast.makeText(context, "Video saved", Toast.LENGTH_SHORT).show()
+            tempVideoUri?.let { uri ->
+                videos.add(uri)
+                tempVideoUri = null
+            }
         } else {
-            videos.removeLastOrNull() // Remove if capture failed
+            tempVideoUri = null
             Toast.makeText(context, "Video capture failed", Toast.LENGTH_SHORT).show()
         }
     }
@@ -75,50 +116,65 @@ fun CaptureMediaSection(
         if (granted) {
             pendingAction?.invoke()
         } else {
-            Toast.makeText(context, "Camera permission required", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Permission required", Toast.LENGTH_SHORT).show()
         }
     }
 
-    fun checkPermissionAndTakePhoto() {
+    fun checkPermissionAndExecute(action: () -> Unit) {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) ==
             PackageManager.PERMISSION_GRANTED
         ) {
+            action()
+        } else {
+            pendingAction = action
+            permissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
+
+    fun showMediaPicker() {
+        showMediaPickerDialog = true
+    }
+
+    fun takeMultiplePhotosFromGallery() {
+        pickMultiplePhotosLauncher.launch(
+            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+        )
+    }
+
+    fun takePhotoWithCamera() {
+        checkPermissionAndExecute {
             val uri = MediaStorageHelper.createImageUri(context, customerId)
             if (uri != null) {
-                images.add(uri)
-                takePictureLauncher.launch(uri)
+                tempImageUri = uri
+                takePhotoLauncher.launch(uri)
             }
-        } else {
-            pendingAction = { checkPermissionAndTakePhoto() }
-            permissionLauncher.launch(Manifest.permission.CAMERA)
         }
     }
 
-    fun checkPermissionAndTakeVideo() {
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) ==
-            PackageManager.PERMISSION_GRANTED
-        ) {
+    fun takeVideo() {
+        if (videos.isNotEmpty()) {
+            Toast.makeText(context, "Only one video allowed", Toast.LENGTH_SHORT).show()
+            return
+        }
+        checkPermissionAndExecute {
             val uri = MediaStorageHelper.createVideoUri(context, customerId)
             if (uri != null) {
-                videos.add(uri)
+                tempVideoUri = uri
                 takeVideoLauncher.launch(uri)
             }
-        } else {
-            pendingAction = { checkPermissionAndTakeVideo() }
-            permissionLauncher.launch(Manifest.permission.CAMERA)
         }
     }
 
     Column(modifier = modifier.fillMaxWidth()) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(
-                onClick = { checkPermissionAndTakePhoto() },
+                onClick = { showMediaPicker() },
                 modifier = Modifier.weight(1f)
             ) {
-                Text("📷 Take Photo")
+                Text("📷 Add Photos")
             }
             Button(
-                onClick = { checkPermissionAndTakeVideo() },
+                onClick = { takeVideo() },
                 modifier = Modifier.weight(1f)
             ) {
                 Text("🎥 Take Video")
@@ -127,61 +183,74 @@ fun CaptureMediaSection(
 
         Spacer(Modifier.height(8.dp))
 
-        // Show captured images with cancel icons
+        // Show captured images & videos
         if (images.isNotEmpty() || videos.isNotEmpty()) {
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                items(images) { uri ->
-                    Box(modifier = Modifier.size(100.dp)) {
+                // Images
+                items(images, key = { it.toString() }) { uri ->
+                    Box(
+                        modifier = Modifier
+                            .size(70.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                    ) {
                         AsyncImage(
                             model = uri,
-                            contentDescription = null,
-                            modifier = Modifier.fillMaxSize()
+                            contentDescription = "Captured image",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
                         )
                         IconButton(
                             onClick = { images.remove(uri) },
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
-                                .size(24.dp)
+                                .size(20.dp)
                                 .background(Color.Red.copy(alpha = 0.7f), CircleShape)
                         ) {
                             Icon(
                                 Icons.Default.Close,
                                 contentDescription = "Remove image",
                                 tint = Color.White,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(12.dp)
                             )
                         }
                     }
                 }
 
-                items(videos) { uri ->
-                    Box(modifier = Modifier.size(100.dp)) {
-                        // Show video thumbnail
-                        VideoThumbnail(uri = uri)
+                // Videos
+                items(videos, key = { it.toString() }) { uri ->
+                    Box(
+                        modifier = Modifier
+                            .size(70.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                    ) {
+                        VideoThumbnail(
+                            uri = uri,
+                            modifier = Modifier.fillMaxSize()
+                        )
                         IconButton(
                             onClick = { videos.remove(uri) },
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
-                                .size(24.dp)
+                                .size(20.dp)
                                 .background(Color.Red.copy(alpha = 0.7f), CircleShape)
                         ) {
                             Icon(
                                 Icons.Default.Close,
                                 contentDescription = "Remove video",
                                 tint = Color.White,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(12.dp)
                             )
                         }
                         Icon(
                             Icons.Default.PlayArrow,
-                            contentDescription = "Play video",
+                            contentDescription = "Video",
                             tint = Color.White,
                             modifier = Modifier
                                 .align(Alignment.Center)
-                                .size(32.dp)
+                                .size(24.dp)
                                 .background(Color.Black.copy(alpha = 0.5f), CircleShape)
                         )
                     }
@@ -189,44 +258,44 @@ fun CaptureMediaSection(
             }
         }
     }
-}
 
-@Composable
-fun VideoThumbnail(
-    uri: Uri,
-    modifier: Modifier = Modifier
-) {
-    val context = LocalContext.current
-    val bitmap = remember(uri) {
-        val mediaMetadataRetriever = MediaMetadataRetriever()
-        try {
-            mediaMetadataRetriever.setDataSource(context, uri)
-            mediaMetadataRetriever.frameAtTime
-        } catch (e: Exception) {
-            null
-        } finally {
-            mediaMetadataRetriever.release()
-        }
-    }
-
-    if (bitmap != null) {
-        Image(
-            bitmap = bitmap.asImageBitmap(),
-            contentDescription = "Video thumbnail",
-            modifier = modifier,
-            contentScale = ContentScale.Crop
+    if (showMediaPickerDialog) {
+        AlertDialog(
+            onDismissRequest = { showMediaPickerDialog = false },
+            title = { Text("Add Photos") },
+            text = {
+                Column {
+                    Button(
+                        onClick = {
+                            showMediaPickerDialog = false
+                            takePhotoWithCamera()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Take Photo")
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Button(
+                        onClick = {
+                            showMediaPickerDialog = false
+                            takeMultiplePhotosFromGallery()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Choose from Gallery")
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showMediaPickerDialog = false }
+                ) {
+                    Text("Cancel")
+                }
+            }
         )
-    } else {
-        Box(
-            modifier = modifier.background(Color.DarkGray),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                Icons.Default.Videocam,
-                contentDescription = "Video",
-                tint = Color.White,
-                modifier = Modifier.size(48.dp)
-            )
-        }
     }
 }
+
+private var tempImageUri: Uri? = null
+private var tempVideoUri: Uri? = null

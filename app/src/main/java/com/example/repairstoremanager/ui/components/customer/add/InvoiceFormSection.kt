@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -24,6 +25,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -80,6 +82,9 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
     val userProblems by viewModel.userProblems.collectAsState()
 
     val currentInvoiceNumber by viewModel.currentInvoiceNumber.collectAsState()
+    val capturedImages = remember { mutableStateListOf<Uri>() }
+    val capturedVideos = remember { mutableStateListOf<Uri>() }
+    var clearMediaSignal by remember { mutableIntStateOf(0) }
 
     // Common phone models
     val commonPhoneModels = remember {
@@ -141,6 +146,9 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
         hasDrawnPattern = false
         patternResetKey++
         isSaved = false
+        capturedImages.clear()
+        capturedVideos.clear()
+        clearMediaSignal++
     }
 
     fun saveCustomer(showPrintAfterSave: Boolean = false) {
@@ -276,7 +284,16 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
             )
             Spacer(Modifier.height(20.dp))
 
-            CaptureMediaSection(customerId = currentInvoiceNumber ?: "temp")
+            CaptureMediaSection(
+                customerId = currentInvoiceNumber ?: "temp",
+                clearSignal = clearMediaSignal, // Pass the clear signal
+                onMediaCaptured = { images, videos ->
+                    capturedImages.clear()
+                    capturedImages.addAll(images)
+                    capturedVideos.clear()
+                    capturedVideos.addAll(videos)
+                }
+            )
 
             Spacer(Modifier.height(20.dp))
 
