@@ -1,87 +1,90 @@
 package com.example.repairstoremanager.ui.components.customer.media
 
 import android.content.Context
+import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import com.example.repairstoremanager.util.MediaStorageHelper
+
+private fun isVideoUri(context: Context, uri: Uri): Boolean {
+    val type = context.contentResolver.getType(uri) ?: return false
+    return type.startsWith("video/")
+}
 
 @Composable
 fun CustomerMediaViewer(
     context: Context,
     customerId: String,
+    initialIndex: Int = 0,
     onClose: () -> Unit
 ) {
-    val mediaList = remember { MediaStorageHelper.getMediaForCustomer(context, customerId) }
-    var currentIndex by remember { mutableStateOf(0) }
+    val mediaList = remember {
+        try {
+            MediaStorageHelper.getMediaForCustomer(context, customerId)
+        } catch (e: Exception) {
+            Log.e("CustomerMediaViewer", "Error loading media: ${e.message}")
+            emptyList()
+        }
+    }
+
+    var currentIndex by remember { mutableStateOf(initialIndex) }
+
+    if (mediaList.isEmpty()) {
+        AlertDialog(
+            onDismissRequest = onClose,
+            title = { Text("No Media") },
+            text = { Text("This customer has no media attachments") },
+            confirmButton = {
+                Button(onClick = onClose) { Text("OK") }
+            }
+        )
+        return
+    }
 
     AlertDialog(
         onDismissRequest = onClose,
-        title = { Text("Device Media") },
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+        title = { Text("Media Viewer") },
         text = {
-            Column {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 // Media display area
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(300.dp)
-                        .background(Color.LightGray),
+                        .height(400.dp)
+                        .background(Color.Black),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (mediaList.isNotEmpty()) {
-                        val currentUri = mediaList[currentIndex]
-                        if (currentUri.toString().contains(".mp4")) {
-                            // Show video with play button
-                            VideoThumbnail(uri = currentUri)
-                            Icon(
-                                Icons.Default.PlayArrow,
-                                contentDescription = "Play video",
-                                tint = Color.White,
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .background(Color.Black.copy(alpha = 0.5f), CircleShape)
-                            )
-                        } else {
-                            AsyncImage(
-                                model = currentUri,
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Fit
-                            )
-                        }
+                    val currentUri = mediaList[currentIndex]
+                    if (isVideoUri(context, currentUri)) {
+                        VideoPlayer(uri = currentUri)
                     } else {
-                        Text("No media found")
+                        AsyncImage(
+                            model = currentUri,
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Fit
+                        )
                     }
                 }
 
-                // Navigation buttons
+                // Navigation controls
                 if (mediaList.size > 1) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -91,28 +94,41 @@ fun CustomerMediaViewer(
                         IconButton(
                             onClick = {
                                 currentIndex = (currentIndex - 1).mod(mediaList.size)
-                            },
-                            enabled = mediaList.isNotEmpty()
+                            }
                         ) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Previous")
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Previous",
+                                tint = Color.White,
+                                modifier = Modifier.size(32.dp)
+                            )
                         }
 
-                        Text("${currentIndex + 1}/${mediaList.size}")
+                        Text(
+                            "${currentIndex + 1}/${mediaList.size}",
+                            color = Color.White
+                        )
 
                         IconButton(
                             onClick = {
                                 currentIndex = (currentIndex + 1).mod(mediaList.size)
-                            },
-                            enabled = mediaList.isNotEmpty()
+                            }
                         ) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowForward, "Next")
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = "Next",
+                                tint = Color.White,
+                                modifier = Modifier.size(32.dp)
+                            )
                         }
                     }
                 }
             }
         },
         confirmButton = {
-            Button(onClick = onClose) { Text("Close") }
+            Button(onClick = onClose) {
+                Text("Close")
+            }
         }
     )
 }

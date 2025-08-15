@@ -1,19 +1,16 @@
 package com.example.repairstoremanager.ui.components.customer.list
 
-import android.media.MediaPlayer
+import android.content.Context
 import android.net.Uri
 import android.os.Build
 import android.util.Log
-import android.widget.VideoView
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,26 +20,17 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DividerDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -55,14 +43,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.repairstoremanager.data.model.Customer
 import com.example.repairstoremanager.ui.components.customer.add.PatternLockCanvas
 import com.example.repairstoremanager.ui.components.customer.common.AccessoriesBadges
 import com.example.repairstoremanager.ui.components.customer.common.AccessoryCheckboxes
+import com.example.repairstoremanager.ui.components.customer.common.StatusDropdown
+import com.example.repairstoremanager.ui.components.customer.common.statusToColor
 import com.example.repairstoremanager.ui.components.customer.invoice.InvoicePrintBottomSheet
+import com.example.repairstoremanager.ui.components.customer.media.CustomerMediaViewer
 import com.example.repairstoremanager.ui.components.customer.media.VideoThumbnail
 import com.example.repairstoremanager.util.MediaStorageHelper
 import com.example.repairstoremanager.util.MessageHelper
@@ -72,6 +62,7 @@ import com.example.repairstoremanager.viewmodel.StoreViewModel
 @RequiresApi(Build.VERSION_CODES.S)
 @Composable
 fun CustomerCard(customer: Customer, viewModel: CustomerViewModel) {
+
     var expanded by remember { mutableStateOf(false) }
     var isEditing by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -111,6 +102,7 @@ fun CustomerCard(customer: Customer, viewModel: CustomerViewModel) {
             }
         }
     }
+
 
     Card(
         modifier = Modifier
@@ -254,8 +246,7 @@ fun CustomerCard(customer: Customer, viewModel: CustomerViewModel) {
                                     showFullScreenMedia = true
                                 }
                         ) {
-                            if (mediaUri.toString().contains(".mp4")) {
-                                // Video thumbnail with play button
+                            if (isVideoUri(context, mediaUri)) {
                                 VideoThumbnail(
                                     uri = mediaUri,
                                     modifier = Modifier.fillMaxSize()
@@ -270,7 +261,6 @@ fun CustomerCard(customer: Customer, viewModel: CustomerViewModel) {
                                         .background(Color.Black.copy(alpha = 0.5f), CircleShape)
                                 )
                             } else {
-                                // Image display
                                 AsyncImage(
                                     model = mediaUri,
                                     contentDescription = "Customer device media",
@@ -371,147 +361,16 @@ fun CustomerCard(customer: Customer, viewModel: CustomerViewModel) {
         }
     }
 
-    // Full-screen media viewer
     if (showFullScreenMedia) {
-        AlertDialog(
-            onDismissRequest = { showFullScreenMedia = false },
-            title = { Text("Media Viewer") },
-            text = {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(400.dp)
-                        .background(Color.Black),
-                    contentAlignment = Alignment.Center
-                ) {
-                    val currentUri = mediaList[selectedMediaIndex]
-                    if (currentUri.toString().contains(".mp4")) {
-                        // Video player
-                        VideoPlayer(uri = currentUri)
-                    } else {
-                        // Full-screen image
-                        AsyncImage(
-                            model = currentUri,
-                            contentDescription = null,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Fit
-                        )
-                    }
-                }
-
-                if (mediaList.size > 1) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        IconButton(
-                            onClick = {
-                                selectedMediaIndex = (selectedMediaIndex - 1).mod(mediaList.size)
-                            }
-                        ) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Previous")
-                        }
-
-                        Text("${selectedMediaIndex + 1}/${mediaList.size}")
-
-                        IconButton(
-                            onClick = {
-                                selectedMediaIndex = (selectedMediaIndex + 1).mod(mediaList.size)
-                            }
-                        ) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowForward, "Next")
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                Button(onClick = { showFullScreenMedia = false }) {
-                    Text("Close")
-                }
-            }
+        CustomerMediaViewer(
+            context = LocalContext.current,
+            customerId = customer.invoiceNumber,
+            initialIndex = selectedMediaIndex,
+            onClose = { showFullScreenMedia = false }
         )
     }
 }
-
-@Composable
-fun VideoPlayer(uri: Uri) {
-    val context = LocalContext.current
-    var player by remember { mutableStateOf<MediaPlayer?>(null) }
-
-    AndroidView(
-        factory = { ctx ->
-            VideoView(ctx).apply {
-                val mediaController = android.widget.MediaController(ctx).apply {
-                    setAnchorView(this@apply)
-                }
-                setVideoURI(uri)
-                setMediaController(mediaController)
-                setOnPreparedListener { mp ->
-                    player = mp
-                    mp.start()
-                }
-            }
-        },
-        modifier = Modifier.fillMaxSize(),
-        update = { view ->
-            view.setVideoURI(uri)
-        }
-    )
-
-    DisposableEffect(Unit) {
-        onDispose {
-            player?.release()
-        }
-    }
-}
-@Composable
-fun StatusDropdown(
-    selectedStatus: String,
-    options: List<String>,
-    onStatusChange: (String) -> Unit,
-    statusColor: Color
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Box {
-        TextButton(
-            onClick = { expanded = true },
-            colors = ButtonDefaults.textButtonColors(containerColor = statusColor),
-            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-            modifier = Modifier.defaultMinSize(minHeight = 32.dp)
-        ) {
-            Text(
-                text = selectedStatus,
-                color = Color.White,
-                style = MaterialTheme.typography.bodySmall
-            )
-        }
-
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            options.forEach { status ->
-                DropdownMenuItem(
-                    text = { Text(status) },
-                    onClick = {
-                        onStatusChange(status)
-                        expanded = false
-                    }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun statusToColor(status: String): Color {
-    return when (status) {
-        "Pending" -> MaterialTheme.colorScheme.outline
-        "Repaired" -> MaterialTheme.colorScheme.primary
-        "Delivered" -> MaterialTheme.colorScheme.primary.copy(green = 0.8f)
-        "Cancelled" -> MaterialTheme.colorScheme.error
-        else -> MaterialTheme.colorScheme.outline
-    }
+private fun isVideoUri(context: Context, uri: Uri): Boolean {
+    val type = context.contentResolver.getType(uri) ?: return false
+    return type.startsWith("video/")
 }

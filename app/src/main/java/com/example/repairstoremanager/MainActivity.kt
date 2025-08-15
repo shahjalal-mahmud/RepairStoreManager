@@ -20,6 +20,7 @@ import com.example.repairstoremanager.worker.WorkScheduler
 
 class MainActivity : ComponentActivity() {
 
+    // Launcher for Bluetooth permissions
     private val requestBluetoothPermissionsLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
             val allGranted = permissions.all { it.value }
@@ -29,6 +30,21 @@ class MainActivity : ComponentActivity() {
                 Toast.makeText(
                     this,
                     "Bluetooth permissions denied - some features may not work",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+
+    // Launcher for media permissions (photos + videos)
+    private val requestMediaPermissionsLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            val allGranted = permissions.all { it.value }
+            if (allGranted) {
+                Toast.makeText(this, "Media permissions granted", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(
+                    this,
+                    "Media permissions denied - cannot display or play media files",
                     Toast.LENGTH_LONG
                 ).show()
             }
@@ -54,6 +70,31 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * Requests correct media permissions for Android 12, 13, and 14+
+     */
+    private fun checkMediaPermissions() {
+        val requiredPermissions = when {
+            Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2 -> { // Android 12 and below
+                arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
+            else -> { // Android 13+ (includes 14+ with Selected Photos Access)
+                arrayOf(
+                    Manifest.permission.READ_MEDIA_IMAGES,
+                    Manifest.permission.READ_MEDIA_VIDEO
+                )
+            }
+        }
+
+        val allGranted = requiredPermissions.all {
+            ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
+        }
+
+        if (!allGranted) {
+            requestMediaPermissionsLauncher.launch(requiredPermissions)
+        }
+    }
+
     @RequiresApi(Build.VERSION_CODES.S)
     private fun checkExactAlarmPermission() {
         val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
@@ -66,12 +107,18 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Request Bluetooth permissions
         checkBluetoothPermissions()
 
+        // Request media (photo/video) permissions
+        checkMediaPermissions()
+
+        // Check exact alarm permission
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             checkExactAlarmPermission()
         }
 
+        // Schedule daily reminder
         WorkScheduler.scheduleDailyReminder(applicationContext, hour = 9, minute = 0)
 
         setContent {

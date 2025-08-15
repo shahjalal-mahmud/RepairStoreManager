@@ -31,15 +31,23 @@ fun VideoThumbnail(uri: Uri, modifier: Modifier = Modifier) {
     LaunchedEffect(uri) {
         val retriever = MediaMetadataRetriever()
         try {
-            retriever.setDataSource(context, uri)
-            val frame = retriever.frameAtTime
-            if (frame != null) {
-                bitmap.value = frame
+            // Add alternative data source methods
+            if (uri.scheme == "content" || uri.scheme == "file") {
+                retriever.setDataSource(context, uri)
+            } else {
+                retriever.setDataSource(uri.toString())
             }
+
+            val frame = retriever.frameAtTime
+            bitmap.value = frame ?: throw Exception("No frame available")
         } catch (e: Exception) {
-            Log.e("VideoThumbnail", "Error loading video thumbnail", e)
+            Log.e("VideoThumbnail", "Error loading thumbnail: ${e.message}")
         } finally {
-            retriever.release()
+            try {
+                retriever.release()
+            } catch (e: Exception) {
+                Log.e("VideoThumbnail", "Error releasing retriever", e)
+            }
         }
     }
 
