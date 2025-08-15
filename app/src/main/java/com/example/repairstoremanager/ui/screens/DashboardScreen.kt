@@ -6,6 +6,8 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,7 +22,10 @@ import com.example.repairstoremanager.viewmodel.CustomerViewModel
 @RequiresApi(Build.VERSION_CODES.S)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardScreen(viewModel: CustomerViewModel = viewModel()) {
+fun DashboardScreen(
+    viewModel: CustomerViewModel = viewModel(),
+    onNavigateToQuickInvoice: () -> Unit
+) {
     val scrollState = rememberScrollState()
     val isLoading by viewModel.isLoading.collectAsState()
     val hasError by viewModel.hasError.collectAsState(false)
@@ -32,13 +37,20 @@ fun DashboardScreen(viewModel: CustomerViewModel = viewModel()) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Text("Dashboard", style = MaterialTheme.typography.titleLarge)
-                },
+                title = { Text("Dashboard") },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 )
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = onNavigateToQuickInvoice,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Quick Invoice")
+            }
         }
     ) { paddingValues ->
         BoxWithConstraints(

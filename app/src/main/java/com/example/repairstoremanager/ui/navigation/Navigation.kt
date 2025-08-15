@@ -14,6 +14,7 @@ import com.example.repairstoremanager.ui.screens.DashboardScreen
 import com.example.repairstoremanager.ui.screens.ForgotPasswordScreen
 import com.example.repairstoremanager.ui.screens.LoginScreen
 import com.example.repairstoremanager.ui.screens.ProfileScreen
+import com.example.repairstoremanager.ui.screens.QuickInvoiceScreen
 import com.example.repairstoremanager.viewmodel.LoginViewModel
 import com.example.repairstoremanager.viewmodel.StoreViewModel
 
@@ -50,7 +51,13 @@ fun Navigation(
         }
 
         composable(BottomNavItem.Dashboard.route) {
-            MainScaffold(navController) { DashboardScreen() }
+            MainScaffold(navController) {
+                DashboardScreen(
+                    onNavigateToQuickInvoice = {
+                        navController.navigate("quick_invoice")
+                    }
+                )
+            }
         }
 
         composable(BottomNavItem.AddCustomer.route) {
@@ -74,11 +81,19 @@ fun Navigation(
                 )
             }
         }
+
         composable("forgot_password") {
             ForgotPasswordScreen(
                 onBack = { navController.popBackStack() }
             )
         }
 
+        composable("quick_invoice") {
+            MainScaffold(navController) { // Wrap with MainScaffold for consistent UI
+                QuickInvoiceScreen(
+                    onClose = { navController.popBackStack() }
+                )
+            }
+        }
     }
 }
