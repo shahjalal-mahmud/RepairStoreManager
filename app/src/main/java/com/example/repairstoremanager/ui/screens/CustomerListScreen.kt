@@ -31,7 +31,7 @@ fun CustomerListScreen(viewModel: CustomerViewModel = viewModel()) {
     val customerList by viewModel.customers.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf("All") }
-    var selectedSort by remember { mutableStateOf("None") }
+    var selectedSort by remember { mutableStateOf("Newest First") }
 
     val filteredList = customerList
         .filter {
