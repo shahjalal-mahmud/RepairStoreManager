@@ -23,7 +23,8 @@ fun StatusDropdown(
     selectedStatus: String,
     options: List<String>,
     onStatusChange: (String) -> Unit,
-    statusColor: Color
+    statusColor: Color,
+    modifier: Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
 
