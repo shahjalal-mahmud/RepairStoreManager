@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">Repair Store Manager</string>
+    <string name="contact">Contact</string>
+    <string name="call">Call</string>
+    <string name="sms">SMS</string>
+    <string name="whatsapp">WhatsApp</string>
+    <string name="show_media_count">Show All Media (%d)</string>
+    <string name="hide_media_count">Hide Media (%d)</string>
 </resources>

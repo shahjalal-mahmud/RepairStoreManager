@@ -80,7 +80,7 @@ import androidx.core.net.toUri
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.S)
 @Composable
-fun CustomerCard(customer: Customer, viewModel: CustomerViewModel) {
+fun CustomerCards(customer: Customer, viewModel: CustomerViewModel) {
     var showMediaGallery by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val storeViewModel: StoreViewModel = viewModel()
