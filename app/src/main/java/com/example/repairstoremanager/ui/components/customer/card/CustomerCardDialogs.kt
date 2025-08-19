@@ -23,12 +23,10 @@ fun CustomerCardDialogs(
     showPrintSheet: Boolean,
     showFullScreenMedia: Boolean,
     showEditScreen: Boolean,
-    showCallOptions: Boolean,
     selectedMediaIndex: Int,
     onDismissPrint: () -> Unit,
     onDismissMedia: () -> Unit,
     onDismissEdit: () -> Unit,
-    onDismissCall: () -> Unit   // <-- FIXED (lambda instead of Boolean)
 ) {
     val context = LocalContext.current
 
@@ -58,15 +56,5 @@ fun CustomerCardDialogs(
                 viewModel = viewModel
             )
         }
-    }
-
-    if (showCallOptions) {
-        CallDropdownMenu(
-            customer = customer,
-            viewModel = viewModel,
-            context = context,
-            expanded = true,         // or keep your own state for expanded
-            onDismiss = onDismissCall
-        )
     }
 }

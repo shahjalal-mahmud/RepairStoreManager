@@ -1,6 +1,9 @@
 package com.example.repairstoremanager.ui.components.customer.card
 
+import androidx.compose.ui.geometry.Rect // ✅ use Compose Rect, not android.graphics.Rect
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,7 +19,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.repairstoremanager.data.model.Customer
 import com.example.repairstoremanager.ui.components.customer.common.StatusDropdown
@@ -29,7 +40,10 @@ fun CustomerCardActions(
     viewModel: CustomerViewModel,
     onPrintClick: () -> Unit,
     onEditClick: () -> Unit,
-    onCallClick: () -> Unit,
+    onCallClick: (Rect) -> Unit,
+    callExpanded: Boolean,
+    callButtonBounds: Rect?,
+    onCallDismiss: () -> Unit
 ) {
     val statusOptions = listOf("Pending", "Repaired", "Delivered", "Cancelled")
     val statusColor = statusToColor(customer.status)
@@ -46,10 +60,33 @@ fun CustomerCardActions(
             onClick = onEditClick,
             modifier = Modifier.weight(1f)
         )
-        CallDropdownButton(
-            onClick = onCallClick,
-            modifier = Modifier.weight(1f)
-        )
+
+        // Contact Button with bounds tracking
+        Box(modifier = Modifier.weight(1f)) {
+            var buttonBounds by remember { mutableStateOf<Rect?>(null) }
+            val density = LocalDensity.current
+
+            CallDropdownButton(
+                onClick = { buttonBounds?.let { onCallClick(it) } },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onGloballyPositioned { coordinates ->
+                        buttonBounds = coordinates.boundsInRoot()
+                    }
+            )
+
+            CallDropdownMenu(
+                customer = customer,
+                viewModel = viewModel,
+                context = LocalContext.current,
+                expanded = callExpanded,
+                onDismiss = onCallDismiss,
+                modifier = Modifier.width(
+                    with(density) { buttonBounds?.width?.toDp() ?: 0.dp } // ✅ convert properly
+                )
+            )
+        }
+
         StatusDropdown(
             selectedStatus = customer.status,
             options = statusOptions,
@@ -64,20 +101,30 @@ fun CustomerCardActions(
         )
     }
 }
-
 @Composable
 private fun PrintButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Button(
         onClick = onClick,
-        modifier = modifier, // weight comes from parent
+        modifier = modifier,
         colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
         ),
-        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp)
+        elevation = ButtonDefaults.buttonElevation(
+            defaultElevation = 2.dp,
+            pressedElevation = 4.dp
+        ),
+        shape = MaterialTheme.shapes.small,
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
     ) {
-        Icon(Icons.Default.Print, contentDescription = "Print", modifier = Modifier.size(18.dp))
-        Spacer(modifier = Modifier.width(4.dp))
-        Text("Print", style = MaterialTheme.typography.labelMedium)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                Icons.Default.Print,
+                contentDescription = "Print",
+                modifier = Modifier.size(18.dp))
+            Spacer(modifier = Modifier.width(4.dp))
+            Text("Print", style = MaterialTheme.typography.labelMedium)
+        }
     }
 }
 
@@ -85,14 +132,25 @@ private fun PrintButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
 private fun EditButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Button(
         onClick = onClick,
-        modifier = modifier, // weight comes from parent
+        modifier = modifier,
         colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
         ),
-        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp)
+        elevation = ButtonDefaults.buttonElevation(
+            defaultElevation = 2.dp,
+            pressedElevation = 4.dp
+        ),
+        shape = MaterialTheme.shapes.small,
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
     ) {
-        Icon(Icons.Default.Edit, contentDescription = "Edit", modifier = Modifier.size(18.dp))
-        Spacer(modifier = Modifier.width(4.dp))
-        Text("Edit", style = MaterialTheme.typography.labelMedium)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                Icons.Default.Edit,
+                contentDescription = "Edit",
+                modifier = Modifier.size(18.dp))
+            Spacer(modifier = Modifier.width(4.dp))
+            Text("Edit", style = MaterialTheme.typography.labelMedium)
+        }
     }
 }

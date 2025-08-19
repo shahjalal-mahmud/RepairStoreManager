@@ -18,6 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -36,6 +37,7 @@ fun CustomerCard(customer: Customer, viewModel: CustomerViewModel) {
     var selectedMediaIndex by remember { mutableStateOf(0) }
     var showEditScreen by remember { mutableStateOf(false) }
     var showCallOptions by remember { mutableStateOf(false) }
+    var callButtonBounds by remember { mutableStateOf<Rect?>(null) }
 
     val context = LocalContext.current
     val storeViewModel: StoreViewModel = viewModel()
@@ -66,7 +68,13 @@ fun CustomerCard(customer: Customer, viewModel: CustomerViewModel) {
                 viewModel = viewModel,
                 onPrintClick = { showPrintSheet = true },
                 onEditClick = { showEditScreen = true },
-                onCallClick = { showCallOptions = true }
+                onCallClick = { bounds ->
+                    callButtonBounds = bounds
+                    showCallOptions = true
+                },
+                callExpanded = showCallOptions,
+                callButtonBounds = callButtonBounds,
+                onCallDismiss = { showCallOptions = false }
             )
         }
     }
@@ -80,12 +88,10 @@ fun CustomerCard(customer: Customer, viewModel: CustomerViewModel) {
         showPrintSheet = showPrintSheet,
         showFullScreenMedia = showFullScreenMedia,
         showEditScreen = showEditScreen,
-        showCallOptions = showCallOptions,
         selectedMediaIndex = selectedMediaIndex,
         onDismissPrint = { showPrintSheet = false },
         onDismissMedia = { showFullScreenMedia = false },
         onDismissEdit = { showEditScreen = false },
-        onDismissCall = { showCallOptions = false }
     )
 }
 

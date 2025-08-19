@@ -11,7 +11,9 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.core.net.toUri
 import com.example.repairstoremanager.R
 import com.example.repairstoremanager.data.model.Customer
@@ -24,15 +26,22 @@ fun CallDropdownMenu(
     viewModel: CustomerViewModel,
     context: Context,
     expanded: Boolean,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     DropdownMenu(
         expanded = expanded,
-        onDismissRequest = onDismiss
+        onDismissRequest = onDismiss,
+        modifier = modifier
     ) {
-        // Call option
         DropdownMenuItem(
-            text = { Text(stringResource(R.string.call)) },
+            text = {
+                Text(
+                    stringResource(R.string.call),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            },
             onClick = {
                 val intent = Intent(Intent.ACTION_DIAL).apply {
                     data = "tel:${customer.contactNumber}".toUri()
@@ -45,9 +54,14 @@ fun CallDropdownMenu(
             }
         )
 
-        // SMS option
         DropdownMenuItem(
-            text = { Text(stringResource(R.string.sms)) },
+            text = {
+                Text(
+                    stringResource(R.string.sms),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            },
             onClick = {
                 val message = viewModel.getStatusMessage(customer)
                 MessageHelper.sendSmsViaIntent(context, customer.contactNumber, message)
@@ -58,9 +72,14 @@ fun CallDropdownMenu(
             }
         )
 
-        // WhatsApp option
         DropdownMenuItem(
-            text = { Text(stringResource(R.string.whatsapp)) },
+            text = {
+                Text(
+                    stringResource(R.string.whatsapp),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            },
             onClick = {
                 val message = viewModel.getStatusMessage(customer)
                 MessageHelper.sendWhatsAppMessage(context, customer.contactNumber, message)
