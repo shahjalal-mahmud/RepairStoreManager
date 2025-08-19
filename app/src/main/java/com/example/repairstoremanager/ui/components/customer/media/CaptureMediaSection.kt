@@ -1,8 +1,10 @@
 package com.example.repairstoremanager.ui.components.customer.media
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -76,7 +78,11 @@ fun CaptureMediaSection(
         contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 10)
     ) { uris ->
         if (uris.isNotEmpty()) {
-            images.addAll(uris)
+            // Copy gallery images to app storage
+            uris.forEach { uri ->
+                val newUri = copyImageToAppStorage(context, uri, customerId)
+                newUri?.let { images.add(it) }
+            }
         }
     }
 
@@ -143,7 +149,7 @@ fun CaptureMediaSection(
 
     fun takePhotoWithCamera() {
         checkPermissionAndExecute {
-            val uri = MediaStorageHelper.createImageUri(context, customerId)
+            val uri = MediaStorageHelper.createImageCaptureUri(context, customerId)
             if (uri != null) {
                 tempImageUri = uri
                 takePhotoLauncher.launch(uri)
@@ -157,7 +163,7 @@ fun CaptureMediaSection(
             return
         }
         checkPermissionAndExecute {
-            val uri = MediaStorageHelper.createVideoUri(context, customerId)
+            val uri = MediaStorageHelper.createVideoCaptureUri(context, customerId)
             if (uri != null) {
                 tempVideoUri = uri
                 takeVideoLauncher.launch(uri)
@@ -296,6 +302,24 @@ fun CaptureMediaSection(
         )
     }
 }
+private fun copyImageToAppStorage(context: Context, sourceUri: Uri, customerId: String): Uri? {
+    return try {
+        // Create a new URI in our app's storage
+        val destinationUri = MediaStorageHelper.createImageUri(context, customerId)
+            ?: return null
 
+        // Copy the content
+        context.contentResolver.openInputStream(sourceUri)?.use { input ->
+            context.contentResolver.openOutputStream(destinationUri)?.use { output ->
+                input.copyTo(output)
+            }
+        }
+
+        destinationUri
+    } catch (e: Exception) {
+        Log.e("CaptureMedia", "Error copying image: ${e.message}")
+        null
+    }
+}
 private var tempImageUri: Uri? = null
 private var tempVideoUri: Uri? = null
