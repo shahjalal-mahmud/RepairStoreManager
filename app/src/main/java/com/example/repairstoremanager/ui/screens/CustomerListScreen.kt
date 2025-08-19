@@ -21,7 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.repairstoremanager.ui.components.customer.list.CustomerCard
+import com.example.repairstoremanager.ui.components.customer.card.CustomerCard
 import com.example.repairstoremanager.ui.components.customer.list.CustomerSearchFilterSortBar
 import com.example.repairstoremanager.viewmodel.CustomerViewModel
 

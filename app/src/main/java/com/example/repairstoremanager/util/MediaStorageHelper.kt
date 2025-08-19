@@ -3,6 +3,7 @@ package com.example.repairstoremanager.util
 import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
+import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
 import androidx.core.content.FileProvider
@@ -52,16 +53,20 @@ object MediaStorageHelper {
     fun createVideoCaptureUri(context: Context, customerId: String): Uri? {
         return try {
             val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-            val storageDir = context.getExternalFilesDir("videos")
-            val file = File.createTempFile(
+            val storageDir = context.getExternalFilesDir(Environment.DIRECTORY_MOVIES) ?:
+            context.getExternalFilesDir("videos") ?:
+            context.filesDir
+
+            val videoFile = File.createTempFile(
                 "VID_${customerId}_${timeStamp}_",
                 ".mp4",
                 storageDir
             )
+
             FileProvider.getUriForFile(
                 context,
                 "${context.packageName}.provider",
-                file
+                videoFile
             )
         } catch (e: Exception) {
             Log.e("MediaStorageHelper", "Error creating video capture URI", e)

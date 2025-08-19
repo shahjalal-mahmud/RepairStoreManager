@@ -93,6 +93,7 @@ dependencies {
 
     // WorkManager
     implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.foundation.layout.android)
 
     // Testing
     testImplementation(libs.junit)

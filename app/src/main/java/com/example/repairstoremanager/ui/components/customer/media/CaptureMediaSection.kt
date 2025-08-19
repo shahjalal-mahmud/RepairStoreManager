@@ -1,8 +1,10 @@
 package com.example.repairstoremanager.ui.components.customer.media
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -58,6 +60,7 @@ fun CaptureMediaSection(
     val images = remember { mutableStateListOf<Uri>() }
     val videos = remember { mutableStateListOf<Uri>() }
     var showMediaPickerDialog by remember { mutableStateOf(false) }
+    var showVideoPickerDialog by remember { mutableStateOf(false) }
 
     // Notify parent when media changes
     LaunchedEffect(images, videos) {
@@ -76,11 +79,26 @@ fun CaptureMediaSection(
         contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 10)
     ) { uris ->
         if (uris.isNotEmpty()) {
-            images.addAll(uris)
+            uris.forEach { uri ->
+                val newUri = copyImageToAppStorage(context, uri, customerId)
+                newUri?.let { images.add(it) }
+            }
         }
     }
 
-    // Camera launcher for multiple photos
+    // Multiple video selection from gallery
+    val pickMultipleVideosLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 5)
+    ) { uris ->
+        if (uris.isNotEmpty()) {
+            uris.forEach { uri ->
+                val newUri = copyVideoToAppStorage(context, uri, customerId)
+                newUri?.let { videos.add(it) }
+            }
+        }
+    }
+
+    // Camera launcher for photos
     val takePhotoLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
@@ -92,13 +110,17 @@ fun CaptureMediaSection(
         }
     }
 
-    // Video capture
+    // Video capture launcher
     val takeVideoLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CaptureVideo()
-    ) { success ->
+    ) { success: Boolean ->
         if (success) {
             tempVideoUri?.let { uri ->
-                videos.add(uri)
+                if (videos.size < 5) {
+                    videos.add(uri)
+                } else {
+                    Toast.makeText(context, "Maximum 5 videos allowed", Toast.LENGTH_SHORT).show()
+                }
                 tempVideoUri = null
             }
         } else {
@@ -135,15 +157,25 @@ fun CaptureMediaSection(
         showMediaPickerDialog = true
     }
 
+    fun showVideoPicker() {
+        showVideoPickerDialog = true
+    }
+
     fun takeMultiplePhotosFromGallery() {
         pickMultiplePhotosLauncher.launch(
             PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
         )
     }
 
+    fun takeMultipleVideosFromGallery() {
+        pickMultipleVideosLauncher.launch(
+            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)
+        )
+    }
+
     fun takePhotoWithCamera() {
         checkPermissionAndExecute {
-            val uri = MediaStorageHelper.createImageUri(context, customerId)
+            val uri = MediaStorageHelper.createImageCaptureUri(context, customerId)
             if (uri != null) {
                 tempImageUri = uri
                 takePhotoLauncher.launch(uri)
@@ -151,11 +183,12 @@ fun CaptureMediaSection(
         }
     }
 
-    fun takeVideo() {
-        if (videos.isNotEmpty()) {
-            Toast.makeText(context, "Only one video allowed", Toast.LENGTH_SHORT).show()
+    fun takeVideoWithCamera() {
+        if (videos.size >= 5) {
+            Toast.makeText(context, "Maximum 5 videos allowed", Toast.LENGTH_SHORT).show()
             return
         }
+
         checkPermissionAndExecute {
             val uri = MediaStorageHelper.createVideoUri(context, customerId)
             if (uri != null) {
@@ -174,10 +207,10 @@ fun CaptureMediaSection(
                 Text("📷 Add Photos")
             }
             Button(
-                onClick = { takeVideo() },
+                onClick = { showVideoPicker() },
                 modifier = Modifier.weight(1f)
             ) {
-                Text("🎥 Take Video")
+                Text("🎥 Add Videos")
             }
         }
 
@@ -294,6 +327,77 @@ fun CaptureMediaSection(
                 }
             }
         )
+    }
+
+    if (showVideoPickerDialog) {
+        AlertDialog(
+            onDismissRequest = { showVideoPickerDialog = false },
+            title = { Text("Add Videos") },
+            text = {
+                Column {
+                    Button(
+                        onClick = {
+                            showVideoPickerDialog = false
+                            takeVideoWithCamera()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Take Video")
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Button(
+                        onClick = {
+                            showVideoPickerDialog = false
+                            takeMultipleVideosFromGallery()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Choose from Gallery")
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showVideoPickerDialog = false }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+}
+
+private fun copyImageToAppStorage(context: Context, sourceUri: Uri, customerId: String): Uri? {
+    return try {
+        val destinationUri = MediaStorageHelper.createImageUri(context, customerId)
+            ?: return null
+
+        context.contentResolver.openInputStream(sourceUri)?.use { input ->
+            context.contentResolver.openOutputStream(destinationUri)?.use { output ->
+                input.copyTo(output)
+            }
+        }
+        destinationUri
+    } catch (e: Exception) {
+        Log.e("CaptureMedia", "Error copying image: ${e.message}")
+        null
+    }
+}
+
+private fun copyVideoToAppStorage(context: Context, sourceUri: Uri, customerId: String): Uri? {
+    return try {
+        val destinationUri = MediaStorageHelper.createVideoUri(context, customerId)
+            ?: return null
+
+        context.contentResolver.openInputStream(sourceUri)?.use { input ->
+            context.contentResolver.openOutputStream(destinationUri)?.use { output ->
+                input.copyTo(output)
+            }
+        }
+        destinationUri
+    } catch (e: Exception) {
+        Log.e("CaptureMedia", "Error copying video: ${e.message}")
+        null
     }
 }
 
