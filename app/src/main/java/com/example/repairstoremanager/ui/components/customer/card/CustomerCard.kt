@@ -5,6 +5,7 @@ import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -29,7 +30,12 @@ import com.example.repairstoremanager.viewmodel.StoreViewModel
 
 @RequiresApi(Build.VERSION_CODES.S)
 @Composable
-fun CustomerCard(customer: Customer, viewModel: CustomerViewModel) {
+fun CustomerCard(
+    customer: Customer,
+    viewModel: CustomerViewModel,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
+) {
     // State management
     var showMediaGallery by remember { mutableStateOf(false) }
     var showPrintSheet by remember { mutableStateOf(false) }
@@ -44,9 +50,10 @@ fun CustomerCard(customer: Customer, viewModel: CustomerViewModel) {
     val mediaList = rememberMediaList(context, customer.invoiceNumber)
 
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .padding(8.dp),
+            .clickable(onClick = onClick)
+            .padding(vertical = 8.dp),
         elevation = CardDefaults.cardElevation(2.dp),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
