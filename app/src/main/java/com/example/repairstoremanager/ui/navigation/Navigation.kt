@@ -11,10 +11,12 @@ import com.example.repairstoremanager.data.repository.AuthRepository
 import com.example.repairstoremanager.ui.screens.AddCustomerScreen
 import com.example.repairstoremanager.ui.screens.CustomerListScreen
 import com.example.repairstoremanager.ui.screens.DashboardScreen
+import com.example.repairstoremanager.ui.screens.EditCustomerScreen
 import com.example.repairstoremanager.ui.screens.ForgotPasswordScreen
 import com.example.repairstoremanager.ui.screens.LoginScreen
 import com.example.repairstoremanager.ui.screens.ProfileScreen
 import com.example.repairstoremanager.ui.screens.QuickInvoiceScreen
+import com.example.repairstoremanager.viewmodel.EditCustomerViewModel
 import com.example.repairstoremanager.viewmodel.LoginViewModel
 import com.example.repairstoremanager.viewmodel.StoreViewModel
 
@@ -55,7 +57,8 @@ fun Navigation(
                 DashboardScreen(
                     onNavigateToQuickInvoice = {
                         navController.navigate("quick_invoice")
-                    }
+                    },
+                    navController = navController
                 )
             }
         }
@@ -65,7 +68,7 @@ fun Navigation(
         }
 
         composable(BottomNavItem.CustomerList.route) {
-            MainScaffold(navController) { CustomerListScreen() }
+            MainScaffold(navController) { CustomerListScreen(navController) }
         }
 
         composable(BottomNavItem.Profile.route) {
@@ -92,6 +95,18 @@ fun Navigation(
             MainScaffold(navController) { // Wrap with MainScaffold for consistent UI
                 QuickInvoiceScreen(
                     onClose = { navController.popBackStack() }
+                )
+            }
+        }
+
+        composable("edit_customer/{customerId}") { backStackEntry ->
+            val customerId = backStackEntry.arguments?.getString("customerId") ?: ""
+            val editCustomerViewModel = remember { EditCustomerViewModel() }
+            MainScaffold(navController) {
+                EditCustomerScreen(
+                    customerId = customerId,
+                    navController = navController,
+                    viewModel = editCustomerViewModel
                 )
             }
         }

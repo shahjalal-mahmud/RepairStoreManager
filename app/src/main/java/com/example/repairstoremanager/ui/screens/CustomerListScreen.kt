@@ -45,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import com.example.repairstoremanager.ui.components.common.ExpandableSearchBar
 import com.example.repairstoremanager.ui.components.common.FilterChipGroup
 import com.example.repairstoremanager.ui.components.common.SortChipGroup
@@ -54,7 +55,10 @@ import com.example.repairstoremanager.viewmodel.CustomerViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.S)
 @Composable
-fun CustomerListScreen(viewModel: CustomerViewModel = viewModel()) {
+fun CustomerListScreen(
+    navController: NavHostController,
+    viewModel: CustomerViewModel = viewModel()
+) {
     val customerList by viewModel.customers.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
@@ -217,6 +221,7 @@ fun CustomerListScreen(viewModel: CustomerViewModel = viewModel()) {
                     CustomerCard(
                         customer = customer,
                         viewModel = viewModel,
+                        navController = navController,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
                 }
