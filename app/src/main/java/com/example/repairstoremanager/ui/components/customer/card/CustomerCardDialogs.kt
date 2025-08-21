@@ -6,10 +6,10 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.window.Dialog
+import androidx.navigation.NavHostController
 import com.example.repairstoremanager.data.model.Customer
 import com.example.repairstoremanager.ui.components.customer.invoice.InvoicePrintBottomSheet
 import com.example.repairstoremanager.ui.components.customer.media.CustomerMediaViewer
-import com.example.repairstoremanager.ui.screens.EditCustomerScreen
 import com.example.repairstoremanager.viewmodel.CustomerViewModel
 import com.example.repairstoremanager.viewmodel.StoreViewModel
 
@@ -22,12 +22,11 @@ fun CustomerCardDialogs(
     mediaList: List<Uri>,
     showPrintSheet: Boolean,
     showFullScreenMedia: Boolean,
-    showEditScreen: Boolean,
     selectedMediaIndex: Int,
     onDismissPrint: () -> Unit,
     onDismissMedia: () -> Unit,
-    onDismissEdit: () -> Unit,
-) {
+    navController: NavHostController
+)  {
     val context = LocalContext.current
 
     if (showPrintSheet) {
@@ -45,16 +44,5 @@ fun CustomerCardDialogs(
             initialIndex = selectedMediaIndex,
             onClose = onDismissMedia
         )
-    }
-
-    if (showEditScreen) {
-        Dialog(onDismissRequest = onDismissEdit) {
-            EditCustomerScreen(
-                customer = customer,
-                onSave = { updatedCustomer -> onDismissEdit() },
-                onCancel = onDismissEdit,
-                viewModel = viewModel
-            )
-        }
     }
 }

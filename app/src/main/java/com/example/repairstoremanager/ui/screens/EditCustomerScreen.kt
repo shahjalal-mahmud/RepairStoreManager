@@ -2,93 +2,153 @@ package com.example.repairstoremanager.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.example.repairstoremanager.data.model.Customer
-import com.example.repairstoremanager.viewmodel.CustomerViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
+import com.example.repairstoremanager.ui.components.common.DatePickerDialog
+import com.example.repairstoremanager.ui.components.customer.edit.EditCustomerContent
+import com.example.repairstoremanager.viewmodel.EditCustomerViewModel
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditCustomerScreen(
-    customer: Customer,
-    onSave: (Customer) -> Unit,
-    onCancel: () -> Unit,
-    viewModel: CustomerViewModel
+    customerId: String,
+    navController: NavController,
+    viewModel: EditCustomerViewModel
 ) {
-    var editedCustomer by remember { mutableStateOf(customer.copy()) }
-    val context = LocalContext.current // Get context during composition
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Text(
-            text = "Edit Customer Details",
-            style = MaterialTheme.typography.headlineSmall
-        )
+    val customer by viewModel.customer.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val errorMessage by viewModel.errorMessage.collectAsStateWithLifecycle()
+    val isSuccess by viewModel.isSuccess.collectAsStateWithLifecycle()
 
-        OutlinedTextField(
-            value = editedCustomer.customerName,
-            onValueChange = { editedCustomer = editedCustomer.copy(customerName = it) },
-            label = { Text("Customer Name") },
-            modifier = Modifier.fillMaxWidth()
-        )
+    var showDatePicker by remember { mutableStateOf(false) }
 
-        OutlinedTextField(
-            value = editedCustomer.contactNumber,
-            onValueChange = { editedCustomer = editedCustomer.copy(contactNumber = it) },
-            label = { Text("Phone Number") },
-            modifier = Modifier.fillMaxWidth()
-        )
+    LaunchedEffect(customerId) {
+        if (customer.id.isEmpty() || customer.id != customerId) {
+            viewModel.loadCustomer(customerId)
+        }
+    }
 
-        // Add other fields similarly (phone model, problem, etc.)
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Button(
-                onClick = onCancel,
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer
-                )
-            ) {
-                Text("Cancel")
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let { message ->
+            scope.launch {
+                snackbarHostState.showSnackbar(message = message)
             }
+        }
+    }
 
-            Button(
-                onClick = {
+    LaunchedEffect(isSuccess) {
+        if (isSuccess) {
+            // Show Toast message
+            android.widget.Toast.makeText(
+                context,
+                "Customer updated successfully!",
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
+
+            // Navigate back immediately
+            navController.popBackStack()
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Edit Customer Details") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                }
+            )
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { innerPadding ->
+        if (isLoading && customer.id.isEmpty()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                CircularProgressIndicator()
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Loading customer details...")
+            }
+        } else if (customer.id.isEmpty()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(Icons.Default.Error, contentDescription = "Error", tint = Color.Red)
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Customer not found", style = MaterialTheme.typography.bodyLarge)
+            }
+        } else {
+            EditCustomerContent(
+                customer = customer,
+                isLoading = isLoading,
+                onUpdateField = viewModel::updateField,
+                onSave = { updatedCustomer ->
                     viewModel.updateCustomer(
-                        updatedCustomer = editedCustomer,
-                        context = context, // Use the context we got during composition
-                        onSuccess = { onSave(editedCustomer) },
+                        updatedCustomer = updatedCustomer,
+                        onSuccess = {
+                            // This callback is no longer needed since we're using LaunchedEffect
+                        },
                         onError = {}
                     )
                 },
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
-            ) {
-                Text("Save")
-            }
+                onShowDatePicker = { showDatePicker = true },
+                onCancel = { navController.popBackStack() }, // Add cancel callback
+                modifier = Modifier.padding(innerPadding)
+            )
+        }
+
+        if (showDatePicker) {
+            DatePickerDialog(
+                onDateSelected = { date ->
+                    viewModel.updateField("deliveryDate", date)
+                    showDatePicker = false
+                },
+                onDismiss = { showDatePicker = false }
+            )
         }
     }
 }

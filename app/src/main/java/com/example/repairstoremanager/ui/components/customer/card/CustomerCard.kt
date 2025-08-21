@@ -23,6 +23,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import com.example.repairstoremanager.data.model.Customer
 import com.example.repairstoremanager.util.MediaStorageHelper
 import com.example.repairstoremanager.viewmodel.CustomerViewModel
@@ -33,6 +34,7 @@ import com.example.repairstoremanager.viewmodel.StoreViewModel
 fun CustomerCard(
     customer: Customer,
     viewModel: CustomerViewModel,
+    navController: NavHostController,
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {}
 ) {
@@ -41,7 +43,6 @@ fun CustomerCard(
     var showPrintSheet by remember { mutableStateOf(false) }
     var showFullScreenMedia by remember { mutableStateOf(false) }
     var selectedMediaIndex by remember { mutableStateOf(0) }
-    var showEditScreen by remember { mutableStateOf(false) }
     var showCallOptions by remember { mutableStateOf(false) }
     var callButtonBounds by remember { mutableStateOf<Rect?>(null) }
 
@@ -73,15 +74,15 @@ fun CustomerCard(
             CustomerCardActions(
                 customer = customer,
                 viewModel = viewModel,
+                navController = navController,
                 onPrintClick = { showPrintSheet = true },
-                onEditClick = { showEditScreen = true },
                 onCallClick = { bounds ->
                     callButtonBounds = bounds
                     showCallOptions = true
                 },
                 callExpanded = showCallOptions,
                 callButtonBounds = callButtonBounds,
-                onCallDismiss = { showCallOptions = false }
+                onCallDismiss = { showCallOptions = false },
             )
         }
     }
@@ -94,11 +95,10 @@ fun CustomerCard(
         mediaList = mediaList,
         showPrintSheet = showPrintSheet,
         showFullScreenMedia = showFullScreenMedia,
-        showEditScreen = showEditScreen,
         selectedMediaIndex = selectedMediaIndex,
         onDismissPrint = { showPrintSheet = false },
         onDismissMedia = { showFullScreenMedia = false },
-        onDismissEdit = { showEditScreen = false },
+        navController = navController
     )
 }
 

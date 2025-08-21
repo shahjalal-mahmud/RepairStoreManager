@@ -1,7 +1,5 @@
 package com.example.repairstoremanager.viewmodel
 
-import android.content.Context
-import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.repairstoremanager.data.model.Customer
@@ -94,24 +92,6 @@ class CustomerViewModel : ViewModel() {
         viewModelScope.launch {
             repository.updateStatus(customerId, newStatus)
             fetchCustomers()
-        }
-    }
-    fun updateCustomer(
-        updatedCustomer: Customer,
-        context: Context,
-        onSuccess: () -> Unit,
-        onError: (String) -> Unit
-    ) {
-        viewModelScope.launch {
-            val result = repository.updateCustomer(updatedCustomer)
-            if (result.isSuccess) {
-                fetchCustomers()
-                Toast.makeText(context, "Customer updated successfully", Toast.LENGTH_SHORT).show()
-                onSuccess()
-            } else {
-                Toast.makeText(context, "Failed to update customer", Toast.LENGTH_SHORT).show()
-                onError(result.exceptionOrNull()?.message ?: "Unknown error")
-            }
         }
     }
 

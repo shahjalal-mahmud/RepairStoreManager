@@ -29,6 +29,7 @@ import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.example.repairstoremanager.data.model.Customer
 import com.example.repairstoremanager.ui.components.customer.common.StatusDropdown
 import com.example.repairstoremanager.ui.components.customer.common.statusToColor
@@ -38,13 +39,13 @@ import com.example.repairstoremanager.viewmodel.CustomerViewModel
 fun CustomerCardActions(
     customer: Customer,
     viewModel: CustomerViewModel,
+    navController: NavHostController,
     onPrintClick: () -> Unit,
-    onEditClick: () -> Unit,
     onCallClick: (Rect) -> Unit,
     callExpanded: Boolean,
     callButtonBounds: Rect?,
     onCallDismiss: () -> Unit
-) {
+){
     val statusOptions = listOf("Pending", "Repaired", "Delivered", "Cancelled")
     val statusColor = statusToColor(customer.status)
 
@@ -57,7 +58,9 @@ fun CustomerCardActions(
             modifier = Modifier.weight(1f)
         )
         EditButton(
-            onClick = onEditClick,
+            onClick = {
+                navController.navigate("edit_customer/${customer.id}") // Use navigation
+            },
             modifier = Modifier.weight(1f)
         )
 
