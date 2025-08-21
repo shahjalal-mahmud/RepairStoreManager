@@ -94,7 +94,7 @@ fun PhoneDetailsSection(customer: Customer, onUpdateField: (String, Any) -> Unit
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(
-            text = "Phone Details",
+            text = "Device Details",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
@@ -131,7 +131,7 @@ fun FinancialSection(
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(
-            text = "Financial Details",
+            text = "Payment Details",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
