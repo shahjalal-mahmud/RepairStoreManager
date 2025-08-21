@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Error
@@ -35,14 +33,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.example.repairstoremanager.data.model.Customer
 import com.example.repairstoremanager.ui.components.common.DatePickerDialog
-import com.example.repairstoremanager.ui.components.customer.common.AccessoriesSection
-import com.example.repairstoremanager.ui.components.customer.edit.ActionButtons
-import com.example.repairstoremanager.ui.components.customer.edit.CustomerInfoSection
-import com.example.repairstoremanager.ui.components.customer.edit.FinancialSection
-import com.example.repairstoremanager.ui.components.customer.edit.PhoneDetailsSection
-import com.example.repairstoremanager.ui.components.customer.edit.ReadOnlyInfoCard
+import com.example.repairstoremanager.ui.components.customer.edit.EditCustomerContent
 import com.example.repairstoremanager.viewmodel.EditCustomerViewModel
 import kotlinx.coroutines.launch
 
@@ -144,6 +136,7 @@ fun EditCustomerScreen(
                     )
                 },
                 onShowDatePicker = { showDatePicker = true },
+                onCancel = { navController.popBackStack() }, // Add cancel callback
                 modifier = Modifier.padding(innerPadding)
             )
         }
@@ -157,58 +150,5 @@ fun EditCustomerScreen(
                 onDismiss = { showDatePicker = false }
             )
         }
-    }
-}
-
-@Composable
-fun EditCustomerContent(
-    customer: Customer,
-    isLoading: Boolean,
-    onUpdateField: (String, Any) -> Unit,
-    onSave: (Customer) -> Unit,
-    onShowDatePicker: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
-    ) {
-        // Read-only information card
-        ReadOnlyInfoCard(customer)
-
-        // Editable fields
-        CustomerInfoSection(customer, onUpdateField)
-
-        // Phone details section
-        PhoneDetailsSection(customer, onUpdateField)
-
-        // Financial section
-        FinancialSection(customer, onUpdateField, onShowDatePicker)
-
-        // Accessories section
-        AccessoriesSection(
-            battery = customer.battery,
-            sim = customer.sim,
-            memory = customer.memory,
-            simTray = customer.simTray,
-            backCover = customer.backCover,
-            deadPermission = customer.deadPermission,
-            onBatteryChange = { onUpdateField("battery", it) },
-            onSimChange = { onUpdateField("sim", it) },
-            onMemoryChange = { onUpdateField("memory", it) },
-            onSimTrayChange = { onUpdateField("simTray", it) },
-            onBackCoverChange = { onUpdateField("backCover", it) },
-            onDeadPermissionChange = { onUpdateField("deadPermission", it) }
-        )
-
-        // Action buttons
-        ActionButtons(
-            isLoading = isLoading,
-            onSave = { onSave(customer) },
-            onCancel = { /* Handled by navigation */ }
-        )
     }
 }

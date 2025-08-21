@@ -173,6 +173,7 @@ fun FinancialSection(
 @Composable
 fun ActionButtons(
     isLoading: Boolean,
+    hasChanges: Boolean,
     onSave: () -> Unit,
     onCancel: () -> Unit
 ) {
@@ -181,7 +182,7 @@ fun ActionButtons(
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Button(
-            onClick = onCancel,
+            onClick = onCancel, // This will now navigate back
             modifier = Modifier.weight(1f),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.errorContainer
@@ -197,7 +198,7 @@ fun ActionButtons(
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primaryContainer
             ),
-            enabled = !isLoading
+            enabled = !isLoading && hasChanges // Enable only when there are changes
         ) {
             if (isLoading) {
                 CircularProgressIndicator(
