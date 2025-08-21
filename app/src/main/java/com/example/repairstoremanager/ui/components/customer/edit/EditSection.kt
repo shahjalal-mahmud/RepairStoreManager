@@ -25,17 +25,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.repairstoremanager.data.model.Customer
-import com.example.repairstoremanager.ui.components.customer.common.StatusDropdown
-import com.example.repairstoremanager.ui.components.customer.common.statusToColor
 
 @Composable
 fun ReadOnlyInfoCard(customer: Customer) {
@@ -66,37 +59,16 @@ fun InfoRow(label: String, value: String) {
 
 @Composable
 fun CustomerInfoSection(customer: Customer, onUpdateField: (String, Any) -> Unit) {
-    // Track the current status locally to ensure UI updates immediately
-    var currentStatus by remember(customer.status) { mutableStateOf(customer.status) }
-
     Column(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
         // Header row with title and status dropdown
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Customer Information",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-
-            StatusDropdown(
-                selectedStatus = currentStatus,
-                options = listOf("Pending", "Repaired", "Delivered", "Cancelled"),
-                onStatusChange = { newStatus ->
-                    currentStatus = newStatus // Update local state immediately
-                    onUpdateField("status", newStatus) // Update the parent state
-                },
-                statusColor = statusToColor(currentStatus),
-                modifier = Modifier.width(120.dp)
-            )
-        }
-
+        Text(
+            text = "Customer Information",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
         OutlinedTextField(
             value = customer.customerName,
             onValueChange = { onUpdateField("customerName", it) },

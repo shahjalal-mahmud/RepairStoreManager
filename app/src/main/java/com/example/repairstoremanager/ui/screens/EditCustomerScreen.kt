@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -80,12 +80,15 @@ fun EditCustomerScreen(
 
     LaunchedEffect(isSuccess) {
         if (isSuccess) {
-            scope.launch {
-                snackbarHostState.showSnackbar(message = "Customer updated successfully!")
-                // Navigate back after a short delay
-                kotlinx.coroutines.delay(1500)
-                navController.popBackStack()
-            }
+            // Show Toast message
+            android.widget.Toast.makeText(
+                context,
+                "Customer updated successfully!",
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
+
+            // Navigate back immediately
+            navController.popBackStack()
         }
     }
 
@@ -95,7 +98,7 @@ fun EditCustomerScreen(
                 title = { Text("Edit Customer Details") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -134,7 +137,9 @@ fun EditCustomerScreen(
                 onSave = { updatedCustomer ->
                     viewModel.updateCustomer(
                         updatedCustomer = updatedCustomer,
-                        onSuccess = {},
+                        onSuccess = {
+                            // This callback is no longer needed since we're using LaunchedEffect
+                        },
                         onError = {}
                     )
                 },
