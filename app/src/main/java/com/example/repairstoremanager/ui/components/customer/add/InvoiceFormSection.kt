@@ -19,10 +19,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,7 +35,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -381,41 +378,12 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
             }
             // ADD THIS NEW SECTION FOR DRAWER NUMBER AND EXTRA DETAILS
             Spacer(Modifier.height(20.dp))
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-            ) {
-                Text("Storage Information", style = MaterialTheme.typography.titleMedium)
-
-                Spacer(Modifier.height(8.dp))
-
-                OutlinedTextField(
-                    value = drawerNumber,
-                    onValueChange = { drawerNumber = it },
-                    label = { Text("Box/Drawer Number") },
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                    singleLine = true
-                )
-
-                Spacer(Modifier.height(12.dp))
-
-                OutlinedTextField(
-                    value = extraDetails,
-                    onValueChange = { extraDetails = it },
-                    label = { Text("Additional Details") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(100.dp),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                    singleLine = false,
-                    maxLines = 4
-                )
-            }
-
-            Spacer(Modifier.height(20.dp))
-
+            StorageInformationSection(
+                drawerNumber = drawerNumber,
+                extraDetails = extraDetails,
+                onDrawerNumberChange = { drawerNumber = it },
+                onExtraDetailsChange = { extraDetails = it }
+            )
             Spacer(Modifier.height(24.dp))
 
             SaveCustomerButton(
