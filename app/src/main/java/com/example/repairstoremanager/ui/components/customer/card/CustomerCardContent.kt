@@ -92,6 +92,7 @@ fun CustomerCardContent(
         ) {
             AccessoryBadges(customer)
             SecurityDropdown(customer)
+            AdditionalDetailsSection(customer = customer)
         }
 
         if (mediaList.size > 1) {

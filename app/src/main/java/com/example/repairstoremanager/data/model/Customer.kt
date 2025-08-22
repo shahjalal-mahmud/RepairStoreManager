@@ -22,5 +22,7 @@ data class Customer(
     val backCover: Boolean = false,
     val deadPermission: Boolean = false,
     val status: String = "Pending",
-    val createdAt: Long = 0L
+    val createdAt: Long = 0L,
+    val drawerNumber: String = "", // New field for box/drawer number
+    val extraDetails: String = ""  // New field for additional details
 )
