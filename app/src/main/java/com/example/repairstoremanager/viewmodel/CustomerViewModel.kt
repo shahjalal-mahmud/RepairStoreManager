@@ -96,16 +96,32 @@ class CustomerViewModel : ViewModel() {
     }
 
     fun getStatusMessage(customer: Customer): String {
-        val note = "\n\nনোট: অনুগ্রহ করে ৩০ দিনের মধ্যে আপনার ডিভাইস সংগ্রহ করুন। অন্যথায়, আমরা ডিভাইসের কোনো গ্যারান্টি দিতে পারব না."
+        val total = customer.totalAmount.ifEmpty { "0" }.toIntOrNull() ?: 0
+        val advanced = customer.advanced.ifEmpty { "0" }.toIntOrNull() ?: 0
+        val due = total - advanced
+
+        val note = "\nনোট: মেরামতের পর ৩০ দিনের মধ্যে ডিভাইস সংগ্রহ করুন, অন্যথায় দোকান কর্তৃপক্ষ দায়ী থাকবে না।"
 
         return when (customer.status) {
-            "Repaired" -> "প্রিয় ${customer.customerName}, আপনার ডিভাইসটি মেরামত করা হয়েছে। অনুগ্রহ করে ডিভাইসটি সংগ্রহ করুন।$note Invoice: ${customer.invoiceNumber}"
-            "Delivered" -> "প্রিয় ${customer.customerName}, আপনার ডিভাইসটি ডেলিভারি দেওয়া হয়েছে। ধন্যবাদ! Invoice: ${customer.invoiceNumber}"
-            "Cancelled" -> "প্রিয় ${customer.customerName}, আপনার রিপেয়ার অনুরোধ বাতিল করা হয়েছে। ভবিষ্যতে আবার যোগাযোগ করুন।"
-            "Pending" -> "প্রিয় ${customer.customerName}, আপনার ডিভাইসটি রিপেয়ারের জন্য গ্রহণ করা হয়েছে। বর্তমান অবস্থা: Pending।$note Invoice: ${customer.invoiceNumber}"
-            else -> "প্রিয় ${customer.customerName}, আপনার ডিভাইসের স্ট্যাটাস এখন: ${customer.status}।$note"
+            "Repaired" -> "প্রিয় ${customer.customerName}, আপনার ডিভাইসটি মেরামত সম্পন্ন হয়েছে। " +
+                    "অনুগ্রহ করে যত দ্রুত সম্ভব সংগ্রহ করুন। " +
+                    "মোট: ৳$total, অগ্রিম: ৳$advanced, বাকি: ৳$due। " +
+                    "Invoice: ${customer.invoiceNumber}.$note"
+
+            "Pending" -> "প্রিয় ${customer.customerName}, আপনার ডিভাইসটি রিপেয়ারের জন্য গ্রহণ করা হয়েছে। " +
+                    "মোট: ৳$total, অগ্রিম: ৳$advanced, বাকি: ৳$due। " +
+                    "Invoice: ${customer.invoiceNumber}.$note"
+
+            "Delivered" -> "প্রিয় ${customer.customerName}, আপনার ডিভাইসটি সফলভাবে ডেলিভারি করা হয়েছে। " +
+                    "Invoice: ${customer.invoiceNumber}. ধন্যবাদ।"
+
+            "Cancelled" -> "প্রিয় ${customer.customerName}, আপনার রিপেয়ার অনুরোধ বাতিল হয়েছে। " +
+                    "ভবিষ্যতে আবার যোগাযোগ করুন।"
+
+            else -> "প্রিয় ${customer.customerName}, আপনার ডিভাইসের বর্তমান স্ট্যাটাস: ${customer.status}.$note"
         }
     }
+
     private val _currentInvoiceNumber = MutableStateFlow<String?>(null)
     val currentInvoiceNumber: StateFlow<String?> = _currentInvoiceNumber
 
