@@ -17,18 +17,24 @@ import com.example.repairstoremanager.ui.screens.LoginScreen
 import com.example.repairstoremanager.ui.screens.ProfileScreen
 import com.example.repairstoremanager.ui.screens.QuickInvoiceScreen
 import com.example.repairstoremanager.ui.stock.AddEditProductScreen
-import com.example.repairstoremanager.ui.stock.AddProductScreen
+import com.example.repairstoremanager.ui.stock.AddTransactionScreen
 import com.example.repairstoremanager.ui.stock.StockListScreen
+import com.example.repairstoremanager.ui.stock.TransactionScreen
+import com.example.repairstoremanager.viewmodel.CustomerViewModel
 import com.example.repairstoremanager.viewmodel.EditCustomerViewModel
 import com.example.repairstoremanager.viewmodel.LoginViewModel
 import com.example.repairstoremanager.viewmodel.StockViewModel
 import com.example.repairstoremanager.viewmodel.StoreViewModel
+import com.example.repairstoremanager.viewmodel.TransactionViewModel
+
 @RequiresApi(Build.VERSION_CODES.S)
 @Composable
 fun Navigation(
     navController: NavHostController,
     storeViewModel: StoreViewModel,
-    stockViewModel: StockViewModel
+    stockViewModel: StockViewModel,
+    transectionViewModel: TransactionViewModel,
+    customerViewModel: CustomerViewModel
 ) {
     val authRepository = remember { AuthRepository() }
 
@@ -59,7 +65,7 @@ fun Navigation(
             MainScaffold(navController) {
                 DashboardScreen(
                     onNavigateToQuickInvoice = {
-                        navController.navigate("quick_invoice")
+                        navController.navigate("add_transection")
                     },
                     navController = navController
                 )
@@ -101,6 +107,23 @@ fun Navigation(
             MainScaffold(navController) {
                 QuickInvoiceScreen(
                     onClose = { navController.popBackStack() }
+                )
+            }
+        }
+        composable("transection"){
+            MainScaffold(navController) {
+                TransactionScreen(
+                    onClose = { navController.popBackStack() },
+                    viewModel = transectionViewModel
+                )
+            }
+        }
+        composable("add_transection"){
+            MainScaffold(navController) {
+                AddTransactionScreen(
+                    transactionViewModel = transectionViewModel,
+                    customerViewModel = customerViewModel,
+                    stockViewModel = stockViewModel,
                 )
             }
         }

@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -138,9 +139,16 @@ fun SearchBar(
 
 @Composable
 fun ProductCard(product: Product, onItemClick: () -> Unit) {
+    val backgroundColor = if (product.hasWarranty) {
+        Color(0xFFE8F5E8) // Light green for products with warranty
+    } else {
+        MaterialTheme.colorScheme.surface
+    }
+
     Card(
         onClick = onItemClick,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = backgroundColor)
     ) {
         Column(Modifier.padding(16.dp)) {
             Text(
@@ -154,6 +162,24 @@ fun ProductCard(product: Product, onItemClick: () -> Unit) {
                 style = MaterialTheme.typography.bodyMedium
             )
             Spacer(Modifier.height(8.dp))
+
+            // Warranty information
+            if (product.hasWarranty) {
+                AssistChip(
+                    onClick = {},
+                    label = {
+                        Text(
+                            "Warranty: ${product.getWarrantyDisplay()}",
+                            color = Color(0xFF2E7D32) // Dark green text
+                        )
+                    },
+                    colors = AssistChipDefaults.assistChipColors(
+                        containerColor = Color(0xFFC8E6C9) // Light green chip
+                    )
+                )
+                Spacer(Modifier.height(8.dp))
+            }
+
             Row(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {

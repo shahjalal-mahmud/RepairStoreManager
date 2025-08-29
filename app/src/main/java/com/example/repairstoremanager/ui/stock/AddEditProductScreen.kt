@@ -1,6 +1,8 @@
 package com.example.repairstoremanager.ui.stock
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -11,7 +13,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -26,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -49,6 +56,9 @@ fun AddEditProductScreen(
     var sellingPrice by remember { mutableStateOf("") }
     var quantity by remember { mutableStateOf("") }
     var details by remember { mutableStateOf("") }
+    var hasWarranty by remember { mutableStateOf(false) }
+    var warrantyDuration by remember { mutableStateOf("") }
+    var warrantyType by remember { mutableStateOf("month") }
 
     var submitting by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -68,6 +78,9 @@ fun AddEditProductScreen(
                     cost = it.cost.toString()
                     quantity = it.quantity.toString()
                     details = it.details
+                    hasWarranty = it.hasWarranty
+                    warrantyDuration = it.warrantyDuration
+                    warrantyType = it.warrantyType
                 }
             }
         }
@@ -103,7 +116,7 @@ fun AddEditProductScreen(
             OutlinedTextField(
                 value = type,
                 onValueChange = { type = it },
-                label = { Text("Type *") },
+                label = { Text("Type") },
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(Modifier.height(8.dp))
@@ -111,7 +124,7 @@ fun AddEditProductScreen(
             OutlinedTextField(
                 value = category,
                 onValueChange = { category = it },
-                label = { Text("Category *") },
+                label = { Text("Category") },
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(Modifier.height(8.dp))
@@ -127,7 +140,7 @@ fun AddEditProductScreen(
             OutlinedTextField(
                 value = buyingPrice,
                 onValueChange = { buyingPrice = it },
-                label = { Text("Buying Price *") },
+                label = { Text("Buying Price") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -136,7 +149,7 @@ fun AddEditProductScreen(
             OutlinedTextField(
                 value = sellingPrice,
                 onValueChange = { sellingPrice = it },
-                label = { Text("Selling Price *") },
+                label = { Text("Selling Price") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -145,7 +158,7 @@ fun AddEditProductScreen(
             OutlinedTextField(
                 value = cost,
                 onValueChange = { cost = it },
-                label = { Text("Cost (optional)") },
+                label = { Text("Cost") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -160,6 +173,67 @@ fun AddEditProductScreen(
             )
             Spacer(Modifier.height(8.dp))
 
+            // Warranty Section
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Checkbox(
+                    checked = hasWarranty,
+                    onCheckedChange = { hasWarranty = it }
+                )
+                Text("Has Warranty/Garantee", modifier = Modifier.padding(start = 8.dp))
+            }
+            Spacer(Modifier.height(8.dp))
+
+            if (hasWarranty) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = warrantyDuration,
+                        onValueChange = { warrantyDuration = it },
+                        label = { Text("Duration") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    var expanded by remember { mutableStateOf(false) }
+                    ExposedDropdownMenuBox(
+                        expanded = expanded,
+                        onExpandedChange = { expanded = !expanded }
+                    ) {
+                        OutlinedTextField(
+                            value = warrantyType,
+                            onValueChange = {},
+                            label = { Text("Type") },
+                            readOnly = true,
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .menuAnchor()
+                        )
+
+                        ExposedDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            listOf("month", "months", "year", "years", "day", "days").forEach { type ->
+                                DropdownMenuItem(
+                                    text = { Text(type) },
+                                    onClick = {
+                                        warrantyType = type
+                                        expanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+            }
+
             OutlinedTextField(
                 value = details,
                 onValueChange = { details = it },
@@ -171,8 +245,7 @@ fun AddEditProductScreen(
 
             Button(
                 onClick = {
-                    if (name.isBlank() || type.isBlank() || category.isBlank() ||
-                        sellingPrice.isBlank() || buyingPrice.isBlank() || quantity.isBlank()) {
+                    if (name.isBlank() || quantity.isBlank()) {
                         // Show error message
                         return@Button
                     }
@@ -187,7 +260,10 @@ fun AddEditProductScreen(
                         sellingPrice = sellingPrice.toDoubleOrNull() ?: 0.0,
                         cost = cost.toDoubleOrNull() ?: 0.0,
                         quantity = quantity.toLongOrNull() ?: 0L,
-                        details = details.trim()
+                        details = details.trim(),
+                        hasWarranty = hasWarranty,
+                        warrantyDuration = warrantyDuration.trim(),
+                        warrantyType = warrantyType.trim()
                     )
 
                     if (productId == null) {

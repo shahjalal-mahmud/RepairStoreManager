@@ -114,4 +114,20 @@ class CustomerRepository {
             "INV-000001" // Fallback
         }
     }
+    suspend fun getCustomerByInvoice(invoice: String): Customer? {
+        return try {
+            val snapshot = FirebaseFirestore.getInstance()
+                .collection("customers")
+                .whereEqualTo("invoiceNumber", invoice)
+                .get()
+                .await()
+
+            if (!snapshot.isEmpty) {
+                snapshot.toObjects(Customer::class.java).firstOrNull()
+            } else null
+        } catch (e: Exception) {
+            null
+        }
+    }
+
 }

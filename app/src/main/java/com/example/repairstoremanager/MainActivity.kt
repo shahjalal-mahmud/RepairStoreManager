@@ -16,8 +16,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.repairstoremanager.ui.navigation.Navigation
 import com.example.repairstoremanager.ui.theme.RepairStoreManagerTheme
+import com.example.repairstoremanager.viewmodel.CustomerViewModel
 import com.example.repairstoremanager.viewmodel.StockViewModel
 import com.example.repairstoremanager.viewmodel.StoreViewModel
+import com.example.repairstoremanager.viewmodel.TransactionViewModel
 import com.example.repairstoremanager.worker.WorkScheduler
 
 class MainActivity : ComponentActivity() {
@@ -128,7 +130,15 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 val storeViewModel: StoreViewModel = viewModel()
                 val stockViewModel = remember { StockViewModel() }
-                Navigation(navController = navController, storeViewModel = storeViewModel, stockViewModel = stockViewModel)
+                val transactionViewModel = remember { TransactionViewModel() }
+                val customerViewModel = remember { CustomerViewModel() }
+                Navigation(
+                    navController = navController,
+                    storeViewModel = storeViewModel,
+                    stockViewModel = stockViewModel,
+                    transectionViewModel = transactionViewModel,
+                    customerViewModel = customerViewModel
+                )
             }
         }
     }
