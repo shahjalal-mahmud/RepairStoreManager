@@ -11,5 +11,6 @@ sealed class BottomNavItem(val route: String, val label: String, val icon: Image
     object CustomerList : BottomNavItem("customer_list", "Customers",
         Icons.AutoMirrored.Filled.List
     )
+    object Stock : BottomNavItem("stock_list", "Stock", Icons.Filled.Inventory)
     object Profile : BottomNavItem("profile", "Profile", Icons.Filled.Person)
 }

@@ -10,11 +10,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.compose.runtime.remember
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.repairstoremanager.ui.navigation.Navigation
 import com.example.repairstoremanager.ui.theme.RepairStoreManagerTheme
+import com.example.repairstoremanager.viewmodel.StockViewModel
 import com.example.repairstoremanager.viewmodel.StoreViewModel
 import com.example.repairstoremanager.worker.WorkScheduler
 
@@ -125,7 +127,8 @@ class MainActivity : ComponentActivity() {
             RepairStoreManagerTheme {
                 val navController = rememberNavController()
                 val storeViewModel: StoreViewModel = viewModel()
-                Navigation(navController = navController, storeViewModel = storeViewModel)
+                val stockViewModel = remember { StockViewModel() }
+                Navigation(navController = navController, storeViewModel = storeViewModel, stockViewModel = stockViewModel)
             }
         }
     }

@@ -1,0 +1,17 @@
+package com.example.repairstoremanager.data.model
+
+data class Product(
+    val id: String = "",
+    val shopOwnerId: String = "",
+    val type: String = "",
+    val name: String = "",
+    val category: String = "",
+    val subCategory: String = "",
+    val cost: Double = 0.0,
+    val buyingPrice: Double = 0.0,
+    val sellingPrice: Double = 0.0,
+    val quantity: Long = 0L,
+    val details: String = "",
+    val createdAt: Long = 0L,
+    val updatedAt: Long = 0L
+)

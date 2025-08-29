@@ -16,15 +16,19 @@ import com.example.repairstoremanager.ui.screens.ForgotPasswordScreen
 import com.example.repairstoremanager.ui.screens.LoginScreen
 import com.example.repairstoremanager.ui.screens.ProfileScreen
 import com.example.repairstoremanager.ui.screens.QuickInvoiceScreen
+import com.example.repairstoremanager.ui.stock.AddEditProductScreen
+import com.example.repairstoremanager.ui.stock.AddProductScreen
+import com.example.repairstoremanager.ui.stock.StockListScreen
 import com.example.repairstoremanager.viewmodel.EditCustomerViewModel
 import com.example.repairstoremanager.viewmodel.LoginViewModel
+import com.example.repairstoremanager.viewmodel.StockViewModel
 import com.example.repairstoremanager.viewmodel.StoreViewModel
-
 @RequiresApi(Build.VERSION_CODES.S)
 @Composable
 fun Navigation(
     navController: NavHostController,
-    storeViewModel: StoreViewModel
+    storeViewModel: StoreViewModel,
+    stockViewModel: StockViewModel
 ) {
     val authRepository = remember { AuthRepository() }
 
@@ -34,7 +38,6 @@ fun Navigation(
     } else {
         "login"
     }
-
     NavHost(navController = navController, startDestination = startDestination) {
 
         composable("login") {
@@ -70,6 +73,9 @@ fun Navigation(
         composable(BottomNavItem.CustomerList.route) {
             MainScaffold(navController) { CustomerListScreen(navController) }
         }
+        composable(BottomNavItem.Stock.route ) {
+            MainScaffold(navController) { StockListScreen(navController, stockViewModel)}
+        }
 
         composable(BottomNavItem.Profile.route) {
             MainScaffold(navController) {
@@ -92,7 +98,7 @@ fun Navigation(
         }
 
         composable("quick_invoice") {
-            MainScaffold(navController) { // Wrap with MainScaffold for consistent UI
+            MainScaffold(navController) {
                 QuickInvoiceScreen(
                     onClose = { navController.popBackStack() }
                 )
@@ -107,6 +113,36 @@ fun Navigation(
                     customerId = customerId,
                     navController = navController,
                     viewModel = editCustomerViewModel
+                )
+            }
+        }
+
+        // ✅ Stock management routes
+        composable("stock_list") {
+            MainScaffold(navController) {
+                StockListScreen(
+                    navController = navController,
+                    viewModel = stockViewModel
+                )
+            }
+        }
+
+        composable("add_product") {
+            MainScaffold(navController) {
+                AddEditProductScreen(
+                    navController = navController,
+                    viewModel = stockViewModel
+                )
+            }
+        }
+
+        composable("edit_product/{productId}") { backStackEntry ->
+            val productId = backStackEntry.arguments?.getString("productId")
+            MainScaffold(navController) {
+                AddEditProductScreen(
+                    navController = navController,
+                    viewModel = stockViewModel,
+                    productId = productId
                 )
             }
         }
