@@ -25,6 +25,7 @@ fun BottomNavigationBar(navController: NavController) {
         BottomNavItem.Dashboard,
         BottomNavItem.AddCustomer,
         BottomNavItem.CustomerList,
+        BottomNavItem.Stock,
         BottomNavItem.Profile
     )
 

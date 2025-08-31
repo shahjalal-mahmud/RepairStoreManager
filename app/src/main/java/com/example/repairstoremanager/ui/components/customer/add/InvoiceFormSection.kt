@@ -10,7 +10,6 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,7 +20,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -94,6 +92,8 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
     var clearMediaSignal by remember { mutableIntStateOf(0) }
     var sendSmsAfterSave by remember { mutableStateOf(false) }
     var sendWhatsAppAfterSave by remember { mutableStateOf(false) }
+    var drawerNumber by remember { mutableStateOf("") }
+    var extraDetails by remember { mutableStateOf("") }
 
     // Common phone models
     val commonPhoneModels = remember {
@@ -160,6 +160,8 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
         clearMediaSignal++
         sendSmsAfterSave = false
         sendWhatsAppAfterSave = false
+        drawerNumber = ""
+        extraDetails = ""
     }
 
     fun saveCustomer(showPrintAfterSave: Boolean = false) {
@@ -188,6 +190,8 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
             backCover = backCover,
             deadPermission = deadPermission,
             status = "Pending",
+            drawerNumber = drawerNumber,
+            extraDetails = extraDetails
         )
 
         viewModel.addCustomer(
@@ -372,7 +376,14 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
                     )
                 }
             }
-
+            // ADD THIS NEW SECTION FOR DRAWER NUMBER AND EXTRA DETAILS
+            Spacer(Modifier.height(20.dp))
+            StorageInformationSection(
+                drawerNumber = drawerNumber,
+                extraDetails = extraDetails,
+                onDrawerNumberChange = { drawerNumber = it },
+                onExtraDetailsChange = { extraDetails = it }
+            )
             Spacer(Modifier.height(24.dp))
 
             SaveCustomerButton(

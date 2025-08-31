@@ -175,7 +175,7 @@ fun CaptureMediaSection(
 
     fun takePhotoWithCamera() {
         checkPermissionAndExecute {
-            val uri = MediaStorageHelper.createImageCaptureUri(context, customerId)
+            val uri = MediaStorageHelper.createImageUri(context, customerId) // ✅ use MediaStore
             if (uri != null) {
                 tempImageUri = uri
                 takePhotoLauncher.launch(uri)
@@ -190,7 +190,7 @@ fun CaptureMediaSection(
         }
 
         checkPermissionAndExecute {
-            val uri = MediaStorageHelper.createVideoUri(context, customerId)
+            val uri = MediaStorageHelper.createVideoUri(context, customerId) // ✅ use MediaStore
             if (uri != null) {
                 tempVideoUri = uri
                 takeVideoLauncher.launch(uri)
