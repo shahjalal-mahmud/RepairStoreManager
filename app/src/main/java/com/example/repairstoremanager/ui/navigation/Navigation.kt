@@ -9,13 +9,19 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.repairstoremanager.data.repository.AuthRepository
 import com.example.repairstoremanager.ui.screens.AddCustomerScreen
+import com.example.repairstoremanager.ui.screens.AllDeliveriesScreen
 import com.example.repairstoremanager.ui.screens.CustomerListScreen
 import com.example.repairstoremanager.ui.screens.DashboardScreen
 import com.example.repairstoremanager.ui.screens.EditCustomerScreen
 import com.example.repairstoremanager.ui.screens.ForgotPasswordScreen
 import com.example.repairstoremanager.ui.screens.LoginScreen
+import com.example.repairstoremanager.ui.screens.NotificationsScreen
 import com.example.repairstoremanager.ui.screens.ProfileScreen
 import com.example.repairstoremanager.ui.screens.QuickInvoiceScreen
+import com.example.repairstoremanager.ui.screens.SearchScreen
+import com.example.repairstoremanager.ui.screens.SettingsScreen
+import com.example.repairstoremanager.ui.screens.TodayDeliveriesScreen
+import com.example.repairstoremanager.ui.screens.TomorrowDeliveriesScreen
 import com.example.repairstoremanager.ui.stock.AddProductScreen
 import com.example.repairstoremanager.ui.stock.AddTransactionScreen
 import com.example.repairstoremanager.ui.stock.EditProductScreen
@@ -65,11 +71,61 @@ fun Navigation(
         composable(BottomNavItem.Dashboard.route) {
             MainScaffold(navController) {
                 DashboardScreen(
+                    viewModel = customerViewModel,
+                    storeViewModel = storeViewModel,
+                    navController = navController,
                     onNavigateToQuickInvoice = {
                         navController.navigate("sales")
                     },
-                    navController = navController
+                    onNavigateToProfile = {
+                        navController.navigate(BottomNavItem.Profile.route)
+                    },
+                    onNavigateToNotifications = {
+                        navController.navigate("notifications")
+                    },
+                    onNavigateToSearch = {
+                        navController.navigate("search")
+                    },
+                    onNavigateToSettings = {
+                        navController.navigate("settings")
+                    }
                 )
+            }
+        }
+
+        composable("notifications") {
+            MainScaffold(navController) {
+                NotificationsScreen(navController)
+            }
+        }
+
+        composable("search") {
+            MainScaffold(navController) {
+                SearchScreen(navController)
+            }
+        }
+
+        composable("settings") {
+            MainScaffold(navController) {
+                SettingsScreen(navController)
+            }
+        }
+
+        composable("today_deliveries") {
+            MainScaffold(navController) {
+                TodayDeliveriesScreen(navController)
+            }
+        }
+
+        composable("tomorrow_deliveries") {
+            MainScaffold(navController) {
+                TomorrowDeliveriesScreen(navController)
+            }
+        }
+
+        composable("all_deliveries") {
+            MainScaffold(navController) {
+                AllDeliveriesScreen(navController)
             }
         }
 
