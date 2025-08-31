@@ -83,6 +83,8 @@ dependencies {
 
     implementation("androidx.media3:media3-exoplayer:1.2.0")
     implementation("androidx.media3:media3-ui:1.2.0")
+    implementation("androidx.compose.material3:material3:1.1.2")
+    implementation("com.google.code.gson:gson:2.13.1")
 
     // Coil
     implementation(libs.coil.compose)
@@ -95,6 +97,7 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.foundation.layout.android)
     implementation(libs.androidx.foundation)
+    implementation(libs.androidx.room.common.jvm)
 
     // Testing
     testImplementation(libs.junit)
