@@ -24,12 +24,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import coil.compose.rememberAsyncImagePainter
 import com.example.repairstoremanager.data.model.StoreInfo
-import kotlin.text.ifEmpty
+import android.graphics.BitmapFactory
+import android.util.Base64
+import androidx.compose.ui.graphics.painter.BitmapPainter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,16 +50,33 @@ fun DashboardTopBar(
             ) {
                 // Store Logo/Profile Icon
                 if (storeInfo.logoBase64.isNotEmpty()) {
-                    Image(
-                        painter = rememberAsyncImagePainter(
-                            model = "data:image/png;base64,${storeInfo.logoBase64}"
-                        ),
-                        contentDescription = "Store Logo",
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape),
-                        contentScale = ContentScale.Crop
-                    )
+                    val imageBytes = try {
+                        Base64.decode(storeInfo.logoBase64, Base64.DEFAULT)
+                    } catch (e: Exception) {
+                        null
+                    }
+
+                    val bitmap = imageBytes?.let {
+                        BitmapFactory.decodeByteArray(it, 0, it.size)
+                    }
+
+                    if (bitmap != null) {
+                        Image(
+                            painter = BitmapPainter(bitmap.asImageBitmap()),
+                            contentDescription = "Store Logo",
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.AccountCircle,
+                            contentDescription = "Profile",
+                            modifier = Modifier.size(40.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 } else {
                     Icon(
                         imageVector = Icons.Default.AccountCircle,
