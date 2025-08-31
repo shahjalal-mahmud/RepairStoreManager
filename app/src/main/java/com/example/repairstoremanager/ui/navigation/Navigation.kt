@@ -34,7 +34,7 @@ fun Navigation(
     navController: NavHostController,
     storeViewModel: StoreViewModel,
     stockViewModel: StockViewModel,
-    transectionViewModel: TransactionViewModel,
+    transactionViewModel: TransactionViewModel,
     customerViewModel: CustomerViewModel
 ) {
     val authRepository = remember { AuthRepository() }
@@ -66,7 +66,7 @@ fun Navigation(
             MainScaffold(navController) {
                 DashboardScreen(
                     onNavigateToQuickInvoice = {
-                        navController.navigate("add_transection")
+                        navController.navigate("sales")
                     },
                     navController = navController
                 )
@@ -80,7 +80,8 @@ fun Navigation(
         composable(BottomNavItem.CustomerList.route) {
             MainScaffold(navController) { CustomerListScreen(navController) }
         }
-        composable(BottomNavItem.Stock.route ) {
+
+        composable(BottomNavItem.Stock.route) {
             MainScaffold(navController) { StockListScreen(navController, stockViewModel)}
         }
 
@@ -111,20 +112,23 @@ fun Navigation(
                 )
             }
         }
-        composable("transection"){
+
+        // ✅ Sales and Transactions routes - UPDATED
+        composable("sales") {
             MainScaffold(navController) {
-                TransactionScreen(
-                    onClose = { navController.popBackStack() },
-                    viewModel = transectionViewModel
+                AddTransactionScreen(
+                    transactionViewModel = transactionViewModel,
+                    stockViewModel = stockViewModel,
+                    onNavigateToTransactions = { navController.navigate("transactions") }
                 )
             }
         }
-        composable("add_transection"){
+
+        composable("transactions") {
             MainScaffold(navController) {
-                AddTransactionScreen(
-                    transactionViewModel = transectionViewModel,
-                    customerViewModel = customerViewModel,
-                    stockViewModel = stockViewModel,
+                TransactionScreen(
+                    transactionViewModel = transactionViewModel,
+                    onBack = { navController.popBackStack() }
                 )
             }
         }
