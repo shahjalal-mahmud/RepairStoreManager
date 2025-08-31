@@ -16,8 +16,9 @@ import com.example.repairstoremanager.ui.screens.ForgotPasswordScreen
 import com.example.repairstoremanager.ui.screens.LoginScreen
 import com.example.repairstoremanager.ui.screens.ProfileScreen
 import com.example.repairstoremanager.ui.screens.QuickInvoiceScreen
-import com.example.repairstoremanager.ui.stock.AddEditProductScreen
+import com.example.repairstoremanager.ui.stock.AddProductScreen
 import com.example.repairstoremanager.ui.stock.AddTransactionScreen
+import com.example.repairstoremanager.ui.stock.EditProductScreen
 import com.example.repairstoremanager.ui.stock.StockListScreen
 import com.example.repairstoremanager.ui.stock.TransactionScreen
 import com.example.repairstoremanager.viewmodel.CustomerViewModel
@@ -152,7 +153,7 @@ fun Navigation(
 
         composable("add_product") {
             MainScaffold(navController) {
-                AddEditProductScreen(
+                AddProductScreen(
                     navController = navController,
                     viewModel = stockViewModel
                 )
@@ -160,9 +161,9 @@ fun Navigation(
         }
 
         composable("edit_product/{productId}") { backStackEntry ->
-            val productId = backStackEntry.arguments?.getString("productId")
+            val productId = backStackEntry.arguments?.getString("productId") ?: ""
             MainScaffold(navController) {
-                AddEditProductScreen(
+                EditProductScreen(
                     navController = navController,
                     viewModel = stockViewModel,
                     productId = productId

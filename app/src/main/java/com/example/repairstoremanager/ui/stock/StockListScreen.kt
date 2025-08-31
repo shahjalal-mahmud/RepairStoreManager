@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.repairstoremanager.data.model.Product
@@ -139,7 +140,9 @@ fun SearchBar(
 
 @Composable
 fun ProductCard(product: Product, onItemClick: () -> Unit) {
-    val backgroundColor = if (product.hasWarranty) {
+    val backgroundColor = if (product.quantity <= product.alertQuantity && product.alertQuantity > 0) {
+        Color(0xFFFFEBEE) // Light red for low stock
+    } else if (product.hasWarranty) {
         Color(0xFFE8F5E8) // Light green for products with warranty
     } else {
         MaterialTheme.colorScheme.surface
@@ -147,21 +150,49 @@ fun ProductCard(product: Product, onItemClick: () -> Unit) {
 
     Card(
         onClick = onItemClick,
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = backgroundColor)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(4.dp),
+        colors = CardDefaults.cardColors(containerColor = backgroundColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(Modifier.padding(16.dp)) {
-            Text(
-                product.name,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                "${product.type} • ${product.category}${if (product.subCategory.isNotBlank()) " • ${product.subCategory}" else ""}",
-                style = MaterialTheme.typography.bodyMedium
-            )
+            // Header with name and type
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    product.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+
+                Text(
+                    product.type,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
+
             Spacer(Modifier.height(8.dp))
+
+            // Category and model
+            if (product.category.isNotBlank() || product.model.isNotBlank()) {
+                Text(
+                    "${product.category}${if (product.subCategory.isNotBlank()) " • ${product.subCategory}" else ""}${if (product.model.isNotBlank()) " • ${product.model}" else ""}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(Modifier.height(8.dp))
+            }
 
             // Warranty information
             if (product.hasWarranty) {
@@ -170,38 +201,75 @@ fun ProductCard(product: Product, onItemClick: () -> Unit) {
                     label = {
                         Text(
                             "Warranty: ${product.getWarrantyDisplay()}",
-                            color = Color(0xFF2E7D32) // Dark green text
+                            color = Color(0xFF2E7D32),
+                            style = MaterialTheme.typography.labelSmall
                         )
                     },
                     colors = AssistChipDefaults.assistChipColors(
-                        containerColor = Color(0xFFC8E6C9) // Light green chip
-                    )
+                        containerColor = Color(0xFFC8E6C9)
+                    ),
+                    modifier = Modifier.padding(bottom = 8.dp)
                 )
-                Spacer(Modifier.height(8.dp))
             }
 
+            // Stock and pricing info
             Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                AssistChip(
-                    onClick = {},
-                    label = { Text("Qty: ${product.quantity}") }
-                )
-                AssistChip(
-                    onClick = {},
-                    label = { Text("Buy: $${product.buyingPrice}") }
-                )
-                AssistChip(
-                    onClick = {},
-                    label = { Text("Sell: $${product.sellingPrice}") }
+                // Quantity with alert indicator
+                Box(
+                    contentAlignment = Alignment.Center
+                ) {
+                    AssistChip(
+                        onClick = {},
+                        label = {
+                            Text(
+                                "Qty: ${product.quantity}",
+                                color = if (product.quantity <= product.alertQuantity && product.alertQuantity > 0) {
+                                    Color(0xFFD32F2F)
+                                } else {
+                                    MaterialTheme.colorScheme.onSurface
+                                }
+                            )
+                        }
+                    )
+
+                    if (product.quantity <= product.alertQuantity && product.alertQuantity > 0) {
+                        Badge(
+                            modifier = Modifier.align(Alignment.TopEnd)
+                        )
+                    }
+                }
+
+                Text(
+                    "$${product.sellingPrice}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
+
+            // Supplier info if available
+            if (product.supplier.isNotBlank()) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "Supplier: ${product.supplier}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            // Product details if available
             if (product.details.isNotBlank()) {
                 Spacer(Modifier.height(8.dp))
                 Text(
                     product.details,
                     style = MaterialTheme.typography.bodySmall,
-                    maxLines = 2
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
