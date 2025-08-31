@@ -1,4 +1,4 @@
-package com.example.repairstoremanager.ui.stock
+package com.example.repairstoremanager.ui.screens.transaction
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.example.repairstoremanager.data.model.Transaction
 import com.example.repairstoremanager.viewmodel.TransactionViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -124,7 +125,7 @@ fun SummaryItem(label: String, value: String) {
 }
 
 @Composable
-fun TransactionList(transactions: List<com.example.repairstoremanager.data.model.Transaction>) {
+fun TransactionList(transactions: List<Transaction>) {
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -136,7 +137,7 @@ fun TransactionList(transactions: List<com.example.repairstoremanager.data.model
 }
 
 @Composable
-fun TransactionCard(transaction: com.example.repairstoremanager.data.model.Transaction) {
+fun TransactionCard(transaction: Transaction) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(

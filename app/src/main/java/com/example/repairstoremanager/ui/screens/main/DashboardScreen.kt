@@ -1,4 +1,4 @@
-package com.example.repairstoremanager.ui.screens
+package com.example.repairstoremanager.ui.screens.main
 
 import android.annotation.SuppressLint
 import android.os.Build

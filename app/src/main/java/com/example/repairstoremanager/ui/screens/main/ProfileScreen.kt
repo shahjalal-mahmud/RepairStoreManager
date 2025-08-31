@@ -1,4 +1,4 @@
-package com.example.repairstoremanager.ui.screens
+package com.example.repairstoremanager.ui.screens.main
 
 import android.Manifest
 import android.content.pm.PackageManager

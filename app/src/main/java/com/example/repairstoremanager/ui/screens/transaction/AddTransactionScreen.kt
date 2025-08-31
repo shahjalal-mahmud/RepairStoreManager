@@ -1,4 +1,4 @@
-package com.example.repairstoremanager.ui.stock
+package com.example.repairstoremanager.ui.screens.transaction
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

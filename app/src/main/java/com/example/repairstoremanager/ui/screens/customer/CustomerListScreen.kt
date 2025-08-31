@@ -1,4 +1,4 @@
-package com.example.repairstoremanager.ui.screens
+package com.example.repairstoremanager.ui.screens.customer
 
 import android.os.Build
 import androidx.annotation.RequiresApi

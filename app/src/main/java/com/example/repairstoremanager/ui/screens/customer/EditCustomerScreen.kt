@@ -1,5 +1,6 @@
-package com.example.repairstoremanager.ui.screens
+package com.example.repairstoremanager.ui.screens.customer
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -73,10 +74,10 @@ fun EditCustomerScreen(
     LaunchedEffect(isSuccess) {
         if (isSuccess) {
             // Show Toast message
-            android.widget.Toast.makeText(
+            Toast.makeText(
                 context,
                 "Customer updated successfully!",
-                android.widget.Toast.LENGTH_SHORT
+                Toast.LENGTH_SHORT
             ).show()
 
             // Navigate back immediately
