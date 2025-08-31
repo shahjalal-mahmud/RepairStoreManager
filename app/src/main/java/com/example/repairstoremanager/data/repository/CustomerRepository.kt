@@ -3,6 +3,7 @@ package com.example.repairstoremanager.data.repository
 import com.example.repairstoremanager.data.model.Customer
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
 
 class CustomerRepository {
@@ -129,5 +130,33 @@ class CustomerRepository {
             null
         }
     }
+    suspend fun searchCustomers(query: String): List<Customer> {
+        val uid = getUserId() ?: return emptyList()
+        val trimmedQuery = query.trim()
 
+        if (trimmedQuery.isBlank() || trimmedQuery.length < 2) {
+            return emptyList()
+        }
+
+        return try {
+            // Use the simple search approach for compatibility
+            val allCustomers = db.collection("customers")
+                .whereEqualTo("shopOwnerId", uid)
+                .get()
+                .await()
+                .toObjects(Customer::class.java)
+
+            // Filter with case-insensitive search
+            allCustomers.filter { customer ->
+                customer.customerName.contains(trimmedQuery, ignoreCase = true) ||
+                        customer.contactNumber.contains(trimmedQuery, ignoreCase = true) ||
+                        customer.invoiceNumber?.contains(trimmedQuery, ignoreCase = true) == true ||
+                        // For invoice numbers without "INV-" prefix
+                        (trimmedQuery.all { it.isDigit() } &&
+                                customer.invoiceNumber?.replace("INV-", "", ignoreCase = true)?.startsWith(trimmedQuery, ignoreCase = true) == true)
+            }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
 }

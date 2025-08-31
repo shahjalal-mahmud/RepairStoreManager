@@ -17,6 +17,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.repairstoremanager.ui.navigation.Navigation
 import com.example.repairstoremanager.ui.theme.RepairStoreManagerTheme
 import com.example.repairstoremanager.viewmodel.CustomerViewModel
+import com.example.repairstoremanager.viewmodel.SearchViewModel
 import com.example.repairstoremanager.viewmodel.StockViewModel
 import com.example.repairstoremanager.viewmodel.StoreViewModel
 import com.example.repairstoremanager.viewmodel.TransactionViewModel
@@ -132,12 +133,14 @@ class MainActivity : ComponentActivity() {
                 val stockViewModel = remember { StockViewModel() }
                 val transactionViewModel = remember { TransactionViewModel() }
                 val customerViewModel = remember { CustomerViewModel() }
+                val searchViewModel = remember { SearchViewModel() }
                 Navigation(
                     navController = navController,
                     storeViewModel = storeViewModel,
                     stockViewModel = stockViewModel,
                     transactionViewModel = transactionViewModel,
-                    customerViewModel = customerViewModel
+                    customerViewModel = customerViewModel,
+                    searchViewModel = searchViewModel
                 )
             }
         }

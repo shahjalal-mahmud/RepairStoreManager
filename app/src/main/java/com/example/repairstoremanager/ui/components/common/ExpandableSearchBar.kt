@@ -1,5 +1,6 @@
 package com.example.repairstoremanager.ui.components.common
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -24,6 +25,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 
+@SuppressLint("RememberInComposition")
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ExpandableSearchBar(
