@@ -4,7 +4,8 @@ data class TransactionProduct(
     val productId: String = "",
     val name: String = "",
     val price: Double = 0.0,
-    val quantity: Int = 1
+    val quantity: Int = 1,
+    val total: Double = price * quantity
 )
 
 data class Transaction(
@@ -12,7 +13,9 @@ data class Transaction(
     val shopOwnerId: String = "",
     val invoiceNumber: String = "",
     val customerId: String = "",
-    val type: String = "", // "Service", "ProductSale", "Expense"
+    val customerName: String = "",
+    val customerPhone: String = "",
+    val type: String = "", // "Sale", "Service", "Expense"
     val description: String = "",
     val amount: Double = 0.0,
     val advanced: Double = 0.0,
@@ -21,4 +24,5 @@ data class Transaction(
     val products: List<TransactionProduct> = emptyList(),
     val createdAt: Long = System.currentTimeMillis(),
     val date: String = "",
+    val status: String = "Completed" // "Completed", "Pending", "Cancelled"
 )

@@ -136,7 +136,7 @@ class MainActivity : ComponentActivity() {
                     navController = navController,
                     storeViewModel = storeViewModel,
                     stockViewModel = stockViewModel,
-                    transectionViewModel = transactionViewModel,
+                    transactionViewModel = transactionViewModel,
                     customerViewModel = customerViewModel
                 )
             }

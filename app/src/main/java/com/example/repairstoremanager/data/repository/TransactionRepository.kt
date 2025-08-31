@@ -12,10 +12,7 @@ class TransactionRepository {
     suspend fun addTransaction(transaction: Transaction): Result<Unit> {
         return try {
             val docRef = db.collection("transactions").document()
-            val withId = transaction.copy(
-                id = docRef.id,
-                shopOwnerId = auth.currentUser?.uid ?: ""
-            )
+            val withId = transaction.copy(id = docRef.id)
             docRef.set(withId).await()
             Result.success(Unit)
         } catch (e: Exception) {
@@ -29,6 +26,7 @@ class TransactionRepository {
             db.collection("transactions")
                 .whereEqualTo("shopOwnerId", uid)
                 .whereEqualTo("date", date)
+                .orderBy("createdAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
                 .get()
                 .await()
                 .toObjects(Transaction::class.java)
@@ -42,6 +40,7 @@ class TransactionRepository {
         return try {
             db.collection("transactions")
                 .whereEqualTo("shopOwnerId", uid)
+                .orderBy("createdAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
                 .get()
                 .await()
                 .toObjects(Transaction::class.java)
@@ -49,6 +48,7 @@ class TransactionRepository {
             emptyList()
         }
     }
+
     suspend fun peekNextInvoiceNumber(): String {
         val uid = auth.currentUser?.uid ?: return "INV-0001"
         return try {
@@ -70,7 +70,25 @@ class TransactionRepository {
             "INV-0001"
         }
     }
+
     fun getUserId(): String {
         return auth.currentUser?.uid ?: ""
+    }
+
+    suspend fun updateProductQuantity(productId: String, quantityChange: Int): Result<Unit> {
+        return try {
+            val productRef = db.collection("products").document(productId)
+            db.runTransaction { transaction ->
+                val snapshot = transaction.get(productRef)
+                if (snapshot.exists()) {
+                    val currentQuantity = snapshot.getLong("quantity") ?: 0L
+                    val newQuantity = (currentQuantity - quantityChange).coerceAtLeast(0L)
+                    transaction.update(productRef, "quantity", newQuantity)
+                }
+            }.await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }

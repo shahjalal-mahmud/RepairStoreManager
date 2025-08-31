@@ -8,19 +8,25 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.repairstoremanager.data.repository.AuthRepository
-import com.example.repairstoremanager.ui.screens.AddCustomerScreen
-import com.example.repairstoremanager.ui.screens.CustomerListScreen
-import com.example.repairstoremanager.ui.screens.DashboardScreen
-import com.example.repairstoremanager.ui.screens.EditCustomerScreen
-import com.example.repairstoremanager.ui.screens.ForgotPasswordScreen
-import com.example.repairstoremanager.ui.screens.LoginScreen
-import com.example.repairstoremanager.ui.screens.ProfileScreen
-import com.example.repairstoremanager.ui.screens.QuickInvoiceScreen
-import com.example.repairstoremanager.ui.stock.AddProductScreen
-import com.example.repairstoremanager.ui.stock.AddTransactionScreen
-import com.example.repairstoremanager.ui.stock.EditProductScreen
-import com.example.repairstoremanager.ui.stock.StockListScreen
-import com.example.repairstoremanager.ui.stock.TransactionScreen
+import com.example.repairstoremanager.ui.screens.customer.AddCustomerScreen
+import com.example.repairstoremanager.ui.screens.delivery.AllDeliveriesScreen
+import com.example.repairstoremanager.ui.screens.customer.CustomerListScreen
+import com.example.repairstoremanager.ui.screens.main.DashboardScreen
+import com.example.repairstoremanager.ui.screens.customer.EditCustomerScreen
+import com.example.repairstoremanager.ui.screens.auth.ForgotPasswordScreen
+import com.example.repairstoremanager.ui.screens.auth.LoginScreen
+import com.example.repairstoremanager.ui.screens.common.NotificationsScreen
+import com.example.repairstoremanager.ui.screens.main.ProfileScreen
+import com.example.repairstoremanager.ui.screens.common.QuickInvoiceScreen
+import com.example.repairstoremanager.ui.screens.common.SearchScreen
+import com.example.repairstoremanager.ui.screens.common.SettingsScreen
+import com.example.repairstoremanager.ui.screens.delivery.TodayDeliveriesScreen
+import com.example.repairstoremanager.ui.screens.delivery.TomorrowDeliveriesScreen
+import com.example.repairstoremanager.ui.screens.stock.AddProductScreen
+import com.example.repairstoremanager.ui.screens.transaction.AddTransactionScreen
+import com.example.repairstoremanager.ui.screens.stock.EditProductScreen
+import com.example.repairstoremanager.ui.screens.stock.StockListScreen
+import com.example.repairstoremanager.ui.screens.transaction.TransactionScreen
 import com.example.repairstoremanager.viewmodel.CustomerViewModel
 import com.example.repairstoremanager.viewmodel.EditCustomerViewModel
 import com.example.repairstoremanager.viewmodel.LoginViewModel
@@ -34,7 +40,7 @@ fun Navigation(
     navController: NavHostController,
     storeViewModel: StoreViewModel,
     stockViewModel: StockViewModel,
-    transectionViewModel: TransactionViewModel,
+    transactionViewModel: TransactionViewModel,
     customerViewModel: CustomerViewModel
 ) {
     val authRepository = remember { AuthRepository() }
@@ -65,11 +71,61 @@ fun Navigation(
         composable(BottomNavItem.Dashboard.route) {
             MainScaffold(navController) {
                 DashboardScreen(
+                    viewModel = customerViewModel,
+                    storeViewModel = storeViewModel,
+                    navController = navController,
                     onNavigateToQuickInvoice = {
-                        navController.navigate("add_transection")
+                        navController.navigate("sales")
                     },
-                    navController = navController
+                    onNavigateToProfile = {
+                        navController.navigate(BottomNavItem.Profile.route)
+                    },
+                    onNavigateToNotifications = {
+                        navController.navigate("notifications")
+                    },
+                    onNavigateToSearch = {
+                        navController.navigate("search")
+                    },
+                    onNavigateToSettings = {
+                        navController.navigate("settings")
+                    }
                 )
+            }
+        }
+
+        composable("notifications") {
+            MainScaffold(navController) {
+                NotificationsScreen(navController)
+            }
+        }
+
+        composable("search") {
+            MainScaffold(navController) {
+                SearchScreen(navController)
+            }
+        }
+
+        composable("settings") {
+            MainScaffold(navController) {
+                SettingsScreen(navController)
+            }
+        }
+
+        composable("today_deliveries") {
+            MainScaffold(navController) {
+                TodayDeliveriesScreen(navController)
+            }
+        }
+
+        composable("tomorrow_deliveries") {
+            MainScaffold(navController) {
+                TomorrowDeliveriesScreen(navController)
+            }
+        }
+
+        composable("all_deliveries") {
+            MainScaffold(navController) {
+                AllDeliveriesScreen(navController)
             }
         }
 
@@ -80,7 +136,8 @@ fun Navigation(
         composable(BottomNavItem.CustomerList.route) {
             MainScaffold(navController) { CustomerListScreen(navController) }
         }
-        composable(BottomNavItem.Stock.route ) {
+
+        composable(BottomNavItem.Stock.route) {
             MainScaffold(navController) { StockListScreen(navController, stockViewModel)}
         }
 
@@ -111,20 +168,23 @@ fun Navigation(
                 )
             }
         }
-        composable("transection"){
+
+        // ✅ Sales and Transactions routes - UPDATED
+        composable("sales") {
             MainScaffold(navController) {
-                TransactionScreen(
-                    onClose = { navController.popBackStack() },
-                    viewModel = transectionViewModel
+                AddTransactionScreen(
+                    transactionViewModel = transactionViewModel,
+                    stockViewModel = stockViewModel,
+                    onNavigateToTransactions = { navController.navigate("transactions") }
                 )
             }
         }
-        composable("add_transection"){
+
+        composable("transactions") {
             MainScaffold(navController) {
-                AddTransactionScreen(
-                    transactionViewModel = transectionViewModel,
-                    customerViewModel = customerViewModel,
-                    stockViewModel = stockViewModel,
+                TransactionScreen(
+                    transactionViewModel = transactionViewModel,
+                    onBack = { navController.popBackStack() }
                 )
             }
         }
