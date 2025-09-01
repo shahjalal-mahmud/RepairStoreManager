@@ -4,6 +4,7 @@ import com.example.repairstoremanager.data.model.StoreInfo
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+
 class StoreRepository {
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
@@ -28,11 +29,30 @@ class StoreRepository {
         }
     }
 
+    suspend fun updateOwnerDetails(
+        ownerName: String,
+        ownerEmail: String,
+        ownerPhone: String
+    ): Result<Unit> {
+        val uid = getUserId()
+        if (uid.isEmpty()) return Result.failure(Exception("User not logged in"))
+        return try {
+            val updates = mapOf(
+                "ownerName" to ownerName,
+                "ownerEmail" to ownerEmail,
+                "ownerPhone" to ownerPhone
+            )
+            db.collection("stores").document(uid).update(updates).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     fun logout() {
         auth.signOut()
     }
 
-    // Make changePassword suspend because updatePassword is async
     suspend fun changePassword(newPassword: String): Result<Unit> {
         val user = auth.currentUser ?: return Result.failure(Exception("No user logged in"))
         return try {

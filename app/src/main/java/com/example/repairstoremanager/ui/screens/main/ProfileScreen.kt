@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Security
@@ -38,6 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -48,6 +50,7 @@ import com.example.repairstoremanager.ui.components.profile.OwnerDetailsCard
 import com.example.repairstoremanager.ui.components.profile.QuickAccessGrid
 import com.example.repairstoremanager.ui.components.profile.ShopDetailsCard
 import com.example.repairstoremanager.ui.components.profile.StaffManagementCard
+import com.example.repairstoremanager.ui.components.profile.StoreInfoSection
 import com.example.repairstoremanager.ui.components.profile.UserProfileHeader
 import com.example.repairstoremanager.viewmodel.StoreViewModel
 
@@ -71,6 +74,9 @@ fun ProfileScreen(
     ) == PackageManager.PERMISSION_GRANTED
 
     LaunchedEffect(Unit) {
+        // Load store info from Firebase
+        storeViewModel.loadStoreInfo()
+
         if (hasPhoneStatePermission) {
             storeViewModel.loadSimList(context)
         } else {
@@ -98,10 +104,13 @@ fun ProfileScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* Navigate to edit profile */ }) {
+                    IconButton(onClick = {
+                        // Toggle edit mode
+                        storeViewModel.toggleEditMode()
+                    }) {
                         Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit Profile"
+                            imageVector = if (storeViewModel.isEditMode) Icons.Default.Check else Icons.Default.Edit,
+                            contentDescription = if (storeViewModel.isEditMode) "Save Changes" else "Edit Profile"
                         )
                     }
                 },
@@ -120,7 +129,7 @@ fun ProfileScreen(
         ) {
             // User Profile Header
             item {
-                UserProfileHeader()
+                UserProfileHeader(viewModel = storeViewModel)
             }
 
             // Account Status
@@ -131,14 +140,14 @@ fun ProfileScreen(
             // Shop Details Section
             item {
                 ProfileSection(title = "Shop Details", icon = Icons.Default.Store) {
-                    ShopDetailsCard()
+                    ShopDetailsCard(storeInfo = storeViewModel.storeInfo)
                 }
             }
 
             // Owner Details
             item {
                 ProfileSection(title = "Owner Information", icon = Icons.Default.Person) {
-                    OwnerDetailsCard()
+                    OwnerDetailsCard(storeInfo = storeViewModel.storeInfo)
                 }
             }
 
@@ -162,10 +171,27 @@ fun ProfileScreen(
                     AdditionalFeaturesCard(navController)
                 }
             }
+
+            // Show status message if any
+            storeViewModel.message?.let { message ->
+                item {
+                    Text(
+                        text = message,
+                        color = if (message.contains("success", ignoreCase = true)) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.error
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
         }
     }
 }
-
 // Helper Components
 @Composable
 fun ProfileSection(

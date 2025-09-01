@@ -11,4 +11,7 @@ data class StoreInfo(
     val workingHours: String = "",
     val reminderHour: Int? = null,
     val reminderMinute: Int? = null,
+    val ownerEmail: String = "", // Added for owner details
+    val ownerPhone: String = "", // Added for owner details
+    val subscriptionPlan: String = "" // Added for subscription info
 )

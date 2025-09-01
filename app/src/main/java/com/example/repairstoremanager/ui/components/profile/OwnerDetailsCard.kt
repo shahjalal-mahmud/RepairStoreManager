@@ -12,10 +12,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.repairstoremanager.data.model.StoreInfo
 import com.example.repairstoremanager.ui.screens.main.ProfileInfoItem
 
 @Composable
-fun OwnerDetailsCard() {
+fun OwnerDetailsCard(
+    storeInfo: StoreInfo
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -24,7 +27,7 @@ fun OwnerDetailsCard() {
         ProfileInfoItem(
             icon = Icons.Default.Person,
             title = "Owner Name",
-            value = "John Doe"
+            value = storeInfo.ownerName.ifEmpty { "Not set" }
         )
 
         HorizontalDivider(
@@ -35,7 +38,7 @@ fun OwnerDetailsCard() {
         ProfileInfoItem(
             icon = Icons.Default.Phone,
             title = "Phone",
-            value = "+1 (555) 987-6543"
+            value = storeInfo.ownerPhone.ifEmpty { "Not set" }
         )
 
         HorizontalDivider(
@@ -46,7 +49,7 @@ fun OwnerDetailsCard() {
         ProfileInfoItem(
             icon = Icons.Default.Email,
             title = "Email",
-            value = "john.doe@techrepairhub.com"
+            value = storeInfo.ownerEmail.ifEmpty { "Not set" }
         )
     }
 }
