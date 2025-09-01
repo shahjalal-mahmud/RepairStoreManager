@@ -35,7 +35,6 @@ fun DeviceInfoSection(
     Column(modifier = modifier) {
         SectionTitle("📱 Device Info")
 
-        // Phone model with enhanced suggestions
         SuggestionTextField(
             value = phoneModel,
             onValueChange = onPhoneModelChange,
@@ -46,7 +45,6 @@ fun DeviceInfoSection(
             modifier = Modifier.padding(vertical = 4.dp)
         )
 
-        // Problem description with enhanced suggestions
         SuggestionTextField(
             value = problem,
             onValueChange = onProblemChange,
