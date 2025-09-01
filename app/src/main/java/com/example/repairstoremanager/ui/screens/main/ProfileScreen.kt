@@ -23,7 +23,6 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Store
-import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -49,7 +48,6 @@ import com.example.repairstoremanager.ui.components.profile.AdditionalFeaturesCa
 import com.example.repairstoremanager.ui.components.profile.OwnerDetailsCard
 import com.example.repairstoremanager.ui.components.profile.QuickAccessGrid
 import com.example.repairstoremanager.ui.components.profile.ShopDetailsCard
-import com.example.repairstoremanager.ui.components.profile.StaffManagementCard
 import com.example.repairstoremanager.ui.components.profile.UserProfileHeader
 import com.example.repairstoremanager.viewmodel.StoreViewModel
 
@@ -183,11 +181,11 @@ fun ProfileScreen(
             }
 
             // Staff Management
-            item {
-                ProfileSection(title = "Staff Members", icon = Icons.Default.Work) {
-                    StaffManagementCard(navController)
-                }
-            }
+//            item {
+//                ProfileSection(title = "Staff Members", icon = Icons.Default.Work) {
+//                    StaffManagementCard(navController)
+//                }
+//            }
 
             // Quick Access
             item {
