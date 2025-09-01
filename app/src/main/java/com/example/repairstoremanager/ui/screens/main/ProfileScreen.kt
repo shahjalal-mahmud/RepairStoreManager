@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Security
@@ -44,13 +45,11 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import com.example.repairstoremanager.ui.components.profile.AccountStatusCard
 import com.example.repairstoremanager.ui.components.profile.AdditionalFeaturesCard
 import com.example.repairstoremanager.ui.components.profile.OwnerDetailsCard
 import com.example.repairstoremanager.ui.components.profile.QuickAccessGrid
 import com.example.repairstoremanager.ui.components.profile.ShopDetailsCard
 import com.example.repairstoremanager.ui.components.profile.StaffManagementCard
-import com.example.repairstoremanager.ui.components.profile.StoreInfoSection
 import com.example.repairstoremanager.ui.components.profile.UserProfileHeader
 import com.example.repairstoremanager.viewmodel.StoreViewModel
 
@@ -104,14 +103,38 @@ fun ProfileScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = {
-                        // Toggle edit mode
-                        storeViewModel.toggleEditMode()
-                    }) {
-                        Icon(
-                            imageVector = if (storeViewModel.isEditMode) Icons.Default.Check else Icons.Default.Edit,
-                            contentDescription = if (storeViewModel.isEditMode) "Save Changes" else "Edit Profile"
-                        )
+                    if (storeViewModel.isEditMode) {
+                        // Save button when in edit mode
+                        IconButton(onClick = {
+                            storeViewModel.saveAllChanges()
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = "Save Changes",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        // Cancel button when in edit mode
+                        IconButton(onClick = {
+                            storeViewModel.cancelEdit()
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Cancel Edit",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    } else {
+                        // Edit button when not in edit mode
+                        IconButton(onClick = {
+                            storeViewModel.toggleEditMode()
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Edit Profile",
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -127,27 +150,35 @@ fun ProfileScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // User Profile Header
+            // Shop Profile Header with logo and shop name
             item {
                 UserProfileHeader(viewModel = storeViewModel)
             }
 
-            // Account Status
-            item {
-                AccountStatusCard()
-            }
-
-            // Shop Details Section
+            // Shop Details Section (with inline editing)
             item {
                 ProfileSection(title = "Shop Details", icon = Icons.Default.Store) {
-                    ShopDetailsCard(storeInfo = storeViewModel.storeInfo)
+                    ShopDetailsCard(
+                        storeInfo = storeViewModel.storeInfo,
+                        isEditing = storeViewModel.isEditMode,
+                        onStoreNameChange = { storeViewModel.updateStoreName(it) },
+                        onAddressChange = { storeViewModel.updateAddress(it) },
+                        onPhoneChange = { storeViewModel.updatePhone(it) },
+                        onEmailChange = { storeViewModel.updateEmail(it) }
+                    )
                 }
             }
 
-            // Owner Details
+            // Owner Details (with inline editing)
             item {
                 ProfileSection(title = "Owner Information", icon = Icons.Default.Person) {
-                    OwnerDetailsCard(storeInfo = storeViewModel.storeInfo)
+                    OwnerDetailsCard(
+                        storeInfo = storeViewModel.storeInfo,
+                        isEditing = storeViewModel.isEditMode,
+                        onOwnerNameChange = { storeViewModel.updateOwnerName(it) },
+                        onOwnerPhoneChange = { storeViewModel.updateOwnerPhone(it) },
+                        onOwnerEmailChange = { storeViewModel.updateOwnerEmail(it) }
+                    )
                 }
             }
 

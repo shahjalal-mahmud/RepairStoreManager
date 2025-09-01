@@ -74,6 +74,37 @@ class StoreViewModel : ViewModel() {
     init {
         loadStoreInfo()
     }
+    fun saveAllChanges() {
+        viewModelScope.launch {
+            // Update store info
+            val storeResult = repository.updateStoreInfo(storeInfo)
+
+            // Update owner details specifically
+            val ownerResult = repository.updateOwnerDetails(
+                storeInfo.ownerName,
+                storeInfo.ownerEmail,
+                storeInfo.ownerPhone
+            )
+
+            message = if (storeResult.isSuccess && ownerResult.isSuccess) {
+                isEditMode = false
+                "All changes saved successfully"
+            } else {
+                val errors = listOf(
+                    storeResult.exceptionOrNull()?.message,
+                    ownerResult.exceptionOrNull()?.message
+                ).filterNotNull().joinToString(", ")
+                "Failed to save changes: $errors"
+            }
+        }
+    }
+
+    fun cancelEdit() {
+        // Reload original data from Firebase
+        loadStoreInfo()
+        isEditMode = false
+        message = "Changes cancelled"
+    }
 
     fun loadStoreInfo() {
         viewModelScope.launch {
