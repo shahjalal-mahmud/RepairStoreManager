@@ -2,6 +2,7 @@ package com.example.repairstoremanager.ui.components.customer.add
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.DatePickerDialog
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -18,8 +19,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Contacts
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -37,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.repairstoremanager.data.model.Customer
 import com.example.repairstoremanager.ui.components.customer.common.AccessoriesSection
@@ -44,7 +53,9 @@ import com.example.repairstoremanager.ui.components.customer.invoice.InvoicePrin
 import com.example.repairstoremanager.ui.components.customer.media.CaptureMediaSection
 import com.example.repairstoremanager.util.MessageHelper
 import com.example.repairstoremanager.viewmodel.CustomerViewModel
+import com.example.repairstoremanager.viewmodel.CustomerViewModelFactory
 import com.example.repairstoremanager.viewmodel.StoreViewModel
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -57,7 +68,9 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
     val scrollState = rememberScrollState()
     val date = remember { SimpleDateFormat("dd MMM yyyy, hh:mm a").format(Date()) }
     val context = LocalContext.current
-    val viewModel: CustomerViewModel = viewModel()
+    val viewModel: CustomerViewModel = viewModel(
+        factory = CustomerViewModelFactory(context)
+    )
     val storeViewModel: StoreViewModel = viewModel()
 
     // Form state
@@ -119,6 +132,42 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
     LaunchedEffect(Unit) {
         viewModel.fetchNextInvoiceNumber()
     }
+    val gmailContacts by viewModel.gmailContacts.collectAsState()
+    val isGmailConnected by viewModel.isGmailConnected.collectAsState()
+    val saveToGmailResult by viewModel.saveToGmailResult.collectAsState()
+
+    // Google Sign-In launcher
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            viewModel.viewModelScope.launch {
+                val account = viewModel.getGoogleAuthHelper().handleSignInResult(result.data)
+                account?.let {
+                    viewModel.fetchGmailContacts(it)
+                }
+            }
+        }
+    }
+
+    // Check Gmail connection on startup
+    LaunchedEffect(Unit) {
+        viewModel.checkGmailConnection()
+    }
+
+    // Show save result
+    LaunchedEffect(saveToGmailResult) {
+        saveToGmailResult?.let { success ->
+            if (success) {
+                // Show success message
+            } else {
+                // Show error message
+            }
+            // Clear result after showing
+            viewModel.clearSaveResult()
+        }
+    }
+
 
     val calendar = remember { Calendar.getInstance() }
     val datePickerDialog = remember {
@@ -256,8 +305,50 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
                 customerName = customerName,
                 contactNumber = contactNumber,
                 onCustomerNameChange = { customerName = it },
-                onContactNumberChange = { contactNumber = it }
+                onContactNumberChange = { contactNumber = it },
+                gmailContacts = gmailContacts,
+                onContactSelected = { (name, phone) ->
+                    customerName = name
+                    contactNumber = phone
+                },
+                isGmailConnected = isGmailConnected,
+                onSaveToGmail = {
+                    val account = viewModel.getGoogleAuthHelper().getCurrentAccount()
+                    account?.let {
+                        viewModel.saveContactToGmail(it, customerName, contactNumber)
+                    }
+                }
             )
+
+            // Add Google Sign-In button somewhere in your UI
+            if (!isGmailConnected) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text("🔗 Connect Gmail", style = MaterialTheme.typography.titleMedium)
+                        Spacer(Modifier.height(8.dp))
+                        Button(
+                            onClick = {
+                                val signInIntent = viewModel.getGoogleAuthHelper().getSignInIntent()
+                                googleSignInLauncher.launch(signInIntent)
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Contacts,
+                                contentDescription = "Connect Gmail"
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text("Sign in with Google to access contacts")
+                        }
+                    }
+                }
+            }
 
             Spacer(Modifier.height(20.dp))
 

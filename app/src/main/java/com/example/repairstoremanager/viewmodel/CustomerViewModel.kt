@@ -1,12 +1,14 @@
 package com.example.repairstoremanager.viewmodel
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.repairstoremanager.data.model.Customer
 import com.example.repairstoremanager.data.repository.CustomerRepository
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import com.example.repairstoremanager.data.repository.GoogleContactsRepository
+import com.example.repairstoremanager.util.GoogleAuthHelper
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -15,8 +17,19 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
-class CustomerViewModel : ViewModel() {
+class CustomerViewModel(private val context: Context) : ViewModel() {
     private val repository = CustomerRepository()
+    private val googleContactsRepo = GoogleContactsRepository(context)
+    private val googleAuthHelper = GoogleAuthHelper(context)
+
+    private val _gmailContacts = MutableStateFlow<List<Pair<String, String>>>(emptyList())
+    val gmailContacts: StateFlow<List<Pair<String, String>>> = _gmailContacts
+
+    private val _isGmailConnected = MutableStateFlow(false)
+    val isGmailConnected: StateFlow<Boolean> = _isGmailConnected
+
+    private val _saveToGmailResult = MutableStateFlow<Boolean?>(null)
+    val saveToGmailResult: StateFlow<Boolean?> = _saveToGmailResult
 
     private val _customers = MutableStateFlow<List<Customer>>(emptyList())
     val customers: StateFlow<List<Customer>> = _customers
@@ -28,7 +41,6 @@ class CustomerViewModel : ViewModel() {
     val hasError: StateFlow<Boolean> = _hasError
 
     private val _phoneModelHistory = MutableStateFlow<Set<String>>(emptySet())
-
     private val _problemHistory = MutableStateFlow<Set<String>>(emptySet())
 
     private val _userPhoneModels = MutableStateFlow<Set<String>>(emptySet())
@@ -36,6 +48,54 @@ class CustomerViewModel : ViewModel() {
 
     private val _userProblems = MutableStateFlow<Set<String>>(emptySet())
     val userProblems: StateFlow<Set<String>> = _userProblems
+
+    private val _currentInvoiceNumber = MutableStateFlow<String?>(null)
+    val currentInvoiceNumber: StateFlow<String?> = _currentInvoiceNumber
+
+    // Add this function to check if user is already signed in
+    fun checkGmailConnection() {
+        val account = googleAuthHelper.getCurrentAccount()
+        _isGmailConnected.value = account != null
+        account?.let { fetchGmailContacts(it) }
+    }
+
+    fun fetchGmailContacts(account: GoogleSignInAccount) {
+        viewModelScope.launch {
+            try {
+                val contacts = googleContactsRepo.getContactsFromGmail(account)
+                _gmailContacts.value = contacts
+                _isGmailConnected.value = true
+            } catch (e: Exception) {
+                _gmailContacts.value = emptyList()
+                _isGmailConnected.value = false
+                Log.e("CustomerViewModel", "Error fetching Gmail contacts", e)
+            }
+        }
+    }
+
+    fun saveContactToGmail(account: GoogleSignInAccount, name: String, phone: String) {
+        viewModelScope.launch {
+            try {
+                val success = googleContactsRepo.saveContactToGmail(account, name, phone)
+                _saveToGmailResult.value = success
+                if (success) {
+                    // Refresh contacts after saving
+                    fetchGmailContacts(account)
+                }
+            } catch (e: Exception) {
+                _saveToGmailResult.value = false
+                Log.e("CustomerViewModel", "Error saving contact to Gmail", e)
+            }
+        }
+    }
+
+    fun clearSaveResult() {
+        _saveToGmailResult.value = null
+    }
+
+    fun getGoogleAuthHelper(): GoogleAuthHelper {
+        return googleAuthHelper
+    }
 
     fun fetchCustomers() {
         viewModelScope.launch {
@@ -59,7 +119,7 @@ class CustomerViewModel : ViewModel() {
 
     fun addCustomer(
         customer: Customer,
-        onSuccess: (Customer) -> Unit,  // Changed to accept Customer parameter
+        onSuccess: (Customer) -> Unit,
         onError: (String) -> Unit
     ) {
         viewModelScope.launch {
@@ -71,13 +131,7 @@ class CustomerViewModel : ViewModel() {
             val result = repository.addCustomer(customerWithTimestamp)
             if (result.isSuccess) {
                 fetchCustomers()
-                fetchNextInvoiceNumber() // Refresh for next customer
-                val savedCustomer = _customers.value.lastOrNull {
-                    it.customerName == customer.customerName &&
-                            it.contactNumber == customer.contactNumber &&
-                            it.date == customer.date
-                }
-                // Return the customer with the invoice number we used
+                fetchNextInvoiceNumber()
                 onSuccess(customerWithTimestamp.copy(
                     id = _customers.value.lastOrNull()?.id ?: "",
                     shopOwnerId = repository.getUserId() ?: ""
@@ -88,10 +142,7 @@ class CustomerViewModel : ViewModel() {
         }
     }
 
-    fun updateCustomerStatus(
-        customerId: String,
-        newStatus: String,
-    ) {
+    fun updateCustomerStatus(customerId: String, newStatus: String) {
         viewModelScope.launch {
             repository.updateStatus(customerId, newStatus)
             fetchCustomers()
@@ -103,7 +154,7 @@ class CustomerViewModel : ViewModel() {
         val advanced = customer.advanced.ifEmpty { "0" }.toIntOrNull() ?: 0
         val due = total - advanced
 
-        val note = "\nনোট: মেরামতের পর ৩০ দিনের মধ্যে ডিভাইস সংগ্রহ করুন, অন্যথায় দোকান কর্তৃপক্ষ দায়ী থাকবে না।"
+        val note = "\nনোট: মেরামতের পর ৩০ দিনের মধ্যে ডিভাইস সংগ্রহ করুন, অন্যথায় দোকান কর্তৃপক্ষ দায়ী থাকবে না。"
 
         return when (customer.status) {
             "Repaired" -> "প্রিয় ${customer.customerName}, আপনার ডিভাইসটি মেরামত সম্পন্ন হয়েছে। " +
@@ -116,17 +167,14 @@ class CustomerViewModel : ViewModel() {
                     "Invoice: ${customer.invoiceNumber}.$note"
 
             "Delivered" -> "প্রিয় ${customer.customerName}, আপনার ডিভাইসটি সফলভাবে ডেলিভারি করা হয়েছে। " +
-                    "Invoice: ${customer.invoiceNumber}. ধন্যবাদ।"
+                    "Invoice: ${customer.invoiceNumber}. ধন্যবাদ。"
 
             "Cancelled" -> "প্রিয় ${customer.customerName}, আপনার রিপেয়ার অনুরোধ বাতিল হয়েছে। " +
-                    "ভবিষ্যতে আবার যোগাযোগ করুন।"
+                    "ভবিষ্যতে আবার যোগাযোগ করুন。"
 
             else -> "প্রিয় ${customer.customerName}, আপনার ডিভাইসের বর্তমান স্ট্যাটাস: ${customer.status}.$note"
         }
     }
-
-    private val _currentInvoiceNumber = MutableStateFlow<String?>(null)
-    val currentInvoiceNumber: StateFlow<String?> = _currentInvoiceNumber
 
     fun fetchNextInvoiceNumber() {
         viewModelScope.launch {
@@ -147,6 +195,7 @@ class CustomerViewModel : ViewModel() {
         cal.add(Calendar.DATE, 1)
         return SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(cal.time)
     }
+
     fun addUserPhoneModel(model: String) {
         _userPhoneModels.value = _userPhoneModels.value + model
     }
@@ -171,5 +220,4 @@ class CustomerViewModel : ViewModel() {
 
     val tomorrowDeliveryList: List<Customer>
         get() = customers.value.filter { it.deliveryDate == getTomorrow() }
-
 }
