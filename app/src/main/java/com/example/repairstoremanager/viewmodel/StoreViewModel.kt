@@ -74,6 +74,37 @@ class StoreViewModel : ViewModel() {
     init {
         loadStoreInfo()
     }
+    fun saveAllChanges() {
+        viewModelScope.launch {
+            // Update store info
+            val storeResult = repository.updateStoreInfo(storeInfo)
+
+            // Update owner details specifically
+            val ownerResult = repository.updateOwnerDetails(
+                storeInfo.ownerName,
+                storeInfo.ownerEmail,
+                storeInfo.ownerPhone
+            )
+
+            message = if (storeResult.isSuccess && ownerResult.isSuccess) {
+                isEditMode = false
+                "All changes saved successfully"
+            } else {
+                val errors = listOf(
+                    storeResult.exceptionOrNull()?.message,
+                    ownerResult.exceptionOrNull()?.message
+                ).filterNotNull().joinToString(", ")
+                "Failed to save changes: $errors"
+            }
+        }
+    }
+
+    fun cancelEdit() {
+        // Reload original data from Firebase
+        loadStoreInfo()
+        isEditMode = false
+        message = "Changes cancelled"
+    }
 
     fun loadStoreInfo() {
         viewModelScope.launch {
@@ -94,6 +125,18 @@ class StoreViewModel : ViewModel() {
             }
         }
     }
+
+    fun updateOwnerDetails() {
+        viewModelScope.launch {
+            val result = repository.updateOwnerDetails(
+                storeInfo.ownerName,
+                storeInfo.ownerEmail,
+                storeInfo.ownerPhone
+            )
+            message = if (result.isSuccess) "Owner details updated" else result.exceptionOrNull()?.message
+        }
+    }
+
     fun updateReminderTime(context: Context, hour: Int, minute: Int) {
         val prefs = context.getSharedPreferences("reminder_prefs", Context.MODE_PRIVATE)
         prefs.edit().putInt("hour", hour).putInt("minute", minute).apply()
@@ -140,8 +183,20 @@ class StoreViewModel : ViewModel() {
         storeInfo = storeInfo.copy(email = newValue)
     }
 
+    fun updateOwnerEmail(newValue: String) {
+        storeInfo = storeInfo.copy(ownerEmail = newValue)
+    }
+
+    fun updateOwnerPhone(newValue: String) {
+        storeInfo = storeInfo.copy(ownerPhone = newValue)
+    }
+
     fun updateWorkingHours(newValue: String) {
         storeInfo = storeInfo.copy(workingHours = newValue)
+    }
+
+    fun updateSubscriptionPlan(newValue: String) {
+        storeInfo = storeInfo.copy(subscriptionPlan = newValue)
     }
 
     fun updateAutoSmsEnabled(enabled: Boolean) {

@@ -109,7 +109,15 @@ fun Navigation(
 
         composable("settings") {
             MainScaffold(navController) {
-                SettingsScreen(navController)
+                SettingsScreen(
+                    navController = navController,
+                    storeViewModel = storeViewModel,
+                    onLogout = {
+                        navController.navigate("login") {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                )
             }
         }
 
@@ -147,12 +155,7 @@ fun Navigation(
             MainScaffold(navController) {
                 ProfileScreen(
                     navController = navController,
-                    storeViewModel = storeViewModel,
-                    onLogout = {
-                        navController.navigate("login") {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    }
+                    storeViewModel = storeViewModel
                 )
             }
         }

@@ -19,7 +19,6 @@ class DeliveryReminderWorker(
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         if (!isNetworkAvailable(applicationContext)) {
-            // Skip if no internet
             return@withContext Result.retry()
         }
 
