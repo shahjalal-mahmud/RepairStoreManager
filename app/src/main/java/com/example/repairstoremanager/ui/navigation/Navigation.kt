@@ -18,6 +18,7 @@ import com.example.repairstoremanager.ui.screens.customer.AddCustomerScreen
 import com.example.repairstoremanager.ui.screens.customer.CustomerListScreen
 import com.example.repairstoremanager.ui.screens.customer.EditCustomerScreen
 import com.example.repairstoremanager.ui.screens.delivery.AllDeliveriesScreen
+import com.example.repairstoremanager.ui.screens.delivery.ExpiredDeliveriesScreen
 import com.example.repairstoremanager.ui.screens.delivery.TodayDeliveriesScreen
 import com.example.repairstoremanager.ui.screens.delivery.TomorrowDeliveriesScreen
 import com.example.repairstoremanager.ui.screens.main.DashboardScreen
@@ -136,6 +137,12 @@ fun Navigation(
         composable("all_deliveries") {
             MainScaffold(navController) {
                 AllDeliveriesScreen(navController)
+            }
+        }
+
+        composable("expired_deliveries") {
+            MainScaffold(navController) {
+                ExpiredDeliveriesScreen(navController)
             }
         }
 

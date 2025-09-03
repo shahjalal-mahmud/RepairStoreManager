@@ -18,6 +18,7 @@ import androidx.compose.material.icons.automirrored.outlined.ListAlt
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.Inventory
 import androidx.compose.material.icons.outlined.LocalShipping
+import androidx.compose.material.icons.outlined.MiscellaneousServices
 import androidx.compose.material.icons.outlined.Payment
 import androidx.compose.material.icons.outlined.PointOfSale
 import androidx.compose.material.icons.outlined.Receipt
@@ -42,6 +43,7 @@ fun MainFeaturesSection(navController: NavHostController) {
         FeatureItem("Today's Deliveries", Icons.Outlined.Today, "today_deliveries"),
         FeatureItem("Tomorrow's Delivery", Icons.Outlined.Schedule, "tomorrow_deliveries"),
         FeatureItem("All Deliveries", Icons.Outlined.LocalShipping, "all_deliveries"),
+        FeatureItem("Expired Deliveries", Icons.Outlined.MiscellaneousServices, "expired_deliveries"),
         FeatureItem("Add Customer", Icons.Outlined.Groups, "add_customer"),
         FeatureItem("Customer List", Icons.AutoMirrored.Outlined.ListAlt, "customer_list"),
         FeatureItem("Stock Management", Icons.Outlined.Inventory, "stock_list"),
