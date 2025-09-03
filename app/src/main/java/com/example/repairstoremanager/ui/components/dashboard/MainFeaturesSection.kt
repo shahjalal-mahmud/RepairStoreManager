@@ -18,6 +18,7 @@ import androidx.compose.material.icons.automirrored.outlined.ListAlt
 import androidx.compose.material.icons.outlined.AddCircle
 import androidx.compose.material.icons.outlined.AssignmentTurnedIn
 import androidx.compose.material.icons.outlined.CalendarToday
+import androidx.compose.material.icons.outlined.DeliveryDining
 import androidx.compose.material.icons.outlined.Inventory
 import androidx.compose.material.icons.outlined.LocalShipping
 import androidx.compose.material.icons.outlined.Payment
@@ -31,6 +32,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -40,12 +45,10 @@ import androidx.navigation.NavHostController
 
 @Composable
 fun MainFeaturesSection(navController: NavHostController) {
+    var showDeliveryDialog by remember { mutableStateOf(false) }
+
     val features = listOf(
-        FeatureItem("Today's Deliveries", Icons.Outlined.CalendarToday, "today_deliveries"),
-        FeatureItem("Tomorrow's Delivery", Icons.Outlined.Schedule, "tomorrow_deliveries"),
-        FeatureItem("All Deliveries", Icons.Outlined.LocalShipping, "all_deliveries"),
-        FeatureItem("Expired Deliveries", Icons.Outlined.Warning, "expired_deliveries"),
-        FeatureItem("Ready for Delivery", Icons.Outlined.AssignmentTurnedIn, "ready_for_delivery"),
+        FeatureItem("Delivery Options", Icons.Outlined.DeliveryDining, "delivery_options"),
         FeatureItem("Add Customer", Icons.Outlined.AddCircle, "add_customer"),
         FeatureItem("Customer List", Icons.AutoMirrored.Outlined.ListAlt, "customer_list"),
         FeatureItem("Stock Management", Icons.Outlined.Inventory, "stock_list"),
@@ -53,6 +56,27 @@ fun MainFeaturesSection(navController: NavHostController) {
         FeatureItem("Transactions", Icons.Outlined.Payment, "sales"),
         FeatureItem("Quick Invoice", Icons.Outlined.PointOfSale, "quick_invoice")
     )
+
+    // Delivery options for the dialog
+    val deliveryOptions = listOf(
+        FeatureItem("Today's Deliveries", Icons.Outlined.CalendarToday, "today_deliveries"),
+        FeatureItem("Tomorrow's Delivery", Icons.Outlined.Schedule, "tomorrow_deliveries"),
+        FeatureItem("All Deliveries", Icons.Outlined.LocalShipping, "all_deliveries"),
+        FeatureItem("Expired Deliveries", Icons.Outlined.Warning, "expired_deliveries"),
+        FeatureItem("Ready for Delivery", Icons.Outlined.AssignmentTurnedIn, "ready_for_delivery")
+    )
+
+    // Delivery Options Dialog
+    if (showDeliveryDialog) {
+        DeliveryOptionsDialog(
+            options = deliveryOptions,
+            onDismiss = { showDeliveryDialog = false },
+            onOptionSelected = { route ->
+                showDeliveryDialog = false
+                navController.navigate(route)
+            }
+        )
+    }
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(3),
@@ -66,12 +90,17 @@ fun MainFeaturesSection(navController: NavHostController) {
         items(features) { feature ->
             FeatureCard(
                 feature = feature,
-                onClick = { navController.navigate(feature.route) }
+                onClick = {
+                    if (feature.route == "delivery_options") {
+                        showDeliveryDialog = true
+                    } else {
+                        navController.navigate(feature.route)
+                    }
+                }
             )
         }
     }
 }
-
 data class FeatureItem(val title: String, val icon: ImageVector, val route: String)
 
 @Composable
