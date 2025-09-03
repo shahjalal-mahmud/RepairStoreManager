@@ -57,6 +57,10 @@ android {
 }
 
 dependencies {
+    // ✅ Compose BOM for consistent versions
+    implementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+
     // Core Android
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -81,9 +85,9 @@ dependencies {
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
 
+    // Media + Utils
     implementation("androidx.media3:media3-exoplayer:1.2.0")
     implementation("androidx.media3:media3-ui:1.2.0")
-    implementation("androidx.compose.material3:material3:1.1.2")
     implementation("com.google.code.gson:gson:2.13.1")
     implementation("com.airbnb.android:lottie-compose:6.6.7")
 
@@ -94,7 +98,7 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.compose.material.icons.core)
 
-    // WorkManager
+    // WorkManager + Foundation + Room
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.foundation.layout.android)
     implementation(libs.androidx.foundation)
@@ -104,7 +108,6 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(libs.androidx.compose.bom) // Optional
     androidTestImplementation(libs.androidx.ui.test.junit4)
 
     // Debug
