@@ -8,28 +8,27 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.repairstoremanager.data.repository.AuthRepository
-import com.example.repairstoremanager.ui.screens.customer.AddCustomerScreen
-import com.example.repairstoremanager.ui.screens.delivery.AllDeliveriesScreen
-import com.example.repairstoremanager.ui.screens.customer.CustomerListScreen
-import com.example.repairstoremanager.ui.screens.main.DashboardScreen
-import com.example.repairstoremanager.ui.screens.customer.EditCustomerScreen
 import com.example.repairstoremanager.ui.screens.auth.ForgotPasswordScreen
-import com.example.repairstoremanager.ui.screens.auth.LoginScreen
 import com.example.repairstoremanager.ui.screens.common.NotificationsScreen
-import com.example.repairstoremanager.ui.screens.main.ProfileScreen
 import com.example.repairstoremanager.ui.screens.common.QuickInvoiceScreen
 import com.example.repairstoremanager.ui.screens.common.SearchScreen
 import com.example.repairstoremanager.ui.screens.common.SettingsScreen
+import com.example.repairstoremanager.ui.screens.common.SplashScreen
+import com.example.repairstoremanager.ui.screens.customer.AddCustomerScreen
+import com.example.repairstoremanager.ui.screens.customer.CustomerListScreen
+import com.example.repairstoremanager.ui.screens.customer.EditCustomerScreen
+import com.example.repairstoremanager.ui.screens.delivery.AllDeliveriesScreen
 import com.example.repairstoremanager.ui.screens.delivery.TodayDeliveriesScreen
 import com.example.repairstoremanager.ui.screens.delivery.TomorrowDeliveriesScreen
+import com.example.repairstoremanager.ui.screens.main.DashboardScreen
+import com.example.repairstoremanager.ui.screens.main.ProfileScreen
 import com.example.repairstoremanager.ui.screens.stock.AddProductScreen
-import com.example.repairstoremanager.ui.screens.transaction.AddTransactionScreen
 import com.example.repairstoremanager.ui.screens.stock.EditProductScreen
 import com.example.repairstoremanager.ui.screens.stock.StockListScreen
+import com.example.repairstoremanager.ui.screens.transaction.AddTransactionScreen
 import com.example.repairstoremanager.ui.screens.transaction.TransactionScreen
 import com.example.repairstoremanager.viewmodel.CustomerViewModel
 import com.example.repairstoremanager.viewmodel.EditCustomerViewModel
-import com.example.repairstoremanager.viewmodel.LoginViewModel
 import com.example.repairstoremanager.viewmodel.SearchViewModel
 import com.example.repairstoremanager.viewmodel.StockViewModel
 import com.example.repairstoremanager.viewmodel.StoreViewModel
@@ -47,25 +46,26 @@ fun Navigation(
 ) {
     val authRepository = remember { AuthRepository() }
 
-    // ✅ Decide start destination based on login status
-    val startDestination = if (authRepository.isUserLoggedIn()) {
-        BottomNavItem.Dashboard.route
-    } else {
-        "login"
-    }
-    NavHost(navController = navController, startDestination = startDestination) {
+    NavHost(navController = navController, startDestination = "splash") {
 
-        composable("login") {
-            val loginViewModel = remember { LoginViewModel(storeViewModel) }
-            LoginScreen(
-                viewModel = loginViewModel,
-                onLoginSuccess = {
-                    navController.navigate(BottomNavItem.Dashboard.route) {
-                        popUpTo("login") { inclusive = true }
+        composable("splash") {
+            SplashScreen(
+                onTimeout = {
+                    try {
+                        if (authRepository.isUserLoggedIn()) {
+                            navController.navigate(BottomNavItem.Dashboard.route) {
+                                popUpTo("splash") { inclusive = true }
+                            }
+                        } else {
+                            navController.navigate("login") {
+                                popUpTo("splash") { inclusive = true }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        navController.navigate("login") {
+                            popUpTo("splash") { inclusive = true }
+                        }
                     }
-                },
-                onNavigateToForgotPassword = {
-                    navController.navigate("forgot_password")
                 }
             )
         }
