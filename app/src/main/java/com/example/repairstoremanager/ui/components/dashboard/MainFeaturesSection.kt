@@ -15,15 +15,16 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ListAlt
-import androidx.compose.material.icons.outlined.Groups
+import androidx.compose.material.icons.outlined.AddCircle
+import androidx.compose.material.icons.outlined.AssignmentTurnedIn
+import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.Inventory
 import androidx.compose.material.icons.outlined.LocalShipping
-import androidx.compose.material.icons.outlined.MiscellaneousServices
 import androidx.compose.material.icons.outlined.Payment
 import androidx.compose.material.icons.outlined.PointOfSale
 import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material.icons.outlined.Schedule
-import androidx.compose.material.icons.outlined.Today
+import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -40,11 +41,12 @@ import androidx.navigation.NavHostController
 @Composable
 fun MainFeaturesSection(navController: NavHostController) {
     val features = listOf(
-        FeatureItem("Today's Deliveries", Icons.Outlined.Today, "today_deliveries"),
+        FeatureItem("Today's Deliveries", Icons.Outlined.CalendarToday, "today_deliveries"),
         FeatureItem("Tomorrow's Delivery", Icons.Outlined.Schedule, "tomorrow_deliveries"),
         FeatureItem("All Deliveries", Icons.Outlined.LocalShipping, "all_deliveries"),
-        FeatureItem("Expired Deliveries", Icons.Outlined.MiscellaneousServices, "expired_deliveries"),
-        FeatureItem("Add Customer", Icons.Outlined.Groups, "add_customer"),
+        FeatureItem("Expired Deliveries", Icons.Outlined.Warning, "expired_deliveries"),
+        FeatureItem("Ready for Delivery", Icons.Outlined.AssignmentTurnedIn, "ready_for_delivery"),
+        FeatureItem("Add Customer", Icons.Outlined.AddCircle, "add_customer"),
         FeatureItem("Customer List", Icons.AutoMirrored.Outlined.ListAlt, "customer_list"),
         FeatureItem("Stock Management", Icons.Outlined.Inventory, "stock_list"),
         FeatureItem("Daily Records", Icons.Outlined.Receipt, "transactions"),
@@ -56,7 +58,7 @@ fun MainFeaturesSection(navController: NavHostController) {
         columns = GridCells.Fixed(3),
         modifier = Modifier
             .fillMaxWidth()
-            .height(400.dp) // FIXED: Added fixed height to prevent infinite constraints
+            .height(400.dp)
             .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
