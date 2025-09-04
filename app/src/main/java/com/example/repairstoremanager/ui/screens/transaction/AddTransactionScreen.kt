@@ -39,7 +39,6 @@ fun AddTransactionScreen(
     onNavigateToTransactions: () -> Unit
 ) {
     val cartProducts by transactionViewModel.cartProducts.collectAsState()
-    val invoiceNumber by transactionViewModel.currentInvoiceNumber.collectAsState()
     val isLoading by transactionViewModel.isLoading.collectAsState()
 
     var showProductPicker by remember { mutableStateOf(false) }
@@ -74,22 +73,6 @@ fun AddTransactionScreen(
                 .padding(16.dp)
                 .fillMaxSize()
         ) {
-            // Invoice Header
-            InvoiceHeader(
-                invoiceNumber = invoiceNumber ?: "Loading...",
-                onNewInvoice = { transactionViewModel.fetchNextInvoiceNumber() }
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Customer Info
-            CustomerInfoSection(
-                customerName = customerName,
-                customerPhone = customerPhone,
-                onNameChange = { customerName = it },
-                onPhoneChange = { customerPhone = it }
-            )
-
             Spacer(modifier = Modifier.height(16.dp))
 
             // Cart Items
