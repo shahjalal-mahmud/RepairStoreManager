@@ -145,6 +145,7 @@ fun AddTransactionScreen(
         }
 
         // Payment Dialog
+        // Payment Dialog
         if (showPaymentDialog) {
             PaymentDialog(
                 total = transactionViewModel.getCartTotal(),
@@ -156,12 +157,15 @@ fun AddTransactionScreen(
                         customerName = customerName,
                         customerPhone = customerPhone,
                         paymentType = paymentType
-                    ) { success, invoice ->
+                    ) { success, invoice, errorMessage ->
                         showPaymentDialog = false
                         if (success) {
                             // Show success message
                             customerName = ""
                             customerPhone = ""
+                        } else {
+                            // Show error message if needed
+                            // errorMessage?.let { msg -> showError(msg) }
                         }
                     }
                 },

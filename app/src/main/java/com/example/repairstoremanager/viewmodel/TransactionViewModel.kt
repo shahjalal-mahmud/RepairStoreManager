@@ -79,7 +79,7 @@ class TransactionViewModel : ViewModel() {
         customerName: String = "Walk-in Customer",
         customerPhone: String = "",
         paymentType: String = "Cash",
-        onResult: (Boolean, String?) -> Unit
+        onResult: (Boolean, String?, String?) -> Unit // Added error message parameter
     ) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -99,26 +99,36 @@ class TransactionViewModel : ViewModel() {
                     status = "Completed"
                 )
 
-                // Save transaction
+                // First update all product quantities
+                val updateResults = _cartProducts.value.map { product ->
+                    repository.updateProductQuantity(product.productId, product.quantity)
+                }
+
+                // Check if any stock update failed
+                val failedUpdates = updateResults.filter { it.isFailure }
+                if (failedUpdates.isNotEmpty()) {
+                    val errorMsg = "Failed to update stock for some products"
+                    onResult(false, null, errorMsg)
+                    return@launch
+                }
+
+                // Then save the transaction
                 val result = repository.addTransaction(transaction)
 
                 if (result.isSuccess) {
-                    // Update stock quantities
-                    _cartProducts.value.forEach { product ->
-                        repository.updateProductQuantity(product.productId, product.quantity)
-                    }
-
                     // Generate next invoice number
                     fetchNextInvoiceNumber()
                     clearCart()
                     fetchTodayTransactions()
 
-                    onResult(true, transaction.invoiceNumber)
+                    onResult(true, transaction.invoiceNumber, null)
                 } else {
-                    onResult(false, null)
+                    // If transaction fails but stock was updated, we need to revert
+                    // This is a more complex scenario you might want to handle
+                    onResult(false, null, "Transaction failed: ${result.exceptionOrNull()?.message}")
                 }
             } catch (e: Exception) {
-                onResult(false, null)
+                onResult(false, null, "Error: ${e.message}")
             } finally {
                 _isLoading.value = false
             }

@@ -83,7 +83,14 @@ class TransactionRepository {
                 if (snapshot.exists()) {
                     val currentQuantity = snapshot.getLong("quantity") ?: 0L
                     val newQuantity = (currentQuantity - quantityChange).coerceAtLeast(0L)
-                    transaction.update(productRef, "quantity", newQuantity)
+
+                    // Update multiple fields including updatedAt
+                    transaction.update(productRef, mapOf(
+                        "quantity" to newQuantity,
+                        "updatedAt" to System.currentTimeMillis()
+                    ))
+                } else {
+                    throw IllegalStateException("Product not found")
                 }
             }.await()
             Result.success(Unit)
