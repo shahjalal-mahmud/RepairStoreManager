@@ -6,6 +6,7 @@ import com.example.repairstoremanager.data.model.Note
 import com.example.repairstoremanager.data.repository.NotesRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class NotesViewModel(
@@ -13,13 +14,13 @@ class NotesViewModel(
 ) : ViewModel() {
 
     private val _notes = MutableStateFlow<List<Note>>(emptyList())
-    val notes: StateFlow<List<Note>> = _notes
+    val notes: StateFlow<List<Note>> = _notes.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> = _error
+    val error: StateFlow<String?> = _error.asStateFlow()
 
     init {
         loadNotes()
@@ -46,7 +47,11 @@ class NotesViewModel(
             try {
                 val result = notesRepository.addNote(note)
                 if (result.isSuccess) {
-                    loadNotes() // Refresh the list
+                    // Instead of reloading all notes, add the new note to the current list
+                    val currentNotes = _notes.value.toMutableList()
+                    val newNote = note.copy(id = result.getOrNull() ?: "")
+                    currentNotes.add(0, newNote) // Add to top
+                    _notes.value = currentNotes
                 }
                 onResult(result)
             } catch (e: Exception) {
@@ -65,7 +70,13 @@ class NotesViewModel(
             try {
                 val result = notesRepository.updateNote(note)
                 if (result.isSuccess) {
-                    loadNotes() // Refresh the list
+                    // Update the specific note in the list
+                    val currentNotes = _notes.value.toMutableList()
+                    val index = currentNotes.indexOfFirst { it.id == note.id }
+                    if (index != -1) {
+                        currentNotes[index] = note
+                        _notes.value = currentNotes
+                    }
                 }
                 onResult(result)
             } catch (e: Exception) {
@@ -84,7 +95,10 @@ class NotesViewModel(
             try {
                 val result = notesRepository.deleteNote(noteId)
                 if (result.isSuccess) {
-                    loadNotes() // Refresh the list
+                    // Remove the note from the current list
+                    val currentNotes = _notes.value.toMutableList()
+                    currentNotes.removeAll { it.id == noteId }
+                    _notes.value = currentNotes
                 }
                 onResult(result)
             } catch (e: Exception) {
@@ -94,5 +108,9 @@ class NotesViewModel(
                 _isLoading.value = false
             }
         }
+    }
+
+    fun getNoteById(noteId: String): Note? {
+        return _notes.value.find { it.id == noteId }
     }
 }
