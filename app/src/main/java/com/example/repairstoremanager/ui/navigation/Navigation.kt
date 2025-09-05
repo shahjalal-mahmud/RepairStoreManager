@@ -24,6 +24,8 @@ import com.example.repairstoremanager.ui.screens.delivery.TodayDeliveriesScreen
 import com.example.repairstoremanager.ui.screens.delivery.TomorrowDeliveriesScreen
 import com.example.repairstoremanager.ui.screens.main.DashboardScreen
 import com.example.repairstoremanager.ui.screens.main.ProfileScreen
+import com.example.repairstoremanager.ui.screens.notes.AddEditNoteScreen
+import com.example.repairstoremanager.ui.screens.notes.NotesScreen
 import com.example.repairstoremanager.ui.screens.stock.AddProductScreen
 import com.example.repairstoremanager.ui.screens.stock.EditProductScreen
 import com.example.repairstoremanager.ui.screens.stock.StockListScreen
@@ -247,6 +249,16 @@ fun Navigation(
                     productId = productId
                 )
             }
+        }
+        composable("notes") {
+            NotesScreen(navController = navController)
+        }
+        composable("add_note") {
+            AddEditNoteScreen(navController = navController)
+        }
+        composable("edit_note/{noteId}") { backStackEntry ->
+            val noteId = backStackEntry.arguments?.getString("noteId")
+            AddEditNoteScreen(navController = navController, noteId = noteId)
         }
     }
 }

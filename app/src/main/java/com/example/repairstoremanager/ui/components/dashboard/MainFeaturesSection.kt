@@ -15,12 +15,14 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ListAlt
+import androidx.compose.material.icons.automirrored.outlined.Note
 import androidx.compose.material.icons.outlined.AddCircle
 import androidx.compose.material.icons.outlined.AssignmentTurnedIn
 import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.DeliveryDining
 import androidx.compose.material.icons.outlined.Inventory
 import androidx.compose.material.icons.outlined.LocalShipping
+import androidx.compose.material.icons.outlined.Note
 import androidx.compose.material.icons.outlined.Payment
 import androidx.compose.material.icons.outlined.PointOfSale
 import androidx.compose.material.icons.outlined.Receipt
@@ -54,7 +56,8 @@ fun MainFeaturesSection(navController: NavHostController) {
         FeatureItem("Stock Management", Icons.Outlined.Inventory, "stock_list"),
         FeatureItem("Daily Records", Icons.Outlined.Receipt, "transactions"),
         FeatureItem("Transactions", Icons.Outlined.Payment, "sales"),
-        FeatureItem("Quick Invoice", Icons.Outlined.PointOfSale, "quick_invoice")
+        FeatureItem("Quick Invoice", Icons.Outlined.PointOfSale, "quick_invoice"),
+        FeatureItem("Notes", Icons.AutoMirrored.Outlined.Note, "notes")
     )
 
     // Delivery options for the dialog
