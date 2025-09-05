@@ -16,6 +16,7 @@ import java.util.Locale
 
 class TransactionViewModel : ViewModel() {
     private val repository = TransactionRepository()
+    private val DATE_FORMAT = "dd MMM yyyy"
 
     private val _transactions = MutableStateFlow<List<Transaction>>(emptyList())
     val transactions: StateFlow<List<Transaction>> = _transactions
@@ -34,10 +35,33 @@ class TransactionViewModel : ViewModel() {
     private val _showAllTransactions = MutableStateFlow(false)
     val showAllTransactions: StateFlow<Boolean> = _showAllTransactions
 
+    private val _transactionSummary = MutableStateFlow(TransactionRepository.TransactionSummary())
+    val transactionSummary: StateFlow<TransactionRepository.TransactionSummary> = _transactionSummary
+
     init {
         Log.d("TransactionVM", "ViewModel initialized")
         fetchNextInvoiceNumber()
         setupRealTimeTransactions()
+        fetchTodayTransactions()
+    }
+
+    private fun getCurrentDate(): String {
+        return SimpleDateFormat(DATE_FORMAT, Locale.getDefault()).format(Date())
+    }
+
+    private fun getCurrentDateOnly(): String {
+        return SimpleDateFormat(DATE_FORMAT, Locale.getDefault()).format(Date())
+    }
+
+    fun formatDateForDisplay(date: String): String {
+        return try {
+            val inputFormat = SimpleDateFormat(DATE_FORMAT, Locale.getDefault())
+            val outputFormat = SimpleDateFormat("EEE, MMM dd, yyyy", Locale.getDefault())
+            val parsedDate = inputFormat.parse(date)
+            outputFormat.format(parsedDate ?: Date())
+        } catch (e: Exception) {
+            date
+        }
     }
 
     fun addToCart(product: Product, quantity: Int = 1) {
@@ -171,9 +195,13 @@ class TransactionViewModel : ViewModel() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                _transactions.value = repository.getTransactionsByDate(getCurrentDate())
+                val today = getCurrentDate()
+                _transactions.value = repository.getTransactionsByDate(today)
+                _selectedDate.value = today
+                _transactionSummary.value = repository.getTransactionSummaryByDate(today)
             } catch (e: Exception) {
                 _transactions.value = emptyList()
+                _transactionSummary.value = TransactionRepository.TransactionSummary(date = getCurrentDate())
             } finally {
                 _isLoading.value = false
             }
@@ -186,8 +214,10 @@ class TransactionViewModel : ViewModel() {
             try {
                 _transactions.value = repository.getTransactionsByDate(date)
                 _selectedDate.value = date
+                _transactionSummary.value = repository.getTransactionSummaryByDate(date)
             } catch (e: Exception) {
                 _transactions.value = emptyList()
+                _transactionSummary.value = TransactionRepository.TransactionSummary(date = date)
             } finally {
                 _isLoading.value = false
             }
@@ -199,6 +229,7 @@ class TransactionViewModel : ViewModel() {
             _isLoading.value = true
             try {
                 _transactions.value = repository.getAllTransactions()
+                // For all transactions view, we don't show the summary
             } catch (e: Exception) {
                 _transactions.value = emptyList()
             } finally {
@@ -216,26 +247,50 @@ class TransactionViewModel : ViewModel() {
         }
     }
 
-    fun getDailySalesTotal(): Double {
-        return _transactions.value.filter { it.type == "Sale" }.sumOf { it.amount }
-    }
-
-    fun getDailyTransactionCount(): Int {
-        return _transactions.value.size
-    }
-
-    private fun getCurrentDate(): String {
-        return SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date())
-    }
-
-    private fun getCurrentDateOnly(): String {
-        return SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date())
-    }
-
     private fun setupRealTimeTransactions() {
-        repository.getTransactionsRealTimeListener { transactions ->
-            Log.d("TransactionVM", "Real-time update received: ${transactions.size} transactions")
-            _transactions.value = transactions
+        repository.getTransactionsRealTimeListener { allTransactions ->
+            Log.d("TransactionVM", "Real-time update received: ${allTransactions.size} transactions")
+
+            if (_showAllTransactions.value) {
+                // Show all transactions
+                _transactions.value = allTransactions
+            } else {
+                // Filter by selected date for daily view
+                val filtered = allTransactions.filter { it.date == _selectedDate.value }
+                _transactions.value = filtered
+
+                // Also update summary with the filtered transactions
+                viewModelScope.launch {
+                    // Calculate summary from filtered transactions instead of fetching again
+                    val summary = calculateSummaryFromTransactions(filtered, _selectedDate.value)
+                    _transactionSummary.value = summary
+                }
+            }
         }
+    }
+
+    // Add this helper function to TransactionViewModel
+    private fun calculateSummaryFromTransactions(transactions: List<Transaction>, date: String): TransactionRepository.TransactionSummary {
+        // Calculate summary from the provided transactions
+        val totalSales = transactions.filter { it.type == "Sale" }.sumOf { it.amount }
+        val totalServices = transactions.filter { it.type == "Service" }.sumOf { it.amount }
+        val totalExpenses = transactions.filter { it.type == "Expense" }.sumOf { it.amount }
+
+        // Count products sold
+        val productsSold = mutableMapOf<String, Int>()
+        transactions.forEach { transaction ->
+            transaction.products.forEach { product ->
+                productsSold[product.name] = productsSold.getOrDefault(product.name, 0) + product.quantity
+            }
+        }
+
+        return TransactionRepository.TransactionSummary(
+            date = date,
+            totalTransactions = transactions.size,
+            totalSales = totalSales,
+            totalServices = totalServices,
+            totalExpenses = totalExpenses,
+            productsSold = productsSold
+        )
     }
 }

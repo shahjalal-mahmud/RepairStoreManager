@@ -150,4 +150,52 @@ class TransactionRepository {
                 }
             }
     }
+    // Add this function to get transaction summary
+    suspend fun getTransactionSummaryByDate(date: String): TransactionSummary {
+        val uid = auth.currentUser?.uid ?: return TransactionSummary()
+
+        return try {
+            val transactions = db.collection("transactions")
+                .whereEqualTo("shopOwnerId", uid)
+                .whereEqualTo("date", date)
+                .get()
+                .await()
+                .toObjects(Transaction::class.java)
+
+            // Calculate summary
+            val totalSales = transactions.filter { it.type == "Sale" }.sumOf { it.amount }
+            val totalServices = transactions.filter { it.type == "Service" }.sumOf { it.amount }
+            val totalExpenses = transactions.filter { it.type == "Expense" }.sumOf { it.amount }
+
+            // Count products sold
+            val productsSold = mutableMapOf<String, Int>()
+            transactions.forEach { transaction ->
+                transaction.products.forEach { product ->
+                    productsSold[product.name] = productsSold.getOrDefault(product.name, 0) + product.quantity
+                }
+            }
+
+            TransactionSummary(
+                date = date,
+                totalTransactions = transactions.size,
+                totalSales = totalSales,
+                totalServices = totalServices,
+                totalExpenses = totalExpenses,
+                productsSold = productsSold
+            )
+        } catch (e: Exception) {
+            Log.e("TransactionRepo", "Error getting transaction summary: ${e.message}", e)
+            TransactionSummary(date = date)
+        }
+    }
+
+    // Add this data class for summary
+    data class TransactionSummary(
+        val date: String = "",
+        val totalTransactions: Int = 0,
+        val totalSales: Double = 0.0,
+        val totalServices: Double = 0.0,
+        val totalExpenses: Double = 0.0,
+        val productsSold: Map<String, Int> = emptyMap()
+    )
 }

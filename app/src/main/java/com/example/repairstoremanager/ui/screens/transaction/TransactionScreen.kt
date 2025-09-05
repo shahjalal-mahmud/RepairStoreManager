@@ -4,12 +4,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Today
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -40,13 +43,14 @@ fun TransactionScreen(
     val isLoading by transactionViewModel.isLoading.collectAsState()
     val selectedDate by transactionViewModel.selectedDate.collectAsState()
     val showAllTransactions by transactionViewModel.showAllTransactions.collectAsState()
+    val transactionSummary by transactionViewModel.transactionSummary.collectAsState()
 
     var showDatePicker by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Transactions") },
+                title = { Text("Transactions Records") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -75,12 +79,22 @@ fun TransactionScreen(
                 // Date Selector and Summary for daily view
                 TransactionHeader(
                     selectedDate = selectedDate,
-                    totalSales = transactionViewModel.getDailySalesTotal(),
-                    transactionCount = transactionViewModel.getDailyTransactionCount(),
                     onDateSelect = { showDatePicker = true },
                     showAll = showAllTransactions
                 )
+
+                // Transaction Summary
+                TransactionSummaryCard(summary = transactionSummary)
+
                 Spacer(modifier = Modifier.height(16.dp))
+
+                // ADD THIS SECTION TO SHOW TRANSACTIONS HEADER
+                Text(
+                    "Transactions for ${transactionViewModel.formatDateForDisplay(selectedDate)}",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
             } else {
                 // Header for all transactions view
                 Text(
@@ -98,11 +112,13 @@ fun TransactionScreen(
             } else if (transactions.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
-                        if (showAllTransactions) "No transactions found" else "No transactions found for $selectedDate",
+                        if (showAllTransactions) "No transactions found"
+                        else "No transactions found for ${transactionViewModel.formatDateForDisplay(selectedDate)}",
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
             } else {
+                // THIS WILL NOW SHOW THE TRANSACTIONS AFTER THE SUMMARY
                 TransactionList(transactions = transactions, showAll = showAllTransactions)
             }
         }
@@ -115,6 +131,49 @@ fun TransactionScreen(
                 },
                 onDismiss = { showDatePicker = false }
             )
+        }
+    }
+}
+
+@Composable
+fun TransactionSummaryCard(summary: com.example.repairstoremanager.data.repository.TransactionRepository.TransactionSummary) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                "Daily Summary",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
+            // Summary items
+            SummaryItem("Total Transactions", summary.totalTransactions.toString())
+            SummaryItem("Total Sales", "₹${summary.totalSales.format(2)}")
+            SummaryItem("Total Services", "₹${summary.totalServices.format(2)}")
+            SummaryItem("Total Expenses", "₹${summary.totalExpenses.format(2)}")
+
+            if (summary.productsSold.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    "Products Sold:",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Medium
+                )
+                summary.productsSold.forEach { (product, quantity) ->
+                    Text(
+                        "• $product: $quantity",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
+            }
         }
     }
 }
