@@ -88,7 +88,7 @@ fun TransactionScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // ADD THIS SECTION TO SHOW TRANSACTIONS HEADER
+                // Transactions header
                 Text(
                     "Transactions for ${transactionViewModel.formatDateForDisplay(selectedDate)}",
                     style = MaterialTheme.typography.titleMedium,
@@ -118,7 +118,7 @@ fun TransactionScreen(
                     )
                 }
             } else {
-                // THIS WILL NOW SHOW THE TRANSACTIONS AFTER THE SUMMARY
+                // Show the transactions list
                 TransactionList(transactions = transactions, showAll = showAllTransactions)
             }
         }

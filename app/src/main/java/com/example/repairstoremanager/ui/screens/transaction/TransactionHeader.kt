@@ -2,7 +2,6 @@ package com.example.repairstoremanager.ui.screens.transaction
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -35,7 +34,7 @@ fun TransactionHeader(
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            Row(
+            androidx.compose.foundation.layout.Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -67,7 +66,7 @@ fun TransactionHeader(
 }
 @Composable
 fun SummaryItem(label: String, value: String) {
-    Row(
+    androidx.compose.foundation.layout.Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
