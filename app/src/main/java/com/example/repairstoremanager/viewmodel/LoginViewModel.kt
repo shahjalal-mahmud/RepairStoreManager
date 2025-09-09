@@ -1,6 +1,5 @@
 package com.example.repairstoremanager.viewmodel
 
-import android.content.Context
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,7 +7,7 @@ import com.example.repairstoremanager.data.repository.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
-class LoginViewModel(private val storeViewModel: StoreViewModel) : ViewModel() {
+class LoginViewModel : ViewModel() {
     private val repository = AuthRepository()
 
     var email by mutableStateOf("")
@@ -20,7 +19,7 @@ class LoginViewModel(private val storeViewModel: StoreViewModel) : ViewModel() {
     val isUserLoggedIn: Boolean
         get() = repository.isUserLoggedIn()
 
-    fun login() {
+    fun login(storeViewModel: StoreViewModel) {
         isLoading = true
         errorMessage = null
         viewModelScope.launch {
@@ -34,6 +33,18 @@ class LoginViewModel(private val storeViewModel: StoreViewModel) : ViewModel() {
             }
         }
     }
+
+    fun logout(onLogoutComplete: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                repository.logout()
+                onLogoutComplete()
+            } catch (e: Exception) {
+                errorMessage = "Logout failed: ${e.message}"
+                onLogoutComplete() // still navigate back
+            }
+        }
+    }
 }
 
 class ForgotPasswordViewModel : ViewModel() {
@@ -43,7 +54,7 @@ class ForgotPasswordViewModel : ViewModel() {
 
     private val auth = FirebaseAuth.getInstance()
 
-    fun sendResetLink(context: Context) {
+    fun sendResetLink() {
         message = null
         error = null
         auth.sendPasswordResetEmail(email.trim())
@@ -55,4 +66,3 @@ class ForgotPasswordViewModel : ViewModel() {
             }
     }
 }
-

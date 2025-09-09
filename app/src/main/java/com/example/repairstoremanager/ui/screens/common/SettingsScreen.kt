@@ -54,13 +54,14 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.repairstoremanager.ui.components.profile.ReminderTimePicker
+import com.example.repairstoremanager.viewmodel.LoginViewModel
 import com.example.repairstoremanager.viewmodel.StoreViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     navController: NavHostController,
-    storeViewModel: StoreViewModel = viewModel(),
+    loginViewModel: LoginViewModel = viewModel (),
     onLogout: () -> Unit
 ) {
     val storeViewModel: StoreViewModel = viewModel()
@@ -225,7 +226,11 @@ fun SettingsScreen(
             // Account Section
             SettingsSection(title = "Account") {
                 SettingsItem(
-                    onClick = { storeViewModel.logout { onLogout() } },
+                    onClick = {
+                        loginViewModel.logout {
+                            onLogout()
+                        }
+                    },
                     icon = Icons.AutoMirrored.Filled.ExitToApp,
                     title = "Logout",
                     subtitle = "Sign out from your account",

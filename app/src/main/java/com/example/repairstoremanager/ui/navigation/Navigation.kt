@@ -9,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.repairstoremanager.data.repository.AuthRepository
 import com.example.repairstoremanager.ui.screens.auth.ForgotPasswordScreen
+import com.example.repairstoremanager.ui.screens.auth.LoginScreen
 import com.example.repairstoremanager.ui.screens.common.NotificationsScreen
 import com.example.repairstoremanager.ui.screens.common.QuickInvoiceScreen
 import com.example.repairstoremanager.ui.screens.common.SearchScreen
@@ -33,6 +34,7 @@ import com.example.repairstoremanager.ui.screens.transaction.AddTransactionScree
 import com.example.repairstoremanager.ui.screens.transaction.TransactionScreen
 import com.example.repairstoremanager.viewmodel.CustomerViewModel
 import com.example.repairstoremanager.viewmodel.EditCustomerViewModel
+import com.example.repairstoremanager.viewmodel.LoginViewModel
 import com.example.repairstoremanager.viewmodel.SearchViewModel
 import com.example.repairstoremanager.viewmodel.StockViewModel
 import com.example.repairstoremanager.viewmodel.StoreViewModel
@@ -46,11 +48,27 @@ fun Navigation(
     stockViewModel: StockViewModel,
     transactionViewModel: TransactionViewModel,
     customerViewModel: CustomerViewModel,
-    searchViewModel: SearchViewModel
+    searchViewModel: SearchViewModel,
+    loginViewModel: LoginViewModel
 ) {
     val authRepository = remember { AuthRepository() }
 
     NavHost(navController = navController, startDestination = "splash") {
+
+        composable("login") {
+            LoginScreen(
+                viewModel = loginViewModel,
+                storeViewModel = storeViewModel,
+                onLoginSuccess = {
+                    navController.navigate(BottomNavItem.Dashboard.route) {
+                        popUpTo("login") { inclusive = true }
+                    }
+                },
+                onNavigateToForgotPassword = {
+                    navController.navigate("forgot_password")
+                }
+            )
+        }
 
         composable("splash") {
             SplashScreen(
@@ -61,18 +79,19 @@ fun Navigation(
                                 popUpTo("splash") { inclusive = true }
                             }
                         } else {
-                            navController.navigate("login") {
+                            navController.navigate("login") { // This will now work
                                 popUpTo("splash") { inclusive = true }
                             }
                         }
                     } catch (e: Exception) {
-                        navController.navigate("login") {
+                        navController.navigate("login") { // This will now work
                             popUpTo("splash") { inclusive = true }
                         }
                     }
                 }
             )
         }
+
 
         composable(BottomNavItem.Dashboard.route) {
             MainScaffold(navController) {
@@ -115,10 +134,10 @@ fun Navigation(
             MainScaffold(navController) {
                 SettingsScreen(
                     navController = navController,
-                    storeViewModel = storeViewModel,
+                    loginViewModel = loginViewModel,
                     onLogout = {
                         navController.navigate("login") {
-                            popUpTo(0) { inclusive = true }
+                            popUpTo("splash") { inclusive = true }
                         }
                     }
                 )
