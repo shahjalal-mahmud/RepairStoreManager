@@ -48,18 +48,4 @@ class StoreRepository {
             Result.failure(e)
         }
     }
-
-    fun logout() {
-        auth.signOut()
-    }
-
-    suspend fun changePassword(newPassword: String): Result<Unit> {
-        val user = auth.currentUser ?: return Result.failure(Exception("No user logged in"))
-        return try {
-            user.updatePassword(newPassword).await()
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
 }

@@ -19,11 +19,13 @@ import androidx.compose.ui.platform.*
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
 import com.example.repairstoremanager.viewmodel.LoginViewModel
+import com.example.repairstoremanager.viewmodel.StoreViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel,
+    storeViewModel: StoreViewModel,
     onLoginSuccess: () -> Unit,
     onNavigateToForgotPassword: () -> Unit
 ){
@@ -104,7 +106,7 @@ fun LoginScreen(
                 keyboardActions = KeyboardActions(
                     onDone = {
                         focusManager.clearFocus()
-                        if (!viewModel.isLoading) viewModel.login()
+                        if (!viewModel.isLoading) viewModel.login(storeViewModel = storeViewModel)
                     }
                 ),
                 visualTransformation = if (passwordVisible)
@@ -129,7 +131,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { viewModel.login() },
+                onClick = { viewModel.login(storeViewModel = storeViewModel) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),

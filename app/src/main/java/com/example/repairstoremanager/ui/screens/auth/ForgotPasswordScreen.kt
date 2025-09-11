@@ -24,7 +24,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.repairstoremanager.viewmodel.ForgotPasswordViewModel
 
@@ -34,8 +33,6 @@ fun ForgotPasswordScreen(
     onBack: () -> Unit,
     viewModel: ForgotPasswordViewModel = remember { ForgotPasswordViewModel() }
 ) {
-    val context = LocalContext.current
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -72,7 +69,7 @@ fun ForgotPasswordScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { viewModel.sendResetLink(context) },
+                onClick = { viewModel.sendResetLink() },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Send Reset Link")

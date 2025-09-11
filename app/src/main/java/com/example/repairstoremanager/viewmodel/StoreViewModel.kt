@@ -7,7 +7,6 @@ import android.telephony.SubscriptionInfo
 import android.telephony.SubscriptionManager
 import androidx.annotation.RequiresPermission
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -31,9 +30,6 @@ class StoreViewModel : ViewModel() {
 
     var isEditMode by mutableStateOf(false)
     var message by mutableStateOf<String?>(null)
-
-    var autoSmsEnabled by mutableStateOf(true)
-    var selectedSimSlot by mutableIntStateOf(0)
 
     val simList = mutableStateListOf<SubscriptionInfo>()
     var logoUri by mutableStateOf<Uri?>(null)
@@ -116,27 +112,6 @@ class StoreViewModel : ViewModel() {
         isEditMode = !isEditMode
     }
 
-    fun updateStoreInfo() {
-        viewModelScope.launch {
-            val result = repository.updateStoreInfo(storeInfo)
-            message = if (result.isSuccess) "Updated Successfully" else result.exceptionOrNull()?.message
-            if (result.isSuccess) {
-                isEditMode = false
-            }
-        }
-    }
-
-    fun updateOwnerDetails() {
-        viewModelScope.launch {
-            val result = repository.updateOwnerDetails(
-                storeInfo.ownerName,
-                storeInfo.ownerEmail,
-                storeInfo.ownerPhone
-            )
-            message = if (result.isSuccess) "Owner details updated" else result.exceptionOrNull()?.message
-        }
-    }
-
     fun updateReminderTime(context: Context, hour: Int, minute: Int) {
         val prefs = context.getSharedPreferences("reminder_prefs", Context.MODE_PRIVATE)
         prefs.edit().putInt("hour", hour).putInt("minute", minute).apply()
@@ -149,18 +124,6 @@ class StoreViewModel : ViewModel() {
         val prefs = context.getSharedPreferences("reminder_prefs", Context.MODE_PRIVATE)
         prefs.edit().remove("hour").remove("minute").apply()
         WorkScheduler.cancelReminder(context)
-    }
-
-    fun logout(onLogoutComplete: () -> Unit) {
-        repository.logout()
-        onLogoutComplete()
-    }
-
-    fun changePassword(newPassword: String, onResult: (String?) -> Unit) {
-        viewModelScope.launch {
-            val result = repository.changePassword(newPassword)
-            onResult(result.exceptionOrNull()?.message)
-        }
     }
 
     fun updateStoreName(newValue: String) {
@@ -189,18 +152,6 @@ class StoreViewModel : ViewModel() {
 
     fun updateOwnerPhone(newValue: String) {
         storeInfo = storeInfo.copy(ownerPhone = newValue)
-    }
-
-    fun updateWorkingHours(newValue: String) {
-        storeInfo = storeInfo.copy(workingHours = newValue)
-    }
-
-    fun updateSubscriptionPlan(newValue: String) {
-        storeInfo = storeInfo.copy(subscriptionPlan = newValue)
-    }
-
-    fun updateAutoSmsEnabled(enabled: Boolean) {
-        autoSmsEnabled = enabled
     }
 
     @RequiresPermission(Manifest.permission.READ_PHONE_STATE)

@@ -129,7 +129,13 @@ fun QuickAccessButton(item: QuickAccessItem, navController: NavHostController) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { /* Navigate to feature */ },
+            .clickable {
+                // Only navigate for "Take Notes" button
+                if (item.title == "Take Notes") {
+                    navController.navigate("notes")
+                }
+                // Other buttons won't do anything (as requested)
+            },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
