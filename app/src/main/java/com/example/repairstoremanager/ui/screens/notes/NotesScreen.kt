@@ -25,6 +25,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -76,7 +77,7 @@ fun NotesScreen(
                     Text(
                         "Notes",
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimary
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 },
                 navigationIcon = {
@@ -84,7 +85,7 @@ fun NotesScreen(
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = MaterialTheme.colorScheme.onPrimary
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
                 },
@@ -97,13 +98,18 @@ fun NotesScreen(
                             Icons.Default.Refresh,
                             contentDescription = "Reload",
                             tint = if (isLoading) {
-                                MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f)
+                                MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.5f)
                             } else {
-                                MaterialTheme.colorScheme.onPrimary
+                                MaterialTheme.colorScheme.onPrimaryContainer
                             }
                         )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    actionIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             )
         },
         floatingActionButton = {

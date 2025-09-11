@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -43,12 +44,27 @@ fun NoteCard(
     val textColor = Note.getTextColorForBackground(backgroundColor)
     val dateFormat = SimpleDateFormat("MMM dd, yyyy - hh:mm a", Locale.getDefault())
 
+    // Calculate appropriate pin color based on theme
+    val pinColor = if (note.isPinned) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        // Use appropriate contrast color for the background
+        if (backgroundColor.luminance > 0.5f) {
+            Color.Black.copy(alpha = 0.6f)
+        } else {
+            Color.White.copy(alpha = 0.6f)
+        }
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 2.dp,
+            pressedElevation = 4.dp
+        ),
         colors = CardDefaults.cardColors(containerColor = backgroundColor)
     ) {
         Column(
@@ -77,7 +93,7 @@ fun NoteCard(
                         Icon(
                             imageVector = Icons.Default.PushPin,
                             contentDescription = if (note.isPinned) "Unpin" else "Pin",
-                            tint = if (note.isPinned) MaterialTheme.colorScheme.primary else textColor.copy(alpha = 0.6f),
+                            tint = pinColor,
                             modifier = Modifier.size(16.dp)
                         )
                     }
@@ -163,3 +179,12 @@ fun NoteCard(
         }
     }
 }
+
+// Extension function to calculate luminance
+private val Color.luminance: Float
+    get() {
+        val red = this.red * 0.299f
+        val green = this.green * 0.587f
+        val blue = this.blue * 0.114f
+        return red + green + blue
+    }
