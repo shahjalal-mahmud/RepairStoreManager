@@ -40,6 +40,16 @@ class NotesViewModel(
         }
     }
 
+    suspend fun getNoteById(noteId: String): Note? {
+        return try {
+            // Fetch from repository (Firebase) instead of local state
+            notesRepository.getNoteById(noteId)
+        } catch (e: Exception) {
+            _error.value = "Failed to load note: ${e.message}"
+            null
+        }
+    }
+
     fun addNote(note: Note, onResult: (Result<String>) -> Unit) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -108,9 +118,5 @@ class NotesViewModel(
                 _isLoading.value = false
             }
         }
-    }
-
-    fun getNoteById(noteId: String): Note? {
-        return _notes.value.find { it.id == noteId }
     }
 }

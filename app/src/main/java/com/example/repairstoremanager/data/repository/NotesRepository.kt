@@ -64,7 +64,12 @@ class NotesRepository {
 
     suspend fun getNoteById(noteId: String): Note? {
         return try {
-            db.collection("notes").document(noteId).get().await().toObject(Note::class.java)
+            val document = db.collection("notes").document(noteId).get().await()
+            if (document.exists()) {
+                document.toObject(Note::class.java)
+            } else {
+                null
+            }
         } catch (e: Exception) {
             null
         }

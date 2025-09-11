@@ -36,7 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -45,6 +45,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.repairstoremanager.data.model.Note
 import com.example.repairstoremanager.viewmodel.NotesViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,23 +61,35 @@ fun AddEditNoteScreen(
     var tags by remember { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
     val isEditing = !noteId.isNullOrEmpty()
+    var isLoading by remember { mutableStateOf(false) }
+    val isDarkTheme = MaterialTheme.colorScheme.surface.luminance() < 0.5f
 
     // Load note if editing
     LaunchedEffect(noteId) {
-        if (isEditing) {
-            val note = viewModel.getNoteById(noteId)
-            note?.let {
-                title = it.title
-                content = it.content
-                selectedColor = it.color
-                tags = it.tags.joinToString(",")
+        if (isEditing && noteId != null) {
+            isLoading = true
+            try {
+                // Use coroutine context to avoid UI freezing
+                withContext(Dispatchers.IO) {
+                    val note = viewModel.getNoteById(noteId)
+                    note?.let {
+                        title = it.title
+                        content = it.content
+                        selectedColor = it.color
+                        tags = it.tags.joinToString(",")
+                    }
+                }
+            } catch (e: Exception) {
+                // Handle error - you might want to show a snackbar here
+            } finally {
+                isLoading = false
             }
         }
     }
 
-    // Auto-focus on title field
-    LaunchedEffect(Unit) {
-        if (title.isEmpty()) {
+    // Auto-focus on title field only when not editing or when data is loaded
+    LaunchedEffect(title, isEditing, isLoading) {
+        if (title.isEmpty() && !isEditing && !isLoading) {
             focusRequester.requestFocus()
         }
     }
@@ -83,167 +97,206 @@ fun AddEditNoteScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (!isEditing) "Add Note" else "Edit Note") },
+                title = {
+                    Text(
+                        if (!isEditing) "Add Note" else "Edit Note",
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
                     }
                 },
                 actions = {
-                    IconButton(
-                        onClick = {
-                            val noteTags = tags.split(",")
-                                .map { it.trim() }
-                                .filter { it.isNotEmpty() }
+                    if (!isLoading) {
+                        IconButton(
+                            onClick = {
+                                val noteTags = tags.split(",")
+                                    .map { it.trim() }
+                                    .filter { it.isNotEmpty() }
 
-                            val note = Note(
-                                id = noteId ?: "",
-                                title = title,
-                                content = content,
-                                color = selectedColor,
-                                tags = noteTags
+                                val note = Note(
+                                    id = noteId ?: "",
+                                    title = title,
+                                    content = content,
+                                    color = selectedColor,
+                                    tags = noteTags
+                                )
+
+                                if (!isEditing) {
+                                    viewModel.addNote(note) { result ->
+                                        if (result.isSuccess) {
+                                            navController.popBackStack()
+                                        }
+                                    }
+                                } else {
+                                    viewModel.updateNote(note) { result ->
+                                        if (result.isSuccess) {
+                                            navController.popBackStack()
+                                        }
+                                    }
+                                }
+                            },
+                            enabled = title.isNotEmpty() || content.isNotEmpty()
+                        ) {
+                            Icon(
+                                Icons.Default.Check,
+                                contentDescription = "Save",
+                                tint = if (title.isNotEmpty() || content.isNotEmpty()) {
+                                    MaterialTheme.colorScheme.onPrimary
+                                } else {
+                                    MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f)
+                                }
                             )
-
-                            if (!isEditing) {
-                                viewModel.addNote(note) { result ->
-                                    if (result.isSuccess) {
-                                        navController.popBackStack()
-                                    }
-                                }
-                            } else {
-                                viewModel.updateNote(note) { result ->
-                                    if (result.isSuccess) {
-                                        navController.popBackStack()
-                                    }
-                                }
-                            }
-                        },
-                        enabled = title.isNotEmpty() || content.isNotEmpty()
-                    ) {
-                        Icon(Icons.Default.Check, contentDescription = "Save")
+                        }
                     }
                 }
             )
         }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
-        ) {
-            // Color selection
-            Row(
+        if (isLoading) {
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
             ) {
-                Text(
-                    "Color:",
-                    style = MaterialTheme.typography.labelMedium,
-                    modifier = Modifier.align(Alignment.CenterVertically)
-                )
-
-                val colors = listOf(
-                    Note.COLOR_DEFAULT to MaterialTheme.colorScheme.surface,
-                    Note.COLOR_BLUE to Color(0xFFE3F2FD),
-                    Note.COLOR_GREEN to Color(0xFFE8F5E9),
-                    Note.COLOR_YELLOW to Color(0xFFFFF9C4),
-                    Note.COLOR_RED to Color(0xFFFFEBEE),
-                    Note.COLOR_PURPLE to Color(0xFFF3E5F5)
-                )
-
-                colors.forEach { (colorValue, color) ->
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .clip(CircleShape)
-                            .background(color)
-                            .clickable { selectedColor = colorValue }
-                            .then(
-                                if (selectedColor == colorValue) {
-                                    Modifier.padding(2.dp)
-                                        .background(MaterialTheme.colorScheme.primary, CircleShape)
-                                } else {
-                                    Modifier
-                                }
-                            )
-                    )
-                }
+                Text("Loading note...", color = MaterialTheme.colorScheme.onSurface)
             }
-
-            BasicTextField(
-                value = title,
-                onValueChange = { title = it },
-                textStyle = TextStyle(
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                ),
+        } else {
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .focusRequester(focusRequester),
-                decorationBox = { innerTextField ->
-                    if (title.isEmpty()) {
-                        Text(
-                            "Title",
-                            style = TextStyle(
-                                fontSize = 22.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                            )
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .verticalScroll(rememberScrollState())
+                    .background(MaterialTheme.colorScheme.surface)
+            ) {
+                // Color selection
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        "Color:",
+                        style = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier.align(Alignment.CenterVertically),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    val colors = listOf(
+                        Note.COLOR_DEFAULT to Note.getBackgroundColor(Note.COLOR_DEFAULT, isDarkTheme),
+                        Note.COLOR_BLUE to Note.getBackgroundColor(Note.COLOR_BLUE, isDarkTheme),
+                        Note.COLOR_GREEN to Note.getBackgroundColor(Note.COLOR_GREEN, isDarkTheme),
+                        Note.COLOR_YELLOW to Note.getBackgroundColor(Note.COLOR_YELLOW, isDarkTheme),
+                        Note.COLOR_RED to Note.getBackgroundColor(Note.COLOR_RED, isDarkTheme),
+                        Note.COLOR_PURPLE to Note.getBackgroundColor(Note.COLOR_PURPLE, isDarkTheme)
+                    )
+
+                    colors.forEach { (colorValue, color) ->
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(color)
+                                .clickable { selectedColor = colorValue }
+                                .then(
+                                    if (selectedColor == colorValue) {
+                                        Modifier
+                                            .padding(3.dp)
+                                            .background(
+                                                MaterialTheme.colorScheme.primary,
+                                                CircleShape
+                                            )
+                                    } else {
+                                        Modifier
+                                    }
+                                )
                         )
                     }
-                    innerTextField()
                 }
-            )
 
-            BasicTextField(
-                value = content,
-                onValueChange = { content = it },
-                textStyle = MaterialTheme.typography.bodyLarge.copy(
-                    fontSize = 16.sp,
-                    lineHeight = 24.sp
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .height(200.dp),
-                decorationBox = { innerTextField ->
-                    if (content.isEmpty()) {
-                        Text(
-                            "Start typing...",
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                BasicTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    textStyle = TextStyle(
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .focusRequester(focusRequester),
+                    decorationBox = { innerTextField ->
+                        if (title.isEmpty()) {
+                            Text(
+                                "Title",
+                                style = TextStyle(
+                                    fontSize = 22.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                )
                             )
-                        )
+                        }
+                        innerTextField()
                     }
-                    innerTextField()
-                }
-            )
+                )
 
-            // Tags input
-            BasicTextField(
-                value = tags,
-                onValueChange = { tags = it },
-                textStyle = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                decorationBox = { innerTextField ->
-                    if (tags.isEmpty()) {
-                        Text(
-                            "Tags (comma separated)",
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                BasicTextField(
+                    value = content,
+                    onValueChange = { content = it },
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(
+                        fontSize = 16.sp,
+                        lineHeight = 24.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .height(200.dp),
+                    decorationBox = { innerTextField ->
+                        if (content.isEmpty()) {
+                            Text(
+                                "Start typing...",
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                )
                             )
-                        )
+                        }
+                        innerTextField()
                     }
-                    innerTextField()
-                }
-            )
+                )
+
+                // Tags input
+                BasicTextField(
+                    value = tags,
+                    onValueChange = { tags = it },
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(
+                        color = MaterialTheme.colorScheme.onSurface
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    decorationBox = { innerTextField ->
+                        if (tags.isEmpty()) {
+                            Text(
+                                "Tags (comma separated)",
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                )
+                            )
+                        }
+                        innerTextField()
+                    }
+                )
+            }
         }
     }
 }
