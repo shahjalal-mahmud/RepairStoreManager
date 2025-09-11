@@ -40,13 +40,19 @@ class NotesViewModel(
         }
     }
 
-    suspend fun getNoteById(noteId: String): Note? {
-        return try {
-            // Fetch from repository (Firebase) instead of local state
-            notesRepository.getNoteById(noteId)
-        } catch (e: Exception) {
-            _error.value = "Failed to load note: ${e.message}"
-            null
+    fun getNoteById(noteId: String, onResult: (Note?) -> Unit) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _error.value = null
+            try {
+                val note = notesRepository.getNoteById(noteId)
+                onResult(note)
+            } catch (e: Exception) {
+                _error.value = "Failed to load note: ${e.message}"
+                onResult(null)
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 
@@ -84,7 +90,9 @@ class NotesViewModel(
                     val currentNotes = _notes.value.toMutableList()
                     val index = currentNotes.indexOfFirst { it.id == note.id }
                     if (index != -1) {
-                        currentNotes[index] = note
+                        // Preserve createdAt timestamp when updating
+                        val updatedNote = note.copy(createdAt = currentNotes[index].createdAt)
+                        currentNotes[index] = updatedNote
                         _notes.value = currentNotes
                     }
                 }

@@ -23,6 +23,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -31,6 +33,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,8 +48,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.repairstoremanager.data.model.Note
 import com.example.repairstoremanager.viewmodel.NotesViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,42 +61,43 @@ fun AddEditNoteScreen(
     var content by remember { mutableStateOf("") }
     var selectedColor by remember { mutableStateOf(Note.COLOR_DEFAULT) }
     var tags by remember { mutableStateOf("") }
+    var isPinned by remember { mutableStateOf(false) }
+    var createdAt by remember { mutableStateOf(0L) }
     val focusRequester = remember { FocusRequester() }
     val isEditing = !noteId.isNullOrEmpty()
     var isLoading by remember { mutableStateOf(false) }
     val isDarkTheme = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     // Load note if editing
     LaunchedEffect(noteId) {
         if (isEditing && noteId != null) {
             isLoading = true
-            try {
-                // Use coroutine context to avoid UI freezing
-                withContext(Dispatchers.IO) {
-                    val note = viewModel.getNoteById(noteId)
-                    note?.let {
-                        title = it.title
-                        content = it.content
-                        selectedColor = it.color
-                        tags = it.tags.joinToString(",")
-                    }
+            viewModel.getNoteById(noteId) { note ->
+                note?.let {
+                    title = it.title
+                    content = it.content
+                    selectedColor = it.color
+                    tags = it.tags.joinToString(",")
+                    isPinned = it.isPinned
+                    createdAt = it.createdAt
                 }
-            } catch (e: Exception) {
-                // Handle error - you might want to show a snackbar here
-            } finally {
                 isLoading = false
-            }
-        }
-    }
 
-    // Auto-focus on title field only when not editing or when data is loaded
-    LaunchedEffect(title, isEditing, isLoading) {
-        if (title.isEmpty() && !isEditing && !isLoading) {
+                // Focus on title after loading
+                if (title.isEmpty()) {
+                    focusRequester.requestFocus()
+                }
+            }
+        } else if (!isEditing) {
+            // Focus on title for new notes
             focusRequester.requestFocus()
         }
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -124,20 +127,35 @@ fun AddEditNoteScreen(
                                     id = noteId ?: "",
                                     title = title,
                                     content = content,
+                                    createdAt = createdAt,
                                     color = selectedColor,
-                                    tags = noteTags
+                                    tags = noteTags,
+                                    isPinned = isPinned,
+                                    shopOwnerId = "" // This will be set by repository
                                 )
 
                                 if (!isEditing) {
                                     viewModel.addNote(note) { result ->
                                         if (result.isSuccess) {
                                             navController.popBackStack()
+                                        } else {
+                                            scope.launch {
+                                                snackbarHostState.showSnackbar(
+                                                    "Failed to save note: ${result.exceptionOrNull()?.message}"
+                                                )
+                                            }
                                         }
                                     }
                                 } else {
                                     viewModel.updateNote(note) { result ->
                                         if (result.isSuccess) {
                                             navController.popBackStack()
+                                        } else {
+                                            scope.launch {
+                                                snackbarHostState.showSnackbar(
+                                                    "Failed to update note: ${result.exceptionOrNull()?.message}"
+                                                )
+                                            }
                                         }
                                     }
                                 }

@@ -27,12 +27,19 @@ class NotesRepository {
     suspend fun updateNote(note: Note): Result<Unit> {
         return try {
             val uid = auth.currentUser?.uid ?: return Result.failure(Exception("User not authenticated"))
-            if (note.shopOwnerId != uid) {
-                return Result.failure(Exception("Unauthorized"))
-            }
 
-            val updatedNote = note.copy(updatedAt = Date().time)
-            db.collection("notes").document(note.id).set(updatedNote).await()
+            // Include shopOwnerId in the update to pass Firestore rules validation
+            val updates = mapOf(
+                "title" to note.title,
+                "content" to note.content,
+                "updatedAt" to Date().time,
+                "color" to note.color,
+                "tags" to note.tags,
+                "isPinned" to note.isPinned,
+                "shopOwnerId" to uid // This is required for Firestore rules
+            )
+
+            db.collection("notes").document(note.id).update(updates).await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

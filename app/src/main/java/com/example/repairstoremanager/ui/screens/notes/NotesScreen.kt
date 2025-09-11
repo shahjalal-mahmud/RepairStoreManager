@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -33,7 +34,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.repairstoremanager.data.model.Note
@@ -52,6 +55,11 @@ fun NotesScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
+    // Load notes when screen is first shown
+    LaunchedEffect(Unit) {
+        viewModel.loadNotes()
+    }
+
     // Show error message if any
     LaunchedEffect(error) {
         error?.let {
@@ -64,10 +72,36 @@ fun NotesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Notes", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        "Notes",
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(
+                        onClick = { viewModel.loadNotes() },
+                        enabled = !isLoading
+                    ) {
+                        Icon(
+                            Icons.Default.Refresh,
+                            contentDescription = "Reload",
+                            tint = if (isLoading) {
+                                MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f)
+                            } else {
+                                MaterialTheme.colorScheme.onPrimary
+                            }
+                        )
                     }
                 }
             )
@@ -75,7 +109,8 @@ fun NotesScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { navController.navigate("add_note") },
-                containerColor = MaterialTheme.colorScheme.primary
+                containerColor = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(16.dp)
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Note")
             }
@@ -86,16 +121,25 @@ fun NotesScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .background(MaterialTheme.colorScheme.background)
         ) {
             if (isLoading && notes.isEmpty()) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else if (notes.isEmpty()) {
-                Text(
-                    "No notes yet. Tap + to create one!",
-                    modifier = Modifier.align(Alignment.Center),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "No notes yet\nTap + to create your first note!",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        textAlign = TextAlign.Center,
+                        lineHeight = 24.sp
+                    )
+                }
             } else {
                 NotesList(
                     notes = notes,
@@ -141,18 +185,19 @@ fun NotesList(
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         if (pinnedNotes.isNotEmpty()) {
             stickyHeader {
                 Text(
-                    "Pinned",
+                    "📌 Pinned",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(MaterialTheme.colorScheme.background)
-                        .padding(vertical = 8.dp)
+                        .padding(vertical = 8.dp, horizontal = 4.dp)
                 )
             }
             items(pinnedNotes) { note ->
@@ -166,13 +211,14 @@ fun NotesList(
 
             stickyHeader {
                 Text(
-                    "All Notes",
+                    "📝 All Notes",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(MaterialTheme.colorScheme.background)
-                        .padding(vertical = 8.dp)
+                        .padding(vertical = 8.dp, horizontal = 4.dp)
                 )
             }
         }
