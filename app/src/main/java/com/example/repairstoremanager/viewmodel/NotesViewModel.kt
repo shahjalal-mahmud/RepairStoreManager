@@ -86,15 +86,7 @@ class NotesViewModel(
             try {
                 val result = notesRepository.updateNote(note)
                 if (result.isSuccess) {
-                    // Update the specific note in the list
-                    val currentNotes = _notes.value.toMutableList()
-                    val index = currentNotes.indexOfFirst { it.id == note.id }
-                    if (index != -1) {
-                        // Preserve createdAt timestamp when updating
-                        val updatedNote = note.copy(createdAt = currentNotes[index].createdAt)
-                        currentNotes[index] = updatedNote
-                        _notes.value = currentNotes
-                    }
+                    loadNotes()
                 }
                 onResult(result)
             } catch (e: Exception) {
