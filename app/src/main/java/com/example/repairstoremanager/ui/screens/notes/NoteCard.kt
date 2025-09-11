@@ -13,6 +13,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PushPin
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -20,6 +22,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,15 +46,15 @@ fun NoteCard(
     onDelete: () -> Unit,
     onPin: () -> Unit
 ) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
     val backgroundColor = Note.getBackgroundColor(note.color)
     val textColor = Note.getTextColorForBackground(backgroundColor)
     val dateFormat = SimpleDateFormat("MMM dd, yyyy - hh:mm a", Locale.getDefault())
 
-    // Calculate appropriate pin color based on theme
     val pinColor = if (note.isPinned) {
         MaterialTheme.colorScheme.primary
     } else {
-        // Use appropriate contrast color for the background
         if (backgroundColor.luminance > 0.5f) {
             Color.Black.copy(alpha = 0.6f)
         } else {
@@ -56,6 +62,7 @@ fun NoteCard(
         }
     }
 
+    // Main card UI
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -72,7 +79,6 @@ fun NoteCard(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            // Header with pin icon and actions
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -99,7 +105,7 @@ fun NoteCard(
                     }
 
                     IconButton(
-                        onClick = onDelete,
+                        onClick = { showDeleteDialog = true },
                         modifier = Modifier.size(24.dp)
                     ) {
                         Icon(
@@ -112,7 +118,6 @@ fun NoteCard(
                 }
             }
 
-            // Title
             if (note.title.isNotEmpty()) {
                 Text(
                     text = note.title,
@@ -125,7 +130,6 @@ fun NoteCard(
                 )
             }
 
-            // Content
             if (note.content.isNotEmpty()) {
                 Text(
                     text = note.content,
@@ -137,7 +141,6 @@ fun NoteCard(
                 )
             }
 
-            // Tags
             if (note.tags.isNotEmpty()) {
                 Row(
                     modifier = Modifier.padding(top = 12.dp),
@@ -177,6 +180,28 @@ fun NoteCard(
                 }
             }
         }
+    }
+
+    // Confirmation dialog
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Confirm Delete") },
+            text = { Text("Are you sure you want to delete this note?") },
+            confirmButton = {
+                Button(onClick = {
+                    showDeleteDialog = false
+                    onDelete()
+                }) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 
