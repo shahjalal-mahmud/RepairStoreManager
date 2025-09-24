@@ -1,5 +1,6 @@
 package com.example.repairstoremanager.ui.screens.stock
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -142,11 +143,33 @@ fun SearchBar(
 @Composable
 fun ProductCard(product: Product, onItemClick: () -> Unit) {
     val backgroundColor = if (product.quantity <= product.alertQuantity && product.alertQuantity > 0) {
-        Color(0xFFFFEBEE) // Light red for low stock
+        // Use theme-aware colors for low stock
+        if (isSystemInDarkTheme()) {
+            Color(0x33000000) // Dark mode: semi-transparent dark
+        } else {
+            Color(0x1AFF5252) // Light mode: semi-transparent red
+        }
     } else if (product.hasWarranty) {
-        Color(0xFFE8F5E8) // Light green for products with warranty
+        // Use theme-aware colors for warranty
+        if (isSystemInDarkTheme()) {
+            Color(0x1A4CAF50) // Dark mode: semi-transparent green
+        } else {
+            Color(0x1A66BB6A) // Light mode: semi-transparent green
+        }
     } else {
         MaterialTheme.colorScheme.surface
+    }
+
+    // Calculate text colors based on background
+    val textColor = if (backgroundColor == MaterialTheme.colorScheme.surface) {
+        MaterialTheme.colorScheme.onSurface
+    } else {
+        // For custom backgrounds, use appropriate contrast color
+        if (isSystemInDarkTheme()) {
+            MaterialTheme.colorScheme.onSurface
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        }
     }
 
     Card(
@@ -154,7 +177,10 @@ fun ProductCard(product: Product, onItemClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(4.dp),
-        colors = CardDefaults.cardColors(containerColor = backgroundColor),
+        colors = CardDefaults.cardColors(
+            containerColor = backgroundColor,
+            contentColor = textColor // This ensures text uses proper contrast
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(Modifier.padding(16.dp)) {
@@ -170,7 +196,8 @@ fun ProductCard(product: Product, onItemClick: () -> Unit) {
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    color = textColor
                 )
 
                 Text(
@@ -188,7 +215,7 @@ fun ProductCard(product: Product, onItemClick: () -> Unit) {
                 Text(
                     "${product.category}${if (product.subCategory.isNotBlank()) " • ${product.subCategory}" else ""}${if (product.model.isNotBlank()) " • ${product.model}" else ""}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    color = textColor.copy(alpha = 0.7f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -197,17 +224,29 @@ fun ProductCard(product: Product, onItemClick: () -> Unit) {
 
             // Warranty information
             if (product.hasWarranty) {
+                val warrantyColor = if (isSystemInDarkTheme()) {
+                    Color(0xFF81C784) // Dark mode green
+                } else {
+                    Color(0xFF2E7D32) // Light mode green
+                }
+
+                val warrantyBgColor = if (isSystemInDarkTheme()) {
+                    Color(0x1A81C784) // Dark mode background
+                } else {
+                    Color(0x1A4CAF50) // Light mode background
+                }
+
                 AssistChip(
                     onClick = {},
                     label = {
                         Text(
                             "Warranty: ${product.getWarrantyDisplay()}",
-                            color = Color(0xFF2E7D32),
+                            color = warrantyColor,
                             style = MaterialTheme.typography.labelSmall
                         )
                     },
                     colors = AssistChipDefaults.assistChipColors(
-                        containerColor = Color(0xFFC8E6C9)
+                        containerColor = warrantyBgColor
                     ),
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
@@ -228,9 +267,13 @@ fun ProductCard(product: Product, onItemClick: () -> Unit) {
                             Text(
                                 "Qty: ${product.quantity}",
                                 color = if (product.quantity <= product.alertQuantity && product.alertQuantity > 0) {
-                                    Color(0xFFD32F2F)
+                                    if (isSystemInDarkTheme()) {
+                                        Color(0xFFEF5350) // Dark mode red
+                                    } else {
+                                        Color(0xFFD32F2F) // Light mode red
+                                    }
                                 } else {
-                                    MaterialTheme.colorScheme.onSurface
+                                    textColor
                                 }
                             )
                         }
@@ -257,7 +300,7 @@ fun ProductCard(product: Product, onItemClick: () -> Unit) {
                 Text(
                     "Supplier: ${product.supplier}",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    color = textColor.copy(alpha = 0.6f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -270,7 +313,8 @@ fun ProductCard(product: Product, onItemClick: () -> Unit) {
                     product.details,
                     style = MaterialTheme.typography.bodySmall,
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    color = textColor
                 )
             }
         }
