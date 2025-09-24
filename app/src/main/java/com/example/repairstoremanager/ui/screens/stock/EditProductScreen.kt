@@ -1,5 +1,9 @@
 package com.example.repairstoremanager.ui.screens.stock
 
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -14,17 +18,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.repairstoremanager.data.model.Product
 import com.example.repairstoremanager.ui.components.stock.CategorySection
+import com.example.repairstoremanager.ui.components.stock.DropdownMenuBox
 import com.example.repairstoremanager.ui.components.stock.PricingSection
 import com.example.repairstoremanager.ui.components.stock.ProductTypeDropdown
 import com.example.repairstoremanager.ui.components.stock.QuantitySection
 import com.example.repairstoremanager.ui.components.stock.SupplierSection
 import com.example.repairstoremanager.ui.components.stock.WarrantySection
+import com.example.repairstoremanager.util.MediaStorageHelper
 import com.example.repairstoremanager.viewmodel.StockViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,6 +41,8 @@ fun EditProductScreen(
     viewModel: StockViewModel,
     productId: String
 ) {
+    val context = LocalContext.current
+
     var product by remember { mutableStateOf<Product?>(null) }
     var loading by remember { mutableStateOf(true) }
 
@@ -51,6 +60,7 @@ fun EditProductScreen(
     var sellingPrice by remember { mutableStateOf("") }
     var details by remember { mutableStateOf("") }
     var imageUrl by remember { mutableStateOf("") }
+
     var hasWarranty by remember { mutableStateOf(false) }
     var warrantyDuration by remember { mutableStateOf("") }
     var warrantyType by remember { mutableStateOf("month") }
@@ -62,7 +72,43 @@ fun EditProductScreen(
     var submitting by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Load product data
+    // ---- Image pickers ----
+    var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            val savedUri = MediaStorageHelper.saveImageFromUri(
+                context,
+                it,
+                "product_${System.currentTimeMillis()}.jpg"
+            )
+            savedUri?.let { newUri ->
+                imageUrl = newUri.toString() // permanent Uri
+            }
+        }
+    }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) tempCameraUri?.let { imageUrl = it.toString() }
+    }
+
+    fun pickFromGallery() = galleryLauncher.launch("image/*")
+
+    fun takePhoto() {
+        val uri = MediaStorageHelper.createImageUri(context, "product")
+        if (uri != null) {
+            tempCameraUri = uri
+            cameraLauncher.launch(uri)
+        } else {
+            Toast.makeText(context, "Failed to create image file", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // ---- Load product data ----
     LaunchedEffect(productId) {
         viewModel.getProductById(productId) { loadedProduct ->
             product = loadedProduct
@@ -148,33 +194,18 @@ fun EditProductScreen(
                     )
                 }
 
-                FloatingActionButton(
-                    onClick = { /* TODO: Implement image picker */ },
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .size(36.dp),
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.AddPhotoAlternate,
-                        contentDescription = "Add Photo",
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
+                // Mini FAB → choose option
+                DropdownMenuBox(
+                    onGalleryClick = { pickFromGallery() },
+                    onCameraClick = { takePhoto() }
+                )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Product Type Dropdown
-            ProductTypeDropdown(
-                selectedType = productType,
-                onTypeSelected = { productType = it }
-            )
-
+            // --- Rest of the fields ---
+            ProductTypeDropdown(selectedType = productType, onTypeSelected = { productType = it })
             Spacer(modifier = Modifier.height(16.dp))
-
-            // Product Name
             OutlinedTextField(
                 value = productName,
                 onValueChange = { productName = it },
@@ -182,20 +213,14 @@ fun EditProductScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.medium
             )
-
             Spacer(modifier = Modifier.height(16.dp))
-
-            // Category and Subcategory
             CategorySection(
                 category = category,
                 subCategory = subCategory,
                 onCategorySelected = { category = it },
                 onSubCategorySelected = { subCategory = it }
             )
-
             Spacer(modifier = Modifier.height(16.dp))
-
-            // Model
             OutlinedTextField(
                 value = model,
                 onValueChange = { model = it },
@@ -203,30 +228,21 @@ fun EditProductScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.medium
             )
-
             Spacer(modifier = Modifier.height(16.dp))
-
-            // Quantity Section
             QuantitySection(
                 quantity = quantity,
                 alertQuantity = alertQuantity,
                 onQuantityChange = { quantity = it },
                 onAlertQuantityChange = { alertQuantity = it }
             )
-
             Spacer(modifier = Modifier.height(16.dp))
-
-            // Supplier and Unit
             SupplierSection(
                 supplier = supplier,
                 unit = unit,
                 onSupplierChange = { supplier = it },
                 onUnitChange = { unit = it }
             )
-
             Spacer(modifier = Modifier.height(16.dp))
-
-            // Pricing Section
             PricingSection(
                 cost = cost,
                 buyingPrice = buyingPrice,
@@ -235,10 +251,7 @@ fun EditProductScreen(
                 onBuyingPriceChange = { buyingPrice = it },
                 onSellingPriceChange = { sellingPrice = it }
             )
-
             Spacer(modifier = Modifier.height(16.dp))
-
-            // Warranty Section
             WarrantySection(
                 hasWarranty = hasWarranty,
                 warrantyDuration = warrantyDuration,
@@ -247,10 +260,7 @@ fun EditProductScreen(
                 onWarrantyDurationChange = { warrantyDuration = it },
                 onWarrantyTypeChange = { warrantyType = it }
             )
-
             Spacer(modifier = Modifier.height(16.dp))
-
-            // Guarantee Section
             WarrantySection(
                 hasWarranty = hasGuarantee,
                 warrantyDuration = guaranteeDuration,
@@ -258,10 +268,8 @@ fun EditProductScreen(
                 onWarrantyToggle = { hasGuarantee = it },
                 onWarrantyDurationChange = { guaranteeDuration = it },
                 onWarrantyTypeChange = { guaranteeType = it },
-                title = "Guarantee" // 👈 Add a title param in WarrantySection
+                title = "Guarantee"
             )
-
-            // Product Details
             OutlinedTextField(
                 value = details,
                 onValueChange = { details = it },
@@ -278,11 +286,7 @@ fun EditProductScreen(
             // Update Button
             Button(
                 onClick = {
-                    if (productName.isBlank() || quantity.isBlank()) {
-                        // Show error message
-                        return@Button
-                    }
-
+                    if (productName.isBlank() || quantity.isBlank()) return@Button
                     submitting = true
                     val updatedProduct = product?.copy(
                         name = productName.trim(),
@@ -313,22 +317,14 @@ fun EditProductScreen(
                             submitting = false
                             navController.popBackStack()
                         },
-                        onError = { msg ->
-                            submitting = false
-                            // Show error
-                        }
+                        onError = { submitting = false }
                     )
                 },
                 enabled = !submitting,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
+                modifier = Modifier.fillMaxWidth().height(50.dp),
                 shape = MaterialTheme.shapes.large
             ) {
-                Text(
-                    if (submitting) "Updating Product..." else "Update Product",
-                    fontWeight = FontWeight.SemiBold
-                )
+                Text(if (submitting) "Updating Product..." else "Update Product", fontWeight = FontWeight.SemiBold)
             }
         }
     }
