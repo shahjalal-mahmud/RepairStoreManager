@@ -5,6 +5,8 @@ import android.content.Context
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.Log
+import java.io.File
+import java.io.FileOutputStream
 
 object MediaStorageHelper {
 
@@ -122,5 +124,22 @@ object MediaStorageHelper {
         return mediaItems
             .sortedByDescending { it.second }
             .map { it.first }
+    }
+    fun saveImageFromUri(context: Context, sourceUri: Uri, fileName: String): Uri? {
+        return try {
+            val inputStream = context.contentResolver.openInputStream(sourceUri)
+            val file = File(context.filesDir, fileName) // app internal storage
+            val outputStream = FileOutputStream(file)
+
+            inputStream?.copyTo(outputStream)
+
+            inputStream?.close()
+            outputStream.close()
+
+            Uri.fromFile(file) // permanent Uri
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
     }
 }

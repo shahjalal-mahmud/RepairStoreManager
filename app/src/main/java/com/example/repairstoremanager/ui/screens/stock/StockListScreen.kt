@@ -1,9 +1,11 @@
 package com.example.repairstoremanager.ui.screens.stock
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
@@ -12,12 +14,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 import com.example.repairstoremanager.data.model.Product
 import com.example.repairstoremanager.viewmodel.StockViewModel
 
@@ -143,33 +148,17 @@ fun SearchBar(
 @Composable
 fun ProductCard(product: Product, onItemClick: () -> Unit) {
     val backgroundColor = if (product.quantity <= product.alertQuantity && product.alertQuantity > 0) {
-        // Use theme-aware colors for low stock
-        if (isSystemInDarkTheme()) {
-            Color(0x33000000) // Dark mode: semi-transparent dark
-        } else {
-            Color(0x1AFF5252) // Light mode: semi-transparent red
-        }
+        if (isSystemInDarkTheme()) Color(0x33000000) else Color(0x1AFF5252)
     } else if (product.hasWarranty) {
-        // Use theme-aware colors for warranty
-        if (isSystemInDarkTheme()) {
-            Color(0x1A4CAF50) // Dark mode: semi-transparent green
-        } else {
-            Color(0x1A66BB6A) // Light mode: semi-transparent green
-        }
+        if (isSystemInDarkTheme()) Color(0x1A4CAF50) else Color(0x1A66BB6A)
     } else {
         MaterialTheme.colorScheme.surface
     }
 
-    // Calculate text colors based on background
     val textColor = if (backgroundColor == MaterialTheme.colorScheme.surface) {
         MaterialTheme.colorScheme.onSurface
     } else {
-        // For custom backgrounds, use appropriate contrast color
-        if (isSystemInDarkTheme()) {
-            MaterialTheme.colorScheme.onSurface
-        } else {
-            MaterialTheme.colorScheme.onSurface
-        }
+        MaterialTheme.colorScheme.onSurface
     }
 
     Card(
@@ -179,150 +168,90 @@ fun ProductCard(product: Product, onItemClick: () -> Unit) {
             .padding(4.dp),
         colors = CardDefaults.cardColors(
             containerColor = backgroundColor,
-            contentColor = textColor // This ensures text uses proper contrast
+            contentColor = textColor
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(Modifier.padding(16.dp)) {
-            // Header with name and type
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    product.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f),
-                    color = textColor
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // ✅ Product Image
+            if (product.imageUrl.isNotBlank()) {
+                Image(
+                    painter = rememberAsyncImagePainter(product.imageUrl),
+                    contentDescription = "Product Image",
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop
                 )
-
-                Text(
-                    product.type,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(start = 8.dp)
-                )
+                Spacer(Modifier.width(12.dp))
             }
 
-            Spacer(Modifier.height(8.dp))
-
-            // Category and model
-            if (product.category.isNotBlank() || product.model.isNotBlank()) {
-                Text(
-                    "${product.category}${if (product.subCategory.isNotBlank()) " • ${product.subCategory}" else ""}${if (product.model.isNotBlank()) " • ${product.model}" else ""}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = textColor.copy(alpha = 0.7f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(Modifier.height(8.dp))
-            }
-
-            // Warranty and Guarantee information
-            if (product.hasWarranty) {
-                val warrantyColor = if (isSystemInDarkTheme()) Color(0xFF81C784) else Color(0xFF2E7D32)
-                val warrantyBgColor = if (isSystemInDarkTheme()) Color(0x1A81C784) else Color(0x1A4CAF50)
-
-                AssistChip(
-                    onClick = {},
-                    label = {
-                        Text(
-                            "Warranty: ${product.getWarrantyDisplay()}",
-                            color = warrantyColor,
-                            style = MaterialTheme.typography.labelSmall
-                        )
-                    },
-                    colors = AssistChipDefaults.assistChipColors(containerColor = warrantyBgColor),
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-            }
-
-            if (product.hasGuarantee) {
-                val guaranteeColor = if (isSystemInDarkTheme()) Color(0xFF64B5F6) else Color(0xFF1565C0)
-                val guaranteeBgColor = if (isSystemInDarkTheme()) Color(0x1A64B5F6) else Color(0x1A1565C0)
-
-                AssistChip(
-                    onClick = {},
-                    label = {
-                        Text(
-                            "Guarantee: ${product.getGuaranteeDisplay()}",
-                            color = guaranteeColor,
-                            style = MaterialTheme.typography.labelSmall
-                        )
-                    },
-                    colors = AssistChipDefaults.assistChipColors(containerColor = guaranteeBgColor),
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-            }
-
-            // Stock and pricing info
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Quantity with alert indicator
-                Box(
-                    contentAlignment = Alignment.Center
+            // ✅ Product Info
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    AssistChip(
-                        onClick = {},
-                        label = {
-                            Text(
-                                "Qty: ${product.quantity}",
-                                color = if (product.quantity <= product.alertQuantity && product.alertQuantity > 0) {
-                                    if (isSystemInDarkTheme()) {
-                                        Color(0xFFEF5350) // Dark mode red
-                                    } else {
-                                        Color(0xFFD32F2F) // Light mode red
-                                    }
-                                } else {
-                                    textColor
-                                }
-                            )
-                        }
+                    Text(
+                        product.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = textColor,
+                        modifier = Modifier.weight(1f)
                     )
 
-                    if (product.quantity <= product.alertQuantity && product.alertQuantity > 0) {
-                        Badge(
-                            modifier = Modifier.align(Alignment.TopEnd)
+                    if (product.type.isNotBlank()) {
+                        Text(
+                            product.type,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(start = 8.dp)
                         )
                     }
                 }
 
-                Text(
-                    "$${product.sellingPrice}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
+                Spacer(Modifier.height(4.dp))
 
-            // Supplier info if available
-            if (product.supplier.isNotBlank()) {
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    "Supplier: ${product.supplier}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = textColor.copy(alpha = 0.6f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
+                // Category + Model
+                if (product.category.isNotBlank() || product.model.isNotBlank()) {
+                    Text(
+                        "${product.category}${if (product.subCategory.isNotBlank()) " • ${product.subCategory}" else ""}${if (product.model.isNotBlank()) " • ${product.model}" else ""}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = textColor.copy(alpha = 0.7f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
 
-            // Product details if available
-            if (product.details.isNotBlank()) {
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    product.details,
-                    style = MaterialTheme.typography.bodySmall,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    color = textColor
-                )
+                Spacer(Modifier.height(6.dp))
+
+                // Quantity & Price
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        "Qty: ${product.quantity}",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = if (product.quantity <= product.alertQuantity && product.alertQuantity > 0) {
+                            if (isSystemInDarkTheme()) Color(0xFFEF5350) else Color(0xFFD32F2F)
+                        } else {
+                            textColor
+                        }
+                    )
+                    Text(
+                        "$${product.sellingPrice}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
         }
     }

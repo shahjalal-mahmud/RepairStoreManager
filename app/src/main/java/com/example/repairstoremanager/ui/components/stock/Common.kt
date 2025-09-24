@@ -1,6 +1,8 @@
 package com.example.repairstoremanager.ui.components.stock
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -368,6 +370,52 @@ fun WarrantyTypeDropdown(
                     }
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun DropdownMenuBox(
+    onGalleryClick: () -> Unit,
+    onCameraClick: () -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.BottomEnd
+    ) {
+        FloatingActionButton(
+            onClick = { expanded = true },
+            modifier = Modifier.size(36.dp),
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary
+        ) {
+            Icon(
+                Icons.Default.AddPhotoAlternate,
+                contentDescription = "Add Photo",
+                modifier = Modifier.size(18.dp)
+            )
+        }
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            DropdownMenuItem(
+                text = { Text("Choose from Gallery") },
+                onClick = {
+                    expanded = false
+                    onGalleryClick()
+                }
+            )
+            DropdownMenuItem(
+                text = { Text("Take Photo") },
+                onClick = {
+                    expanded = false
+                    onCameraClick()
+                }
+            )
         }
     }
 }
