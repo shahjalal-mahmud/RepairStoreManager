@@ -55,6 +55,10 @@ fun EditProductScreen(
     var warrantyDuration by remember { mutableStateOf("") }
     var warrantyType by remember { mutableStateOf("month") }
 
+    var hasGuarantee by remember { mutableStateOf(false) }
+    var guaranteeDuration by remember { mutableStateOf("") }
+    var guaranteeType by remember { mutableStateOf("month") }
+
     var submitting by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -80,6 +84,9 @@ fun EditProductScreen(
                 hasWarranty = it.hasWarranty
                 warrantyDuration = it.warrantyDuration
                 warrantyType = it.warrantyType
+                hasGuarantee = it.hasGuarantee
+                guaranteeDuration = it.guaranteeDuration
+                guaranteeType = it.guaranteeType
             }
             loading = false
         }
@@ -243,6 +250,17 @@ fun EditProductScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Guarantee Section
+            WarrantySection(
+                hasWarranty = hasGuarantee,
+                warrantyDuration = guaranteeDuration,
+                warrantyType = guaranteeType,
+                onWarrantyToggle = { hasGuarantee = it },
+                onWarrantyDurationChange = { guaranteeDuration = it },
+                onWarrantyTypeChange = { guaranteeType = it },
+                title = "Guarantee" // 👈 Add a title param in WarrantySection
+            )
+
             // Product Details
             OutlinedTextField(
                 value = details,
@@ -283,7 +301,10 @@ fun EditProductScreen(
                         imageUrl = imageUrl.trim(),
                         hasWarranty = hasWarranty,
                         warrantyDuration = warrantyDuration.trim(),
-                        warrantyType = warrantyType.trim()
+                        warrantyType = warrantyType.trim(),
+                        hasGuarantee = hasGuarantee,
+                        guaranteeDuration = guaranteeDuration.trim(),
+                        guaranteeType = guaranteeType.trim()
                     ) ?: return@Button
 
                     viewModel.updateProduct(

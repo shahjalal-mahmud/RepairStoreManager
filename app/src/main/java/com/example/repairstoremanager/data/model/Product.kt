@@ -20,6 +20,9 @@ data class Product(
     val hasWarranty: Boolean = false,
     val warrantyDuration: String = "",
     val warrantyType: String = "", // "month", "year", etc.
+    val hasGuarantee: Boolean = false,
+    val guaranteeDuration: String = "",
+    val guaranteeType: String = "", // "month", "year", etc.
     val createdAt: Long = 0L,
     val updatedAt: Long = 0L
 ) {
@@ -30,4 +33,12 @@ data class Product(
             "No warranty"
         }
     }
+    fun getGuaranteeDisplay(): String {
+        return if (hasGuarantee && guaranteeDuration.isNotBlank()) {
+            "$guaranteeDuration ${guaranteeType.takeIf { it.isNotBlank() } ?: "month"}"
+        } else {
+            "No guarantee"
+        }
+    }
+
 }

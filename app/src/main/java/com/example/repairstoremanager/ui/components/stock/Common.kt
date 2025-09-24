@@ -297,45 +297,33 @@ fun WarrantySection(
     warrantyType: String,
     onWarrantyToggle: (Boolean) -> Unit,
     onWarrantyDurationChange: (String) -> Unit,
-    onWarrantyTypeChange: (String) -> Unit
+    onWarrantyTypeChange: (String) -> Unit,
+    title: String = "Warranty" // 👈 add default title
 ) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+    Column {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Checkbox(
                 checked = hasWarranty,
                 onCheckedChange = onWarrantyToggle
             )
-            Text(
-                "Has Warranty/Guarantee",
-                style = MaterialTheme.typography.bodyLarge
-            )
+            Text(title) // 👈 dynamic label
         }
 
         if (hasWarranty) {
-            Row(
+            OutlinedTextField(
+                value = warrantyDuration,
+                onValueChange = onWarrantyDurationChange,
+                label = { Text("$title Duration") }, // 👈 dynamic
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                OutlinedTextField(
-                    value = warrantyDuration,
-                    onValueChange = onWarrantyDurationChange,
-                    label = { Text("Duration") },
-                    modifier = Modifier.weight(1f),
-                    shape = MaterialTheme.shapes.medium
-                )
+                shape = MaterialTheme.shapes.medium
+            )
 
-                WarrantyTypeDropdown(
-                    selectedType = warrantyType,
-                    onTypeSelected = onWarrantyTypeChange,
-                    modifier = Modifier.weight(1f)
-                )
-            }
+            Spacer(modifier = Modifier.height(8.dp))
+
+            WarrantyTypeDropdown(
+                selectedType = warrantyType,
+                onTypeSelected = onWarrantyTypeChange
+            )
         }
     }
 }
@@ -348,7 +336,7 @@ fun WarrantyTypeDropdown(
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val warrantyTypes = listOf("month", "months", "year", "years", "day", "days")
+    val warrantyTypes = listOf("months", "years", "days")
 
     ExposedDropdownMenuBox(
         expanded = expanded,

@@ -222,19 +222,10 @@ fun ProductCard(product: Product, onItemClick: () -> Unit) {
                 Spacer(Modifier.height(8.dp))
             }
 
-            // Warranty information
+            // Warranty and Guarantee information
             if (product.hasWarranty) {
-                val warrantyColor = if (isSystemInDarkTheme()) {
-                    Color(0xFF81C784) // Dark mode green
-                } else {
-                    Color(0xFF2E7D32) // Light mode green
-                }
-
-                val warrantyBgColor = if (isSystemInDarkTheme()) {
-                    Color(0x1A81C784) // Dark mode background
-                } else {
-                    Color(0x1A4CAF50) // Light mode background
-                }
+                val warrantyColor = if (isSystemInDarkTheme()) Color(0xFF81C784) else Color(0xFF2E7D32)
+                val warrantyBgColor = if (isSystemInDarkTheme()) Color(0x1A81C784) else Color(0x1A4CAF50)
 
                 AssistChip(
                     onClick = {},
@@ -245,9 +236,25 @@ fun ProductCard(product: Product, onItemClick: () -> Unit) {
                             style = MaterialTheme.typography.labelSmall
                         )
                     },
-                    colors = AssistChipDefaults.assistChipColors(
-                        containerColor = warrantyBgColor
-                    ),
+                    colors = AssistChipDefaults.assistChipColors(containerColor = warrantyBgColor),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+
+            if (product.hasGuarantee) {
+                val guaranteeColor = if (isSystemInDarkTheme()) Color(0xFF64B5F6) else Color(0xFF1565C0)
+                val guaranteeBgColor = if (isSystemInDarkTheme()) Color(0x1A64B5F6) else Color(0x1A1565C0)
+
+                AssistChip(
+                    onClick = {},
+                    label = {
+                        Text(
+                            "Guarantee: ${product.getGuaranteeDisplay()}",
+                            color = guaranteeColor,
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    },
+                    colors = AssistChipDefaults.assistChipColors(containerColor = guaranteeBgColor),
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
             }

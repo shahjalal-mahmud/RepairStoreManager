@@ -51,6 +51,10 @@ fun AddProductScreen(
     var warrantyDuration by remember { mutableStateOf("") }
     var warrantyType by remember { mutableStateOf("month") }
 
+    var hasGuarantee by remember { mutableStateOf(false) }
+    var guaranteeDuration by remember { mutableStateOf("") }
+    var guaranteeType by remember { mutableStateOf("month") }
+
     var submitting by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -205,6 +209,17 @@ fun AddProductScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Guarantee Section
+            WarrantySection(
+                hasWarranty = hasGuarantee,
+                warrantyDuration = guaranteeDuration,
+                warrantyType = guaranteeType,
+                onWarrantyToggle = { hasGuarantee = it },
+                onWarrantyDurationChange = { guaranteeDuration = it },
+                onWarrantyTypeChange = { guaranteeType = it },
+                title = "Guarantee" // 👈 Add a title param in WarrantySection
+            )
+
             // Product Details
             OutlinedTextField(
                 value = details,
@@ -245,7 +260,10 @@ fun AddProductScreen(
                         imageUrl = imageUrl.trim(),
                         hasWarranty = hasWarranty,
                         warrantyDuration = warrantyDuration.trim(),
-                        warrantyType = warrantyType.trim()
+                        warrantyType = warrantyType.trim(),
+                        hasGuarantee = hasGuarantee,
+                        guaranteeDuration = guaranteeDuration.trim(),
+                        guaranteeType = guaranteeType.trim()
                     )
 
                     viewModel.addProduct(
