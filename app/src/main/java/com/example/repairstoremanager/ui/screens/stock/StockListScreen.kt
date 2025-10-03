@@ -1,6 +1,7 @@
 package com.example.repairstoremanager.ui.screens.stock
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -8,8 +9,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -146,111 +152,178 @@ fun SearchBar(
 }
 
 @Composable
-fun ProductCard(product: Product, onItemClick: () -> Unit) {
-    val backgroundColor = if (product.quantity <= product.alertQuantity && product.alertQuantity > 0) {
-        if (isSystemInDarkTheme()) Color(0x33000000) else Color(0x1AFF5252)
-    } else if (product.hasWarranty) {
-        if (isSystemInDarkTheme()) Color(0x1A4CAF50) else Color(0x1A66BB6A)
-    } else {
-        MaterialTheme.colorScheme.surface
-    }
+fun ProductCard(
+    product: Product,
+    onItemClick: () -> Unit
+) {
+    val isLowStock = product.quantity <= product.alertQuantity && product.alertQuantity > 0
 
-    val textColor = if (backgroundColor == MaterialTheme.colorScheme.surface) {
-        MaterialTheme.colorScheme.onSurface
-    } else {
-        MaterialTheme.colorScheme.onSurface
+    val backgroundColor = when {
+        isLowStock -> if (isSystemInDarkTheme()) Color(0x33FF5252) else Color(0x1AFF5252)
+        product.hasWarranty -> if (isSystemInDarkTheme()) Color(0x1A4CAF50) else Color(0x1A66BB6A)
+        else -> MaterialTheme.colorScheme.surface
     }
 
     Card(
         onClick = onItemClick,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = backgroundColor,
-            contentColor = textColor
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+        shape = RoundedCornerShape(18.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = backgroundColor)
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // ✅ Product Image
-            if (product.imageUrl.isNotBlank()) {
-                Image(
-                    painter = rememberAsyncImagePainter(product.imageUrl),
-                    contentDescription = "Product Image",
-                    modifier = Modifier
-                        .size(64.dp)
-                        .clip(RoundedCornerShape(8.dp)),
-                    contentScale = ContentScale.Crop
-                )
-                Spacer(Modifier.width(12.dp))
+            // ✅ Product Image or Default Icon
+            Box(
+                modifier = Modifier
+                    .size(72.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                if (product.imageUrl.isNotBlank()) {
+                    Image(
+                        painter = rememberAsyncImagePainter(product.imageUrl),
+                        contentDescription = "Product Image",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Inventory2,
+                        contentDescription = "Default Product Icon",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        modifier = Modifier.size(40.dp)
+                    )
+                }
             }
 
-            // ✅ Product Info
-            Column(modifier = Modifier.weight(1f)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+            Spacer(Modifier.width(16.dp))
+
+            // ✅ Product Info Section
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            ) {
+                // Product Name + Model
+                Text(
+                    text = product.name.ifBlank { "Unnamed Product" },
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                if (product.model.isNotBlank()) {
                     Text(
-                        product.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        color = textColor,
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    if (product.type.isNotBlank()) {
-                        Text(
-                            product.type,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(start = 8.dp)
-                        )
-                    }
-                }
-
-                Spacer(Modifier.height(4.dp))
-
-                // Category + Model
-                if (product.category.isNotBlank() || product.model.isNotBlank()) {
-                    Text(
-                        "${product.category}${if (product.subCategory.isNotBlank()) " • ${product.subCategory}" else ""}${if (product.model.isNotBlank()) " • ${product.model}" else ""}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = textColor.copy(alpha = 0.7f),
+                        text = product.model,
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
 
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(8.dp))
 
-                // Quantity & Price
+                // ✅ Quantity & Price Row
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Text(
-                        "Qty: ${product.quantity}",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = if (product.quantity <= product.alertQuantity && product.alertQuantity > 0) {
-                            if (isSystemInDarkTheme()) Color(0xFFEF5350) else Color(0xFFD32F2F)
-                        } else {
-                            textColor
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Inventory2,
+                            contentDescription = "Quantity",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = "Qty: ${product.quantity}",
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                color = if (isLowStock) Color(0xFFD32F2F)
+                                else MaterialTheme.colorScheme.onSurface
+                            )
+                        )
+                    }
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = "৳${product.sellingPrice}",
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                // ✅ Warranty & Guarantee
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    if (product.hasWarranty && product.warrantyDuration.isNotBlank()) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Verified,
+                                contentDescription = "Warranty",
+                                tint = MaterialTheme.colorScheme.tertiary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                text = "${product.warrantyDuration} ${product.warrantyType}",
+                                style = MaterialTheme.typography.labelSmall
+                            )
                         }
-                    )
-                    Text(
-                        "$${product.sellingPrice}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    }
+
+                    if (product.hasGuarantee && product.guaranteeDuration.isNotBlank()) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Shield,
+                                contentDescription = "Guarantee",
+                                tint = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                text = "${product.guaranteeDuration} ${product.guaranteeType}",
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        }
+                    }
+                }
+
+                // ✅ Product details (optional)
+                if (product.details.isNotBlank()) {
+                    Spacer(Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.Top) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "Details",
+                            tint = MaterialTheme.colorScheme.outline,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = product.details,
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            ),
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
             }
         }

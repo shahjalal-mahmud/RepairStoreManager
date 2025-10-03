@@ -5,15 +5,39 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AddPhotoAlternate
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,12 +48,9 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.repairstoremanager.data.model.Product
-import com.example.repairstoremanager.ui.components.stock.CategorySection
 import com.example.repairstoremanager.ui.components.stock.DropdownMenuBox
 import com.example.repairstoremanager.ui.components.stock.PricingSection
-import com.example.repairstoremanager.ui.components.stock.ProductTypeDropdown
 import com.example.repairstoremanager.ui.components.stock.QuantitySection
-import com.example.repairstoremanager.ui.components.stock.SupplierSection
 import com.example.repairstoremanager.ui.components.stock.WarrantySection
 import com.example.repairstoremanager.util.MediaStorageHelper
 import com.example.repairstoremanager.viewmodel.StockViewModel
@@ -46,16 +67,10 @@ fun EditProductScreen(
     var product by remember { mutableStateOf<Product?>(null) }
     var loading by remember { mutableStateOf(true) }
 
-    var productType by remember { mutableStateOf("") }
     var productName by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf("") }
-    var subCategory by remember { mutableStateOf("") }
     var model by remember { mutableStateOf("") }
     var alertQuantity by remember { mutableStateOf("") }
     var quantity by remember { mutableStateOf("") }
-    var supplier by remember { mutableStateOf("") }
-    var unit by remember { mutableStateOf("") }
-    var cost by remember { mutableStateOf("") }
     var buyingPrice by remember { mutableStateOf("") }
     var sellingPrice by remember { mutableStateOf("") }
     var details by remember { mutableStateOf("") }
@@ -113,16 +128,10 @@ fun EditProductScreen(
         viewModel.getProductById(productId) { loadedProduct ->
             product = loadedProduct
             loadedProduct?.let {
-                productType = it.type
                 productName = it.name
-                category = it.category
-                subCategory = it.subCategory
                 model = it.model
                 alertQuantity = it.alertQuantity.toString()
                 quantity = it.quantity.toString()
-                supplier = it.supplier
-                unit = it.unit
-                cost = it.cost.toString()
                 buyingPrice = it.buyingPrice.toString()
                 sellingPrice = it.sellingPrice.toString()
                 details = it.details
@@ -203,9 +212,6 @@ fun EditProductScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // --- Rest of the fields ---
-            ProductTypeDropdown(selectedType = productType, onTypeSelected = { productType = it })
-            Spacer(modifier = Modifier.height(16.dp))
             OutlinedTextField(
                 value = productName,
                 onValueChange = { productName = it },
@@ -213,13 +219,7 @@ fun EditProductScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.medium
             )
-            Spacer(modifier = Modifier.height(16.dp))
-            CategorySection(
-                category = category,
-                subCategory = subCategory,
-                onCategorySelected = { category = it },
-                onSubCategorySelected = { subCategory = it }
-            )
+
             Spacer(modifier = Modifier.height(16.dp))
             OutlinedTextField(
                 value = model,
@@ -236,18 +236,9 @@ fun EditProductScreen(
                 onAlertQuantityChange = { alertQuantity = it }
             )
             Spacer(modifier = Modifier.height(16.dp))
-            SupplierSection(
-                supplier = supplier,
-                unit = unit,
-                onSupplierChange = { supplier = it },
-                onUnitChange = { unit = it }
-            )
-            Spacer(modifier = Modifier.height(16.dp))
             PricingSection(
-                cost = cost,
                 buyingPrice = buyingPrice,
                 sellingPrice = sellingPrice,
-                onCostChange = { cost = it },
                 onBuyingPriceChange = { buyingPrice = it },
                 onSellingPriceChange = { sellingPrice = it }
             )
@@ -290,17 +281,11 @@ fun EditProductScreen(
                     submitting = true
                     val updatedProduct = product?.copy(
                         name = productName.trim(),
-                        type = productType.trim(),
-                        category = category.trim(),
-                        subCategory = subCategory.trim(),
                         model = model.trim(),
-                        cost = cost.toDoubleOrNull() ?: 0.0,
                         buyingPrice = buyingPrice.toDoubleOrNull() ?: 0.0,
                         sellingPrice = sellingPrice.toDoubleOrNull() ?: 0.0,
                         quantity = quantity.toLongOrNull() ?: 0L,
                         alertQuantity = alertQuantity.toLongOrNull() ?: 0L,
-                        supplier = supplier.trim(),
-                        unit = unit.trim(),
                         details = details.trim(),
                         imageUrl = imageUrl.trim(),
                         hasWarranty = hasWarranty,

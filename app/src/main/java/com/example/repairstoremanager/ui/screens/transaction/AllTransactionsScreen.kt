@@ -1,15 +1,33 @@
 package com.example.repairstoremanager.ui.screens.transaction
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.Sort
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -19,7 +37,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.repairstoremanager.data.model.Transaction
 import com.example.repairstoremanager.viewmodel.TransactionViewModel
 import java.text.NumberFormat
-import java.util.*
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,10 +47,6 @@ fun AllTransactionsScreen(
 ) {
     val transactions by viewModel.transactions.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
-    val showAll by viewModel.showAllTransactions.collectAsState()
-
-    var sortBy by remember { mutableStateOf("Date") }
-    var filterType by remember { mutableStateOf("All") }
 
     Scaffold(
         floatingActionButton = {
@@ -43,14 +57,6 @@ fun AllTransactionsScreen(
         topBar = {
             TopAppBar(
                 title = { Text("All Transactions") },
-                actions = {
-                    IconButton(onClick = { /* TODO: Filter Dialog */ }) {
-                        Icon(Icons.Default.FilterList, contentDescription = "Filter")
-                    }
-                    IconButton(onClick = { /* TODO: Sort Dialog */ }) {
-                        Icon(Icons.Default.Sort, contentDescription = "Sort")
-                    }
-                }
             )
         }
     ) { padding ->
@@ -143,7 +149,6 @@ fun TransactionItem(transaction: Transaction) {
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Invoice: ${transaction.invoiceNumber}", style = MaterialTheme.typography.bodySmall)
                 Text(formatter.format(transaction.amount), fontWeight = FontWeight.Bold)
             }
         }
