@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.repairstoremanager.data.model.Product
+import com.example.repairstoremanager.data.model.PurchaseProduct
 import com.example.repairstoremanager.data.model.Transaction
 import com.example.repairstoremanager.data.model.TransactionProduct
 import com.example.repairstoremanager.data.repository.TransactionRepository
@@ -293,4 +294,156 @@ class TransactionViewModel : ViewModel() {
             productsSold = productsSold
         )
     }
+    fun createPurchaseTransaction(
+        products: List<PurchaseProduct>,
+        supplier: String = "",
+        onResult: (Boolean, String?, String?) -> Unit
+    ) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val result = repository.addPurchaseTransaction(products, supplier)
+                if (result.isSuccess) {
+                    refreshTransactions()
+                    onResult(true, "Purchase recorded", null)
+                } else {
+                    onResult(false, null, result.exceptionOrNull()?.message)
+                }
+            } catch (e: Exception) {
+                onResult(false, null, e.message)
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun createServiceTransaction(
+        customerName: String,
+        serviceDescription: String,
+        serviceCharge: Double,
+        partsCost: Double = 0.0,
+        onResult: (Boolean, String?, String?) -> Unit
+    ) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val result = repository.addServiceTransaction(
+                    customerName,
+                    serviceDescription,
+                    serviceCharge,
+                    partsCost
+                )
+                if (result.isSuccess) {
+                    refreshTransactions()
+                    onResult(true, "Service recorded", null)
+                } else {
+                    onResult(false, null, result.exceptionOrNull()?.message)
+                }
+            } catch (e: Exception) {
+                onResult(false, null, e.message)
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun createExpenseTransaction(
+        description: String,
+        amount: Double,
+        category: String,
+        onResult: (Boolean, String?, String?) -> Unit
+    ) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val result = repository.addExpenseTransaction(description, amount, category)
+                if (result.isSuccess) {
+                    refreshTransactions()
+                    onResult(true, "Expense recorded", null)
+                } else {
+                    onResult(false, null, result.exceptionOrNull()?.message)
+                }
+            } catch (e: Exception) {
+                onResult(false, null, e.message)
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun createIncomeTransaction(
+        description: String,
+        amount: Double,
+        category: String = "Other",
+        onResult: (Boolean, String?, String?) -> Unit
+    ) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val result = repository.addIncomeTransaction(description, amount, category)
+                if (result.isSuccess) {
+                    refreshTransactions()
+                    onResult(true, "Income recorded", null)
+                } else {
+                    onResult(false, null, result.exceptionOrNull()?.message)
+                }
+            } catch (e: Exception) {
+                onResult(false, null, e.message)
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    private fun refreshTransactions() {
+        if (_showAllTransactions.value) {
+            fetchAllTransactions()
+        } else {
+            fetchTransactionsByDate(_selectedDate.value)
+        }
+    }
+
+    // Enhanced summary calculation
+    suspend fun getFinancialSummary(startDate: String, endDate: String): FinancialSummary {
+        return try {
+            val transactions = repository.getTransactionsByDateRange(startDate, endDate)
+
+            val totalRevenue = transactions
+                .filter { it.type == "Sale" || it.type == "Service" || it.type == "Income" }
+                .sumOf { it.amount }
+
+            val totalCost = transactions
+                .filter { it.type == "Sale" || it.type == "Purchase" || it.type == "Expense" }
+                .sumOf { it.cost }
+
+            val totalProfit = totalRevenue - totalCost
+
+            val salesByCategory = transactions
+                .filter { it.type == "Sale" }
+                .groupBy { it.category }
+                .mapValues { (_, transactions) -> transactions.sumOf { it.amount } }
+
+            FinancialSummary(
+                startDate = startDate,
+                endDate = endDate,
+                totalRevenue = totalRevenue,
+                totalCost = totalCost,
+                totalProfit = totalProfit,
+                salesByCategory = salesByCategory,
+                transactionCount = transactions.size
+            )
+        } catch (e: Exception) {
+            FinancialSummary(startDate = startDate, endDate = endDate)
+        }
+    }
+
+    data class FinancialSummary(
+        val startDate: String = "",
+        val endDate: String = "",
+        val totalRevenue: Double = 0.0,
+        val totalCost: Double = 0.0,
+        val totalProfit: Double = 0.0,
+        val salesByCategory: Map<String, Double> = emptyMap(),
+        val transactionCount: Int = 0
+    )
 }
