@@ -9,7 +9,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Inventory2
@@ -104,12 +103,15 @@ fun StockListScreen(
                     )
                 }
                 else -> {
+                    // ✅ Sort products so newest added appears first
+                    val sortedProducts = products.sortedByDescending { it.createdAt }
+
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(12.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(products) { product ->
+                        items(sortedProducts) { product ->
                             ProductCard(product = product, onItemClick = {
                                 navController.navigate("edit_product/${product.id}")
                             })
