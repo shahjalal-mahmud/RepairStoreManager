@@ -91,7 +91,7 @@ fun ProductPickerItem(product: Product, onClick: () -> Unit) {
                 Text(product.name, style = MaterialTheme.typography.titleMedium)
                 Text("Stock: ${product.quantity}", style = MaterialTheme.typography.bodySmall)
             }
-            Text("$${product.sellingPrice}", style = MaterialTheme.typography.titleMedium)
+            Text("৳${product.sellingPrice}", style = MaterialTheme.typography.titleMedium)
         }
     }
 }

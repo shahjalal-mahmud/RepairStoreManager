@@ -38,7 +38,6 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun PaymentDialog(
     total: Double,
-    customerName: String,
     paymentType: String,
     onPaymentTypeChange: (String) -> Unit,
     onConfirm: () -> Unit,
@@ -46,11 +45,9 @@ fun PaymentDialog(
 ) {
     AlertDialog(
         onDismissRequest = onCancel,
-        title = { Text("Confirm Payment") },
+        title = { Text("Complete Sale") },
         text = {
             Column {
-                Text("Customer: ${customerName.ifBlank { "Walk-in Customer" }}")
-                Spacer(modifier = Modifier.height(8.dp))
                 Text("Total Amount: $${"%.2f".format(total)}", style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -62,7 +59,7 @@ fun PaymentDialog(
         },
         confirmButton = {
             Button(onClick = onConfirm) {
-                Text("Confirm Payment")
+                Text("Complete Sale")
             }
         },
         dismissButton = {
@@ -77,7 +74,7 @@ fun PaymentDialog(
 @Composable
 fun PaymentTypeSelector(selectedType: String, onTypeSelected: (String) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
-    val paymentTypes = listOf("Cash", "Card", "Mobile Banking", "Bank Transfer")
+    val paymentTypes = listOf("Cash","bKash")
 
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -147,14 +144,14 @@ fun PriceInput(price: Double, onPriceChange: (Double) -> Unit, modifier: Modifie
             priceText = it
             it.toDoubleOrNull()?.let { newPrice -> onPriceChange(newPrice) }
         },
-        label = { Text("Price") },
+        label = { Text("Selling Price") },
         modifier = modifier,
-        prefix = { Text("$") }
+        prefix = { Text("৳") }
     )
 }
 
 @Composable
-fun SalesBottomBar(total: Double, itemCount: Int, onCheckout: () -> Unit, isLoading: Boolean) {
+fun SalesBottomBar(total: Double, itemCount: Int, onCompleteSale: () -> Unit, isLoading: Boolean) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         tonalElevation = 8.dp
@@ -169,14 +166,14 @@ fun SalesBottomBar(total: Double, itemCount: Int, onCheckout: () -> Unit, isLoad
             Column {
                 Text("Total Items: $itemCount", style = MaterialTheme.typography.bodySmall)
                 Text(
-                    "$${"%.2f".format(total)}",
+                    "৳${"%.2f".format(total)}",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
             }
 
             Button(
-                onClick = onCheckout,
+                onClick = onCompleteSale,
                 enabled = itemCount > 0 && !isLoading,
                 modifier = Modifier.height(50.dp)
             ) {
@@ -186,7 +183,7 @@ fun SalesBottomBar(total: Double, itemCount: Int, onCheckout: () -> Unit, isLoad
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else {
-                    Text("Checkout")
+                    Text("Complete Sale")
                 }
             }
         }

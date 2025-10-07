@@ -31,7 +31,6 @@ import com.example.repairstoremanager.ui.screens.stock.AddProductScreen
 import com.example.repairstoremanager.ui.screens.stock.EditProductScreen
 import com.example.repairstoremanager.ui.screens.stock.StockListScreen
 import com.example.repairstoremanager.ui.screens.transaction.AddTransactionScreen
-import com.example.repairstoremanager.ui.screens.transaction.AddTransactionTypeScreen
 import com.example.repairstoremanager.ui.screens.transaction.AllTransactionsScreen
 import com.example.repairstoremanager.ui.screens.transaction.TransactionScreen
 import com.example.repairstoremanager.viewmodel.CustomerViewModel
@@ -234,15 +233,6 @@ fun Navigation(
                 AllTransactionsScreen(
                     viewModel = transactionViewModel,
                     onAddTransactionClick = { navController.navigate("sales") }
-                )
-            }
-        }
-        composable("addTransactions") {
-            MainScaffold(navController) {
-                AddTransactionTypeScreen(
-                    transactionViewModel = transactionViewModel,
-                    stockViewModel = stockViewModel,
-                    onBack = { navController.popBackStack() }
                 )
             }
         }

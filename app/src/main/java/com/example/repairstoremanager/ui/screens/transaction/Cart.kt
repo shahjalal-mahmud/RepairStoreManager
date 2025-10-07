@@ -114,7 +114,7 @@ fun CartItemCard(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                "Total: $${"%.2f".format(product.price * product.quantity)}",
+                "Total: ৳${"%.2f".format(product.price * product.quantity)}",
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary

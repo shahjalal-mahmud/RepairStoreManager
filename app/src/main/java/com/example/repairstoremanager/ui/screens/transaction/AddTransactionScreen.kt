@@ -50,7 +50,7 @@ fun AddTransactionScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Point of Sale") },
+                title = { Text("Sales Counter") },
                 actions = {
                     IconButton(onClick = { onNavigateToTransactions() }) {
                         Icon(Icons.Default.Receipt, contentDescription = "Transactions")
@@ -62,7 +62,7 @@ fun AddTransactionScreen(
             SalesBottomBar(
                 total = transactionViewModel.getCartTotal(),
                 itemCount = cartProducts.size,
-                onCheckout = { showPaymentDialog = true },
+                onCompleteSale = { showPaymentDialog = true },
                 isLoading = isLoading
             )
         }
@@ -128,11 +128,9 @@ fun AddTransactionScreen(
         }
 
         // Payment Dialog
-        // Payment Dialog
         if (showPaymentDialog) {
             PaymentDialog(
                 total = transactionViewModel.getCartTotal(),
-                customerName = customerName,
                 paymentType = paymentType,
                 onPaymentTypeChange = { paymentType = it },
                 onConfirm = {

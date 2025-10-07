@@ -49,7 +49,7 @@ fun TransactionCard(transaction: com.example.repairstoremanager.data.model.Trans
                         )
                     }
                 }
-                Text("₹${"%.2f".format(transaction.amount)}", style = MaterialTheme.typography.titleMedium)
+                Text("৳${"%.2f".format(transaction.amount)}", style = MaterialTheme.typography.titleMedium)
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -61,7 +61,7 @@ fun TransactionCard(transaction: com.example.repairstoremanager.data.model.Trans
                 Spacer(modifier = Modifier.height(8.dp))
                 Text("Items:", style = MaterialTheme.typography.labelMedium)
                 transaction.products.forEach { product ->
-                    Text("  • ${product.name} x${product.quantity} - ₹${"%.2f".format(product.total)}")
+                    Text("  • ${product.name} x${product.quantity} - ৳${"%.2f".format(product.total)}")
                 }
             }
 
