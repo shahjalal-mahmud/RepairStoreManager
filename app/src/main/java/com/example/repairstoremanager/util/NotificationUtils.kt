@@ -9,10 +9,10 @@ import com.google.gson.Gson
 import java.util.*
 
 object NotificationUtils {
-    private const val CHANNEL_ID = "delivery_reminder_channel"
-    private const val CHANNEL_NAME = "Delivery Reminder"
-    private const val PREFS_NAME = "notification_prefs"
-    private const val KEY_NOTIFICATIONS = "notifications_list"
+    const val CHANNEL_ID = "delivery_reminder_channel"
+    const val CHANNEL_NAME = "Delivery Reminder"
+    const val PREFS_NAME = "notification_prefs"
+    const val KEY_NOTIFICATIONS = "notifications_list"
 
     fun showNotification(context: Context, title: String, message: String) {
         // Save notification to storage
@@ -100,5 +100,6 @@ data class AppNotification(
     val message: String,
     val timestamp: Long = System.currentTimeMillis(),
     val isRead: Boolean = false,
-    val type: String = "delivery"
+    val type: String = "delivery", // Add "stock" type
+    val productId: String? = null // Add product reference for stock notifications
 )
