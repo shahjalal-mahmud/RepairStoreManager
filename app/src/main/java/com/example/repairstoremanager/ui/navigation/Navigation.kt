@@ -223,7 +223,7 @@ fun Navigation(
         composable("records") {
             MainScaffold(navController) {
                 TransactionScreen(
-                    transactionViewModel = transactionViewModel,
+                    viewModel = transactionViewModel,
                     onBack = { navController.popBackStack() }
                 )
             }

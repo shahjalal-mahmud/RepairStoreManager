@@ -92,8 +92,8 @@ fun AllTransactionsScreen(
 
 @Composable
 fun TransactionSummaryHeader(transactions: List<Transaction>) {
-    val totalAmount = transactions.sumOf { it.amount }
-    val totalProfit = transactions.sumOf { it.profit }
+    val totalAmount = transactions.sumOf { it.totalAmount }
+    val totalProfit = transactions.sumOf { it.totalProfit }
     val formatter = NumberFormat.getCurrencyInstance(Locale.getDefault())
 
     Row(
@@ -140,16 +140,20 @@ fun TransactionItem(transaction: Transaction) {
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(transaction.type, fontWeight = FontWeight.Bold)
+                Text(transaction.invoiceNumber, fontWeight = FontWeight.Bold)
                 Text(transaction.date, style = MaterialTheme.typography.bodySmall)
             }
-            Text(transaction.description, style = MaterialTheme.typography.bodyMedium)
+            Text(transaction.customerName, style = MaterialTheme.typography.bodyMedium)
             Spacer(Modifier.height(6.dp))
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(formatter.format(transaction.amount), fontWeight = FontWeight.Bold)
+                Text(formatter.format(transaction.totalAmount), fontWeight = FontWeight.Bold)
+                Text(
+                    "Profit: ${formatter.format(transaction.totalProfit)}",
+                    color = if (transaction.totalProfit >= 0) Color(0xFF2E7D32) else Color.Red
+                )
             }
         }
     }
