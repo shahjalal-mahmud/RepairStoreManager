@@ -10,6 +10,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -136,6 +137,12 @@ class MainActivity : ComponentActivity() {
                 val customerViewModel = remember { CustomerViewModel() }
                 val searchViewModel = remember { SearchViewModel() }
                 val loginViewModel: LoginViewModel = viewModel()
+
+                // ✅ Trigger low stock check when app starts
+                LaunchedEffect(Unit) {
+                    stockViewModel.checkLowStockOnAppStart(this@MainActivity)
+                }
+
                 Navigation(
                     navController = navController,
                     storeViewModel = storeViewModel,

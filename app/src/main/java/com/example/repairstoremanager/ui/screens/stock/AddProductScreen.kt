@@ -7,15 +7,37 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AddPhotoAlternate
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,12 +49,9 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.repairstoremanager.data.model.Product
-import com.example.repairstoremanager.ui.components.stock.CategorySection
 import com.example.repairstoremanager.ui.components.stock.DropdownMenuBox
 import com.example.repairstoremanager.ui.components.stock.PricingSection
-import com.example.repairstoremanager.ui.components.stock.ProductTypeDropdown
 import com.example.repairstoremanager.ui.components.stock.QuantitySection
-import com.example.repairstoremanager.ui.components.stock.SupplierSection
 import com.example.repairstoremanager.ui.components.stock.WarrantySection
 import com.example.repairstoremanager.util.MediaStorageHelper
 import com.example.repairstoremanager.viewmodel.StockViewModel
@@ -45,16 +64,10 @@ fun AddProductScreen(
 ) {
     val context = LocalContext.current
 
-    var productType by remember { mutableStateOf("") }
     var productName by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf("") }
-    var subCategory by remember { mutableStateOf("") }
     var model by remember { mutableStateOf("") }
     var alertQuantity by remember { mutableStateOf("") }
     var quantity by remember { mutableStateOf("") }
-    var supplier by remember { mutableStateOf("") }
-    var unit by remember { mutableStateOf("") }
-    var cost by remember { mutableStateOf("") }
     var buyingPrice by remember { mutableStateOf("") }
     var sellingPrice by remember { mutableStateOf("") }
     var details by remember { mutableStateOf("") }
@@ -189,14 +202,6 @@ fun AddProductScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Product Type Dropdown
-            ProductTypeDropdown(
-                selectedType = productType,
-                onTypeSelected = { productType = it }
-            )
-
             Spacer(modifier = Modifier.height(16.dp))
 
             // Product Name
@@ -206,16 +211,6 @@ fun AddProductScreen(
                 label = { Text("Product Name *") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.medium
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Category and Subcategory
-            CategorySection(
-                category = category,
-                subCategory = subCategory,
-                onCategorySelected = { category = it },
-                onSubCategorySelected = { subCategory = it }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -241,22 +236,10 @@ fun AddProductScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Supplier and Unit
-            SupplierSection(
-                supplier = supplier,
-                unit = unit,
-                onSupplierChange = { supplier = it },
-                onUnitChange = { unit = it }
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
             // Pricing Section
             PricingSection(
-                cost = cost,
                 buyingPrice = buyingPrice,
                 sellingPrice = sellingPrice,
-                onCostChange = { cost = it },
                 onBuyingPriceChange = { buyingPrice = it },
                 onSellingPriceChange = { sellingPrice = it }
             )
@@ -308,17 +291,11 @@ fun AddProductScreen(
                     submitting = true
                     val product = Product(
                         name = productName.trim(),
-                        type = productType.trim(),
-                        category = category.trim(),
-                        subCategory = subCategory.trim(),
                         model = model.trim(),
-                        cost = cost.toDoubleOrNull() ?: 0.0,
                         buyingPrice = buyingPrice.toDoubleOrNull() ?: 0.0,
                         sellingPrice = sellingPrice.toDoubleOrNull() ?: 0.0,
                         quantity = quantity.toLongOrNull() ?: 0L,
                         alertQuantity = alertQuantity.toLongOrNull() ?: 0L,
-                        supplier = supplier.trim(),
-                        unit = unit.trim(),
                         details = details.trim(),
                         imageUrl = imageUrl.trim(), // Save as local file URI
                         hasWarranty = hasWarranty,

@@ -1,12 +1,17 @@
 package com.example.repairstoremanager.ui.screens.transaction
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.History
@@ -24,33 +29,30 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.repairstoremanager.viewmodel.TransactionViewModel
+import java.text.NumberFormat
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionScreen(
-    transactionViewModel: TransactionViewModel,
+    viewModel: TransactionViewModel,
     onBack: () -> Unit
 ) {
-    val transactions by transactionViewModel.transactions.collectAsState()
-    val isLoading by transactionViewModel.isLoading.collectAsState()
-    val selectedDate by transactionViewModel.selectedDate.collectAsState()
-    val showAllTransactions by transactionViewModel.showAllTransactions.collectAsState()
-    val transactionSummary by transactionViewModel.transactionSummary.collectAsState()
-
-    var showDatePicker by remember { mutableStateOf(false) }
+    val transactions by viewModel.transactions.collectAsState()
+    val dailySummary by viewModel.dailySummary.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val showAllTransactions by viewModel.showAllTransactions.collectAsState()
+    val selectedDate by viewModel.selectedDate.collectAsState()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Transactions Records") },
+                title = { Text("Sales Records") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -58,7 +60,7 @@ fun TransactionScreen(
                 },
                 actions = {
                     IconButton(onClick = {
-                        transactionViewModel.toggleTransactionView(!showAllTransactions)
+                        viewModel.toggleView(!showAllTransactions)
                     }) {
                         Icon(
                             if (showAllTransactions) Icons.Default.Today else Icons.Default.History,
@@ -72,76 +74,75 @@ fun TransactionScreen(
         Column(
             modifier = Modifier
                 .padding(padding)
-                .padding(16.dp)
                 .fillMaxSize()
         ) {
             if (!showAllTransactions) {
-                // Date Selector and Summary for daily view
-                TransactionHeader(
-                    selectedDate = selectedDate,
-                    onDateSelect = { showDatePicker = true },
-                    showAll = showAllTransactions
-                )
-
-                // Transaction Summary
-                TransactionSummaryCard(summary = transactionSummary)
+                // Daily Summary Card
+                DailySummaryCard(dailySummary = dailySummary)
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Transactions header
+                // Date header
                 Text(
-                    "Transactions for ${transactionViewModel.formatDateForDisplay(selectedDate)}",
+                    "Today's Sales - ${viewModel.formatDateForDisplay(selectedDate)}",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
             } else {
-                // Header for all transactions view
                 Text(
-                    "All Transactions",
+                    "All Sales History",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    modifier = Modifier.padding(16.dp)
                 )
             }
 
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Transactions List
             if (isLoading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
                     CircularProgressIndicator()
                 }
             } else if (transactions.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
                     Text(
-                        if (showAllTransactions) "No transactions found"
-                        else "No transactions found for ${transactionViewModel.formatDateForDisplay(selectedDate)}",
+                        if (showAllTransactions) "No sales records found"
+                        else "No sales today",
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
             } else {
-                // Show the transactions list
-                TransactionList(transactions = transactions, showAll = showAllTransactions)
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(transactions) { transaction ->
+                        TransactionItem(transaction = transaction)
+                    }
+                }
             }
-        }
-
-        if (showDatePicker && !showAllTransactions) {
-            DatePickerDialog(
-                onDateSelected = { date ->
-                    transactionViewModel.fetchTransactionsByDate(date)
-                    showDatePicker = false
-                },
-                onDismiss = { showDatePicker = false }
-            )
         }
     }
 }
 
 @Composable
-fun TransactionSummaryCard(summary: com.example.repairstoremanager.data.repository.TransactionRepository.TransactionSummary) {
+fun DailySummaryCard(dailySummary: com.example.repairstoremanager.data.model.DailySummary) {
+    val formatter = NumberFormat.getCurrencyInstance(Locale.getDefault())
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        elevation = CardDefaults.cardElevation(4.dp)
+            .padding(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -149,30 +150,44 @@ fun TransactionSummaryCard(summary: com.example.repairstoremanager.data.reposito
             Text(
                 "Daily Summary",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 8.dp)
+                fontWeight = FontWeight.Bold
             )
 
-            // Summary items
-            SummaryItem("Total Transactions", summary.totalTransactions.toString())
-            SummaryItem("Total Sales", "₹${summary.totalSales.format(2)}")
-            SummaryItem("Total Services", "₹${summary.totalServices.format(2)}")
-            SummaryItem("Total Expenses", "₹${summary.totalExpenses.format(2)}")
+            Spacer(modifier = Modifier.height(12.dp))
 
-            if (summary.productsSold.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    "Products Sold:",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Medium
-                )
-                summary.productsSold.forEach { (product, quantity) ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text("Total Sales", style = MaterialTheme.typography.bodySmall)
                     Text(
-                        "• $product: $quantity",
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(start = 8.dp)
+                        formatter.format(dailySummary.totalSales),
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold
                     )
                 }
+
+                Column(horizontalAlignment = Alignment.End) {
+                    Text("Total Profit", style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        formatter.format(dailySummary.totalProfit),
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = if (dailySummary.totalProfit >= 0) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Transactions: ${dailySummary.transactionCount}")
+                Text("Cost: ${formatter.format(dailySummary.totalCost)}")
             }
         }
     }

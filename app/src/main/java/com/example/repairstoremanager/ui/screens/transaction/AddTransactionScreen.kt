@@ -50,7 +50,7 @@ fun AddTransactionScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Point of Sale") },
+                title = { Text("Sales Counter") },
                 actions = {
                     IconButton(onClick = { onNavigateToTransactions() }) {
                         Icon(Icons.Default.Receipt, contentDescription = "Transactions")
@@ -62,7 +62,7 @@ fun AddTransactionScreen(
             SalesBottomBar(
                 total = transactionViewModel.getCartTotal(),
                 itemCount = cartProducts.size,
-                onCheckout = { showPaymentDialog = true },
+                onCompleteSale = { showPaymentDialog = true },
                 isLoading = isLoading
             )
         }
@@ -128,27 +128,27 @@ fun AddTransactionScreen(
         }
 
         // Payment Dialog
-        // Payment Dialog
         if (showPaymentDialog) {
             PaymentDialog(
                 total = transactionViewModel.getCartTotal(),
-                customerName = customerName,
                 paymentType = paymentType,
                 onPaymentTypeChange = { paymentType = it },
                 onConfirm = {
                     transactionViewModel.createSaleTransaction(
                         customerName = customerName,
-                        customerPhone = customerPhone,
                         paymentType = paymentType
-                    ) { success, invoice, errorMessage ->
+                    ) { success, invoiceNumber ->
                         showPaymentDialog = false
                         if (success) {
-                            // Show success message
+                            // Show success message - you can use invoiceNumber if needed
                             customerName = ""
-                            customerPhone = ""
+                            customerPhone = "" // Optional: clear if you still want to use it
+                            // You might want to show a success snackbar or dialog here
+                            // For example: showSuccessMessage("Sale completed! Invoice: $invoiceNumber")
                         } else {
-                            // Show error message if needed
-                            // errorMessage?.let { msg -> showError(msg) }
+                            // Show error message
+                            // invoiceNumber will contain the error message in this case
+                            // For example: showErrorMessage("Failed: $invoiceNumber")
                         }
                     }
                 },

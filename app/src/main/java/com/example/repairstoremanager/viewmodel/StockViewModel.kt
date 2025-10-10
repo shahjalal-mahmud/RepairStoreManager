@@ -1,9 +1,11 @@
 package com.example.repairstoremanager.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.repairstoremanager.data.model.Product
 import com.example.repairstoremanager.data.repository.StockRepository
+import com.example.repairstoremanager.util.StockNotificationManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -44,12 +46,13 @@ class StockViewModel : ViewModel() {
 
     fun addProduct(
         product: Product,
+        context: Context? = null,
         onSuccess: () -> Unit = {},
         onError: (String) -> Unit = {}
     ) {
         viewModelScope.launch {
             _isLoading.value = true
-            val result = repository.addProduct(product)
+            val result = repository.addProduct(product, context)
             _isLoading.value = false
 
             if (result.isSuccess) {
@@ -65,12 +68,13 @@ class StockViewModel : ViewModel() {
 
     fun updateProduct(
         product: Product,
+        context: Context? = null,
         onSuccess: () -> Unit = {},
         onError: (String) -> Unit = {}
     ) {
         viewModelScope.launch {
             _isLoading.value = true
-            val result = repository.updateProduct(product)
+            val result = repository.updateProduct(product, context)
             _isLoading.value = false
 
             if (result.isSuccess) {
@@ -108,11 +112,14 @@ class StockViewModel : ViewModel() {
     fun updateQuantity(
         productId: String,
         delta: Long,
+        context: Context? = null,
         onSuccess: () -> Unit = {},
         onError: (String) -> Unit = {}
     ) {
         viewModelScope.launch {
-            val result = repository.incrementQuantity(productId, delta)
+            _isLoading.value = true
+            val result = repository.incrementQuantity(productId, delta, context)
+            _isLoading.value = false
 
             if (result.isSuccess) {
                 fetchProducts()
@@ -151,6 +158,7 @@ class StockViewModel : ViewModel() {
     fun clearError() {
         _error.value = null
     }
+
     fun getProductById(productId: String, onResult: (Product?) -> Unit) {
         viewModelScope.launch {
             try {
@@ -163,4 +171,44 @@ class StockViewModel : ViewModel() {
         }
     }
 
+    fun checkLowStockOnAppStart(context: Context) {
+        viewModelScope.launch {
+            try {
+                repository.checkLowStockOnAppStart(context)
+            } catch (e: Exception) {
+                // Log the error but don't show to user as this is a background check
+                println("Low stock check failed: ${e.message}")
+            }
+        }
+    }
+
+    // Method to get low stock products
+    fun getLowStockProducts(): List<Product> {
+        return _products.value.filter { product ->
+            product.quantity <= product.alertQuantity && product.alertQuantity > 0
+        }
+    }
+
+    // Method to check if a specific product is low on stock
+    fun isProductLowStock(product: Product): Boolean {
+        return product.quantity <= product.alertQuantity && product.alertQuantity > 0
+    }
+
+    // Mark all stock notifications as read
+    fun markAllStockNotificationsAsRead(context: Context) {
+        StockNotificationManager.markAllStockNotificationsAsRead(context)
+    }
+
+    // Check if a product has low stock notification
+    fun hasLowStockNotification(context: Context, productId: String): Boolean {
+        return StockNotificationManager.hasLowStockNotification(context, productId)
+    }
+
+    // Force show low stock notification (for testing)
+    fun forceLowStockNotification(context: Context) {
+        viewModelScope.launch {
+            val allProducts = repository.getAllProducts()
+            StockNotificationManager.forceShowLowStockNotification(context, allProducts)
+        }
+    }
 }

@@ -1,6 +1,8 @@
 package com.example.repairstoremanager.data.repository
 
+import android.content.Context
 import com.example.repairstoremanager.data.model.Product
+import com.example.repairstoremanager.util.StockNotificationManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -11,7 +13,7 @@ class StockRepository {
 
     fun getUserId(): String? = auth.currentUser?.uid
 
-    suspend fun addProduct(product: Product): Result<Unit> {
+    suspend fun addProduct(product: Product, context: Context? = null): Result<Unit> {
         return try {
             val uid = getUserId() ?: return Result.failure(IllegalStateException("User not logged in"))
             val docRef = db.collection("products").document()
@@ -25,13 +27,20 @@ class StockRepository {
             )
 
             docRef.set(payload).await()
+
+            // Check for low stock after adding - check ALL products for summary
+            context?.let {
+                val allProducts = getAllProducts()
+                StockNotificationManager.checkLowStockAndNotify(it, allProducts)
+            }
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    suspend fun updateProduct(product: Product): Result<Unit> {
+    suspend fun updateProduct(product: Product, context: Context? = null): Result<Unit> {
         return try {
             if (product.id.isBlank()) return Result.failure(IllegalArgumentException("Missing product id"))
             val uid = getUserId() ?: return Result.failure(IllegalStateException("User not logged in"))
@@ -44,6 +53,13 @@ class StockRepository {
             db.collection("products").document(product.id)
                 .set(payload)
                 .await()
+
+            // Check for low stock after updating - check ALL products for summary
+            context?.let {
+                val allProducts = getAllProducts()
+                StockNotificationManager.checkLowStockAndNotify(it, allProducts)
+            }
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -69,7 +85,7 @@ class StockRepository {
         }
     }
 
-    suspend fun incrementQuantity(productId: String, delta: Long): Result<Unit> {
+    suspend fun incrementQuantity(productId: String, delta: Long, context: Context? = null): Result<Unit> {
         return try {
             val uid = getUserId() ?: return Result.failure(IllegalStateException("User not logged in"))
             val doc = db.collection("products").document(productId)
@@ -88,6 +104,12 @@ class StockRepository {
                     "updatedAt" to System.currentTimeMillis()
                 ))
             }.await()
+
+            // Check for low stock after quantity update - check ALL products for summary
+            context?.let {
+                val allProducts = getAllProducts()
+                StockNotificationManager.checkLowStockAndNotify(it, allProducts)
+            }
 
             Result.success(Unit)
         } catch (e: Exception) {
@@ -118,5 +140,24 @@ class StockRepository {
                         product.category.contains(query, ignoreCase = true) ||
                         product.type.contains(query, ignoreCase = true)
             }
+    }
+
+    suspend fun checkLowStockOnAppStart(context: Context) {
+        try {
+            val allProducts = getAllProducts()
+            // ✅ Use the enhanced summary notification system
+            StockNotificationManager.checkLowStockAndNotify(context, allProducts)
+        } catch (e: Exception) {
+            // Log error but don't crash the app
+            println("Low stock check on app start failed: ${e.message}")
+        }
+    }
+
+    // Method to get low stock products specifically
+    suspend fun getLowStockProducts(): List<Product> {
+        val allProducts = getAllProducts()
+        return allProducts.filter { product ->
+            product.quantity <= product.alertQuantity && product.alertQuantity > 0
+        }
     }
 }

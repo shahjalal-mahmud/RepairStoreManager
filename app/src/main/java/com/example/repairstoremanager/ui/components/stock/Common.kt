@@ -1,144 +1,36 @@
 package com.example.repairstoremanager.ui.components.stock
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddPhotoAlternate
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ProductTypeDropdown(
-    selectedType: String,
-    onTypeSelected: (String) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-    val productTypes = listOf("Standard", "Service", "Part", "Accessory", "Consumable")
-
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = !expanded }
-    ) {
-        OutlinedTextField(
-            value = selectedType,
-            onValueChange = {},
-            label = { Text("Product Type *") },
-            readOnly = true,
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .menuAnchor(),
-            shape = MaterialTheme.shapes.medium
-        )
-
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            productTypes.forEach { type ->
-                DropdownMenuItem(
-                    text = { Text(type) },
-                    onClick = {
-                        onTypeSelected(type)
-                        expanded = false
-                    }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun CategorySection(
-    category: String,
-    subCategory: String,
-    onCategorySelected: (String) -> Unit,
-    onSubCategorySelected: (String) -> Unit
-) {
-    val categories = listOf("Phone", "Charger", "Battery", "Screen", "Accessory", "Tool", "Other")
-    val subCategories = remember(category) {
-        when (category) {
-            "Phone" -> listOf("Smartphone", "Feature Phone", "Tablet", "Other")
-            "Charger" -> listOf("Wall Charger", "Car Charger", "Wireless Charger", "Cable", "Other")
-            "Battery" -> listOf("Phone Battery", "Power Bank", "Other")
-            "Screen" -> listOf("LCD", "OLED", "Touch Screen", "Other")
-            "Accessory" -> listOf("Case", "Protector", "Headphones", "Other")
-            "Tool" -> listOf("Screwdriver", "Pry Tool", "Tweezers", "Other")
-            else -> listOf("Other")
-        }
-    }
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        // Category Dropdown
-        CategoryDropdown(
-            selectedValue = category,
-            options = categories,
-            label = "Category",
-            onValueSelected = onCategorySelected,
-            modifier = Modifier.weight(1f)
-        )
-
-        // Subcategory Dropdown
-        CategoryDropdown(
-            selectedValue = subCategory,
-            options = subCategories,
-            label = "Subcategory",
-            onValueSelected = onSubCategorySelected,
-            modifier = Modifier.weight(1f)
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CategoryDropdown(
-    selectedValue: String,
-    options: List<String>,
-    label: String,
-    onValueSelected: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = !expanded },
-        modifier = modifier
-    ) {
-        OutlinedTextField(
-            value = selectedValue,
-            onValueChange = {},
-            label = { Text(label) },
-            readOnly = true,
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .menuAnchor(),
-            shape = MaterialTheme.shapes.medium
-        )
-
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            options.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(option) },
-                    onClick = {
-                        onValueSelected(option)
-                        expanded = false
-                    }
-                )
-            }
-        }
-    }
-}
 
 @Composable
 fun QuantitySection(
@@ -170,125 +62,45 @@ fun QuantitySection(
 }
 
 @Composable
-fun SupplierSection(
-    supplier: String,
-    unit: String,
-    onSupplierChange: (String) -> Unit,
-    onUnitChange: (String) -> Unit
-) {
-    val units = listOf("Piece", "Set", "Pack", "Meter", "Roll", "Other")
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        OutlinedTextField(
-            value = supplier,
-            onValueChange = onSupplierChange,
-            label = { Text("Supplier") },
-            modifier = Modifier.weight(1f),
-            shape = MaterialTheme.shapes.medium
-        )
-
-        UnitDropdown(
-            selectedUnit = unit,
-            onUnitSelected = onUnitChange,
-            modifier = Modifier.weight(1f)
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun UnitDropdown(
-    selectedUnit: String,
-    onUnitSelected: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    var expanded by remember { mutableStateOf(false) }
-    val units = listOf("Piece", "Set", "Pack", "Meter", "Roll", "Other")
-
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = !expanded },
-        modifier = modifier
-    ) {
-        OutlinedTextField(
-            value = selectedUnit,
-            onValueChange = {},
-            label = { Text("Unit") },
-            readOnly = true,
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .menuAnchor(),
-            shape = MaterialTheme.shapes.medium
-        )
-
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            units.forEach { unit ->
-                DropdownMenuItem(
-                    text = { Text(unit) },
-                    onClick = {
-                        onUnitSelected(unit)
-                        expanded = false
-                    }
-                )
-            }
-        }
-    }
-}
-
-@Composable
 fun PricingSection(
-    cost: String,
     buyingPrice: String,
     sellingPrice: String,
-    onCostChange: (String) -> Unit,
     onBuyingPriceChange: (String) -> Unit,
     onSellingPriceChange: (String) -> Unit
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            "Pricing Information",
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary
-        )
-
+        // ✅ Both fields in a single Row
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            OutlinedTextField(
-                value = cost,
-                onValueChange = onCostChange,
-                label = { Text("Cost Price") },
-                modifier = Modifier.weight(1f),
-                shape = MaterialTheme.shapes.medium
-            )
-
             OutlinedTextField(
                 value = buyingPrice,
                 onValueChange = onBuyingPriceChange,
                 label = { Text("Buying Price") },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                singleLine = true,
+                shape = MaterialTheme.shapes.medium
+            )
+
+            OutlinedTextField(
+                value = sellingPrice,
+                onValueChange = onSellingPriceChange,
+                label = { Text("Selling Price *") },
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                singleLine = true,
                 shape = MaterialTheme.shapes.medium
             )
         }
-
-        OutlinedTextField(
-            value = sellingPrice,
-            onValueChange = onSellingPriceChange,
-            label = { Text("Selling Price *") },
-            modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.medium
-        )
     }
 }
 

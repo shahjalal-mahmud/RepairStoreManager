@@ -54,10 +54,11 @@ fun MainFeaturesSection(navController: NavHostController) {
         FeatureItem("Add Customer", Icons.Outlined.AddCircle, "add_customer"),
         FeatureItem("Customer List", Icons.AutoMirrored.Outlined.ListAlt, "customer_list"),
         FeatureItem("Stock Management", Icons.Outlined.Inventory, "stock_list"),
-        FeatureItem("Daily Records", Icons.Outlined.Receipt, "transactions"),
-        FeatureItem("Transactions", Icons.Outlined.Payment, "sales"),
+        FeatureItem("Daily Records", Icons.Outlined.Receipt, "records"),
+        FeatureItem("Sales", Icons.Outlined.Payment, "sales"),
         FeatureItem("Quick Invoice", Icons.Outlined.PointOfSale, "quick_invoice"),
-        FeatureItem("Notes", Icons.AutoMirrored.Outlined.Note, "notes")
+        FeatureItem("Notes", Icons.AutoMirrored.Outlined.Note, "notes"),
+        FeatureItem("All Transactions", Icons.Outlined.Payment, "transactions"),
     )
 
     // Delivery options for the dialog
