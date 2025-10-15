@@ -50,6 +50,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -69,6 +70,8 @@ fun SuggestionTextField(
     commonItems: Set<String>,
     userItems: Set<String>,
     onAddUserItem: (String) -> Unit,
+    imeAction: ImeAction = ImeAction.Done,
+    onNext: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     var showDropdown by remember { mutableStateOf(false) }
@@ -80,15 +83,15 @@ fun SuggestionTextField(
             value = value,
             onValueChange = {
                 onValueChange(it)
+                // only show dropdown when user types, not on Enter or selection
                 showDropdown = it.isNotEmpty()
             },
             label = { Text(label) },
             modifier = Modifier
                 .fillMaxWidth()
                 .onFocusChanged {
-                    if (it.isFocused && (commonItems.isNotEmpty() || userItems.isNotEmpty())) {
-                        showDropdown = true
-                    }
+                    // only open dropdown when focused & field not empty
+                    showDropdown = it.isFocused && value.isNotEmpty()
                 },
             shape = RoundedCornerShape(12.dp),
             trailingIcon = {
@@ -97,6 +100,7 @@ fun SuggestionTextField(
                         IconButton(
                             onClick = {
                                 onValueChange("")
+                                showDropdown = false
                             },
                             modifier = Modifier.size(24.dp)
                         ) {
@@ -116,19 +120,21 @@ fun SuggestionTextField(
                 }
             },
             singleLine = true,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardOptions = KeyboardOptions(imeAction = imeAction),
             keyboardActions = KeyboardActions(
+                onNext = {
+                    // ✅ Always go to next field
+                    focusManager.moveFocus(FocusDirection.Down)
+                    showDropdown = false
+                },
                 onDone = {
-                    if (value.isNotBlank()) {
-                        onAddUserItem(value)
-                        focusManager.clearFocus()
-                        showDropdown = false
-                    }
+                    focusManager.clearFocus()
+                    showDropdown = false
                 }
             )
         )
 
-        // Dropdown
+        // Dropdown list
         AnimatedVisibility(
             visible = showDropdown,
             enter = fadeIn(tween(150)) + slideInVertically(tween(150)),
@@ -144,7 +150,7 @@ fun SuggestionTextField(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    // Dropdown header
+                    // Header
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -166,10 +172,9 @@ fun SuggestionTextField(
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
                     )
 
-                    // Suggestions list
+                    // Suggestions
                     Column(modifier = Modifier.heightIn(max = 250.dp)) {
                         if (commonItems.isEmpty() && userItems.isEmpty()) {
-                            // No items available
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -177,7 +182,7 @@ fun SuggestionTextField(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "No suggestions available",
+                                    "No suggestions available",
                                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                                 )
                             }
@@ -191,6 +196,7 @@ fun SuggestionTextField(
                                     onItemClick = { item ->
                                         onValueChange(item)
                                         showDropdown = false
+                                        // ❌ removed auto-move to next field
                                     }
                                 )
                             }
@@ -211,6 +217,7 @@ fun SuggestionTextField(
                                     onItemClick = { item ->
                                         onValueChange(item)
                                         showDropdown = false
+                                        // ❌ removed auto-move to next field
                                     }
                                 )
                             }
@@ -229,7 +236,7 @@ fun SuggestionTextField(
                             .padding(16.dp)
                     ) {
                         Text(
-                            text = "Add new item:",
+                            "Add new item:",
                             fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                             modifier = Modifier.padding(bottom = 8.dp)
@@ -258,6 +265,7 @@ fun SuggestionTextField(
                                                 onValueChange(newItem)
                                                 newItem = ""
                                                 showDropdown = false
+                                                // ❌ do NOT move focus automatically
                                             }
                                         ) {
                                             Icon(Icons.Default.Check, contentDescription = "Add")

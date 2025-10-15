@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -13,6 +14,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 
@@ -24,6 +28,8 @@ fun CustomerInfoSection(
     onContactNumberChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val focusManager = LocalFocusManager.current
+
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -40,23 +46,30 @@ fun CustomerInfoSection(
                 label = "Customer Name",
                 value = customerName,
                 onValueChange = onCustomerNameChange,
-                keyboardType = KeyboardType.Text
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Next,
+                onNext = { focusManager.moveFocus(FocusDirection.Down) }
             )
 
             CustomTextField(
                 label = "Contact Number",
                 value = contactNumber,
                 onValueChange = onContactNumberChange,
-                keyboardType = KeyboardType.Phone
+                keyboardType = KeyboardType.Phone,
+                imeAction = ImeAction.Next,
+                onNext = { focusManager.moveFocus(FocusDirection.Down) }
             )
         }
     }
 }
+
 @Composable
 fun CustomTextField(
     label: String,
     value: String,
     keyboardType: KeyboardType = KeyboardType.Text,
+    imeAction: ImeAction = ImeAction.Default,
+    onNext: (() -> Unit)? = null,
     onValueChange: (String) -> Unit
 ) {
     OutlinedTextField(
@@ -66,6 +79,12 @@ fun CustomTextField(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType)
+        keyboardOptions = KeyboardOptions(
+            keyboardType = keyboardType,
+            imeAction = imeAction
+        ),
+        keyboardActions = KeyboardActions(
+            onNext = { onNext?.invoke() }
+        )
     )
 }
