@@ -136,7 +136,7 @@ fun TransactionScreen(
 
 @Composable
 fun DailySummaryCard(dailySummary: com.example.repairstoremanager.data.model.DailySummary) {
-    val formatter = NumberFormat.getCurrencyInstance(Locale.getDefault())
+    val formatter = NumberFormat.getNumberInstance(Locale.getDefault())
 
     Card(
         modifier = Modifier
@@ -162,7 +162,7 @@ fun DailySummaryCard(dailySummary: com.example.repairstoremanager.data.model.Dai
                 Column {
                     Text("Total Sales", style = MaterialTheme.typography.bodySmall)
                     Text(
-                        formatter.format(dailySummary.totalSales),
+                        "৳${formatter.format(dailySummary.totalSales)}",
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -171,7 +171,7 @@ fun DailySummaryCard(dailySummary: com.example.repairstoremanager.data.model.Dai
                 Column(horizontalAlignment = Alignment.End) {
                     Text("Total Profit", style = MaterialTheme.typography.bodySmall)
                     Text(
-                        formatter.format(dailySummary.totalProfit),
+                        "৳${formatter.format(dailySummary.totalProfit)}",
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Bold,
                         color = if (dailySummary.totalProfit >= 0) MaterialTheme.colorScheme.primary
@@ -187,7 +187,7 @@ fun DailySummaryCard(dailySummary: com.example.repairstoremanager.data.model.Dai
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("Transactions: ${dailySummary.transactionCount}")
-                Text("Cost: ${formatter.format(dailySummary.totalCost)}")
+                Text("Cost: ৳${formatter.format(dailySummary.totalCost)}")
             }
         }
     }
