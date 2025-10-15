@@ -6,24 +6,31 @@ data class TransactionProduct(
     val buyingPrice: Double = 0.0,  // Added buying price for profit calculation
     val sellingPrice: Double = 0.0, // Renamed from 'price' for clarity
     val quantity: Int = 1,
-    val totalSellingPrice: Double = sellingPrice * quantity,
-    val totalCost: Double = buyingPrice * quantity,
-    val profit: Double = totalSellingPrice - totalCost
-)
+){
+    // Use custom getters to calculate values dynamically
+    val totalSellingPrice: Double
+        get() = sellingPrice * quantity
+
+    val totalCost: Double
+        get() = buyingPrice * quantity
+
+    val profit: Double
+        get() = totalSellingPrice - totalCost
+}
 
 data class Transaction(
     val id: String = "",
     val shopOwnerId: String = "",
     val invoiceNumber: String = "",
     val customerName: String = "Walk-in Customer",
-    val type: String = "Sale", // Simplified - focus on sales
+    val type: String = "Sale",
     val products: List<TransactionProduct> = emptyList(),
     val totalAmount: Double = 0.0,
     val totalCost: Double = 0.0,
     val totalProfit: Double = 0.0,
     val paymentType: String = "Cash",
     val timestamp: Long = System.currentTimeMillis(),
-    val date: String = "" // Format: "dd MMM yyyy"
+    val date: String = ""
 ) {
     // Helper function to calculate totals
     fun calculateTotals(): Transaction {
