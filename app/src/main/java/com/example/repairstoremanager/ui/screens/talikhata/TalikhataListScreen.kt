@@ -213,7 +213,7 @@ private fun TalikhataEntryItem(
                     text = "৳${String.format("%.2f", entry.amount)}",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = if (entry.isPayableToUser) MaterialTheme.colorScheme.error
+                    color = if (entry.payableToUser) MaterialTheme.colorScheme.error
                     else MaterialTheme.colorScheme.primary
                 )
             }
@@ -234,14 +234,14 @@ private fun TalikhataEntryItem(
                         modifier = Modifier
                             .size(8.dp)
                             .background(
-                                color = if (entry.isPayableToUser) MaterialTheme.colorScheme.error
+                                color = if (entry.payableToUser) MaterialTheme.colorScheme.error
                                 else MaterialTheme.colorScheme.primary,
                                 shape = CircleShape
                             )
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = if (entry.isPayableToUser) "You will pay" else "You will receive",
+                        text = if (entry.payableToUser) "You will pay" else "You will receive",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

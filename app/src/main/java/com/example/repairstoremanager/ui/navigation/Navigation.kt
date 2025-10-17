@@ -219,7 +219,7 @@ fun Navigation(
             val json = backStackEntry.arguments?.getString("entry")
             val entry = if (json.isNullOrEmpty()) null else Gson().fromJson(json, TalikhataEntry::class.java)
 
-            val viewModel: TalikhataViewModel = viewModel(factory = ViewModelProvider.AndroidViewModelFactory(LocalContext.current.applicationContext as Application))
+            val viewModel: TalikhataViewModel = viewModel()
 
             AddEditTalikhataScreen(
                 entry = entry,
@@ -230,7 +230,7 @@ fun Navigation(
                             phone = newEntry.phone,
                             amount = newEntry.amount,
                             dueDate = newEntry.dueDate,
-                            isPayableToUser = newEntry.isPayableToUser
+                            isPayableToUser = newEntry.payableToUser
                         )
                     } else {
                         viewModel.updateEntry(newEntry)

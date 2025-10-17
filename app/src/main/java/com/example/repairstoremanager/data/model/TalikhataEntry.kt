@@ -9,9 +9,8 @@ data class TalikhataEntry(
     val name: String = "",
     val phone: String = "",
     val amount: Double = 0.0,
-    // store as Firestore Timestamp for easy queries
     val dueDate: Timestamp = Timestamp.now(),
-    val isPayableToUser: Boolean = true, // true = user should pay (liability), false = user will receive (asset)
+    val payableToUser: Boolean = true,
     val reminderScheduled: Boolean = false,
     val createdAt: Timestamp = Timestamp.now()
 )

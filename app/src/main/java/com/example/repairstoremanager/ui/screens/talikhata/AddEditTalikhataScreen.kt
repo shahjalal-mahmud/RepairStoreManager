@@ -75,7 +75,9 @@ fun AddEditTalikhataScreen(
     var phone by remember { mutableStateOf(entry?.phone ?: "") }
     var amount by remember { mutableStateOf(entry?.amount?.toString() ?: "") }
     var dueDate by remember { mutableStateOf(entry?.dueDate?.toDate() ?: Date()) }
-    var isPayableToUser by remember { mutableStateOf(entry?.isPayableToUser ?: true) }
+    var payableToUser by remember {
+        mutableStateOf(entry?.payableToUser ?: true)
+    }
 
     var showDatePicker by remember { mutableStateOf(false) }
 
@@ -112,7 +114,7 @@ fun AddEditTalikhataScreen(
                             phone = phone.trim(),
                             amount = amount.toDouble(),
                             dueDate = Timestamp(dueDate),
-                            isPayableToUser = isPayableToUser,
+                            payableToUser = payableToUser,
                             reminderScheduled = entry?.reminderScheduled ?: false,
                             createdAt = entry?.createdAt ?: Timestamp.now()
                         )
@@ -205,16 +207,16 @@ fun AddEditTalikhataScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 PaymentTypeChip(
-                    selected = isPayableToUser,
-                    onClick = { isPayableToUser = true },
+                    selected = payableToUser,
+                    onClick = { payableToUser = true },
                     text = "You will pay",
                     icon = Icons.Outlined.ArrowUpward,
                     color = MaterialTheme.colorScheme.error
                 )
 
                 PaymentTypeChip(
-                    selected = !isPayableToUser,
-                    onClick = { isPayableToUser = false },
+                    selected = !payableToUser,
+                    onClick = { payableToUser = false },
                     text = "You will receive",
                     icon = Icons.Outlined.ArrowDownward,
                     color = MaterialTheme.colorScheme.primary

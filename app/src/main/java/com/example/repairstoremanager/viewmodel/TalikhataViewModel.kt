@@ -39,11 +39,12 @@ class TalikhataViewModel(application: Application) : AndroidViewModel(applicatio
                 phone = phone,
                 amount = amount,
                 dueDate = dueDate,
-                isPayableToUser = isPayableToUser,
-                reminderScheduled = false
+                payableToUser = isPayableToUser,
+                reminderScheduled = true  // Set to true immediately
             )
             val id = repository.addEntry(entry)
-            // schedule reminder
+
+            // Schedule reminder
             TalikhataReminderScheduler.scheduleReminder(
                 workManager = workManager,
                 entryId = id,
@@ -52,7 +53,6 @@ class TalikhataViewModel(application: Application) : AndroidViewModel(applicatio
                 dueDateMillis = dueDate.toDate().time,
                 isPayableToUser = isPayableToUser
             )
-            repository.patchReminderScheduled(id, true)
         }
     }
 
@@ -67,7 +67,7 @@ class TalikhataViewModel(application: Application) : AndroidViewModel(applicatio
                 name = entry.name,
                 amount = entry.amount,
                 dueDateMillis = entry.dueDate.toDate().time,
-                isPayableToUser = entry.isPayableToUser
+                isPayableToUser = entry.payableToUser
             )
             repository.patchReminderScheduled(entry.id, true)
         }
