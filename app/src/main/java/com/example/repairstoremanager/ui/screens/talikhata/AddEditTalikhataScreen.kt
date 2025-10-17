@@ -26,6 +26,7 @@ import androidx.compose.material.icons.outlined.ArrowDownward
 import androidx.compose.material.icons.outlined.ArrowUpward
 import androidx.compose.material.icons.outlined.AttachMoney
 import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.Money
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material3.Card
@@ -182,7 +183,7 @@ fun AddEditTalikhataScreen(
                     imeAction = ImeAction.Done
                 ),
                 keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-                leadingIcon = Icons.Outlined.AttachMoney,
+                leadingIcon = Icons.Outlined.Money,
                 trailingIcon = {
                     Text(
                         "BDT",

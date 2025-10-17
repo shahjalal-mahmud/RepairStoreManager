@@ -59,15 +59,22 @@ class CustomerViewModel : ViewModel() {
 
     fun addCustomer(
         customer: Customer,
-        onSuccess: (Customer) -> Unit,  // Changed to accept Customer parameter
+        onSuccess: (Customer) -> Unit,
         onError: (String) -> Unit
     ) {
         viewModelScope.launch {
+            // Add validation check here
+            if (customer.customerName.isBlank() && customer.contactNumber.isBlank()) {
+                onError("Please enter customer name or phone number")
+                return@launch
+            }
+
             val timestamp = if (customer.createdAt == 0L) System.currentTimeMillis() else customer.createdAt
             val customerWithTimestamp = customer.copy(
                 createdAt = timestamp,
                 invoiceNumber = currentInvoiceNumber.value ?: ""
             )
+
             val result = repository.addCustomer(customerWithTimestamp)
             if (result.isSuccess) {
                 fetchCustomers()
