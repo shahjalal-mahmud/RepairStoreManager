@@ -59,6 +59,9 @@ android {
 dependencies {
     // ✅ Compose BOM for consistent versions
     implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.compose.foundation)
     androidTestImplementation(platform(libs.androidx.compose.bom))
 
     // Core Android

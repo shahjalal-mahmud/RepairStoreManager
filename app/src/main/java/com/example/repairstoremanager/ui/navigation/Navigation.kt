@@ -1,12 +1,20 @@
 package com.example.repairstoremanager.ui.navigation
 
+import android.app.Application
+import android.net.Uri
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
+import com.example.repairstoremanager.data.model.TalikhataEntry
 import com.example.repairstoremanager.data.repository.AuthRepository
 import com.example.repairstoremanager.ui.screens.auth.ForgotPasswordScreen
 import com.example.repairstoremanager.ui.screens.auth.LoginScreen
@@ -30,6 +38,8 @@ import com.example.repairstoremanager.ui.screens.notes.NotesScreen
 import com.example.repairstoremanager.ui.screens.stock.AddProductScreen
 import com.example.repairstoremanager.ui.screens.stock.EditProductScreen
 import com.example.repairstoremanager.ui.screens.stock.StockListScreen
+import com.example.repairstoremanager.ui.screens.talikhata.AddEditTalikhataScreen
+import com.example.repairstoremanager.ui.screens.talikhata.TalikhataListScreen
 import com.example.repairstoremanager.ui.screens.transaction.AddTransactionScreen
 import com.example.repairstoremanager.ui.screens.transaction.AllTransactionsScreen
 import com.example.repairstoremanager.ui.screens.transaction.TransactionScreen
@@ -39,8 +49,14 @@ import com.example.repairstoremanager.viewmodel.LoginViewModel
 import com.example.repairstoremanager.viewmodel.SearchViewModel
 import com.example.repairstoremanager.viewmodel.StockViewModel
 import com.example.repairstoremanager.viewmodel.StoreViewModel
+import com.example.repairstoremanager.viewmodel.TalikhataViewModel
 import com.example.repairstoremanager.viewmodel.TransactionViewModel
+import com.google.gson.Gson
 
+object Routes {
+    const val TalikhataList = "talikhata_list"
+    const val AddEditTalikhata = "add_edit_talikhata"
+}
 @RequiresApi(Build.VERSION_CODES.S)
 @Composable
 fun Navigation(
@@ -50,9 +66,10 @@ fun Navigation(
     transactionViewModel: TransactionViewModel,
     customerViewModel: CustomerViewModel,
     searchViewModel: SearchViewModel,
-    loginViewModel: LoginViewModel
+    loginViewModel: LoginViewModel,
 ) {
     val authRepository = remember { AuthRepository() }
+
 
     NavHost(navController = navController, startDestination = "splash") {
 
@@ -172,6 +189,56 @@ fun Navigation(
             MainScaffold(navController) {
                 ExpiredDeliveriesScreen(navController)
             }
+        }
+        composable(Routes.TalikhataList) {
+            val viewModel: TalikhataViewModel = viewModel(
+                factory = ViewModelProvider.AndroidViewModelFactory(LocalContext.current.applicationContext as Application)
+            )
+
+            MainScaffold(navController) {
+                TalikhataListScreen(
+                    viewModel = viewModel,
+                    onAddEntry = { navController.navigate(Routes.AddEditTalikhata) },
+                    onEditEntry = { entry ->
+                        val json = Uri.encode(Gson().toJson(entry))
+                        navController.navigate("${Routes.AddEditTalikhata}?entry=$json")
+                    }
+                )
+            }
+        }
+
+        composable(
+            route = "${Routes.AddEditTalikhata}?entry={entry}",
+            arguments = listOf(
+                navArgument("entry") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                }
+            )
+        ) { backStackEntry ->
+            val json = backStackEntry.arguments?.getString("entry")
+            val entry = if (json.isNullOrEmpty()) null else Gson().fromJson(json, TalikhataEntry::class.java)
+
+            val viewModel: TalikhataViewModel = viewModel()
+
+            AddEditTalikhataScreen(
+                entry = entry,
+                onSave = { newEntry ->
+                    if (entry == null) {
+                        viewModel.addEntry(
+                            name = newEntry.name,
+                            phone = newEntry.phone,
+                            amount = newEntry.amount,
+                            dueDate = newEntry.dueDate,
+                            isPayableToUser = newEntry.payableToUser
+                        )
+                    } else {
+                        viewModel.updateEntry(newEntry)
+                    }
+                    navController.popBackStack()
+                },
+                onBack = { navController.popBackStack() }
+            )
         }
 
         composable(BottomNavItem.AddCustomer.route) {

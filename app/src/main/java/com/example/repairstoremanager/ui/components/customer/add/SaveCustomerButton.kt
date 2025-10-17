@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -18,6 +19,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun SaveCustomerButton(
     isLoading: Boolean,
+    isFormValid: Boolean, // Add this parameter
     onSaveClick: () -> Unit,
     onSaveAndPrintClick: () -> Unit,
     onPreviewClick: () -> Unit,
@@ -33,7 +35,7 @@ fun SaveCustomerButton(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(52.dp),
-            enabled = !isLoading
+            enabled = !isLoading && isFormValid // Add validation check
         ) {
             if (isLoading) {
                 CircularProgressIndicator(
@@ -53,11 +55,21 @@ fun SaveCustomerButton(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(52.dp),
-            enabled = !isLoading
+            enabled = !isLoading && isFormValid // Add validation check
         ) {
             Text("🖨️ Save & Print", fontSize = 18.sp)
         }
 
         Spacer(modifier = Modifier.height(8.dp))
+
+        // Optional: Add a hint when form is invalid
+        if (!isFormValid && !isLoading) {
+            Text(
+                text = "Please enter customer name or phone number",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        }
     }
 }

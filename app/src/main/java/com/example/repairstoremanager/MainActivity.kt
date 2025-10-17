@@ -22,6 +22,7 @@ import com.example.repairstoremanager.viewmodel.LoginViewModel
 import com.example.repairstoremanager.viewmodel.SearchViewModel
 import com.example.repairstoremanager.viewmodel.StockViewModel
 import com.example.repairstoremanager.viewmodel.StoreViewModel
+import com.example.repairstoremanager.viewmodel.TalikhataViewModel
 import com.example.repairstoremanager.viewmodel.TransactionViewModel
 import com.example.repairstoremanager.worker.WorkScheduler
 

@@ -65,6 +65,11 @@ fun QuickInvoiceForm(
     val userProblems by viewModel.userProblems.collectAsState()
     var isSaved by remember { mutableStateOf(false) }
 
+    // Validation state
+    val isFormValid = remember(customerName, contactNumber) {
+        customerName.trim().isNotEmpty() || contactNumber.trim().isNotEmpty()
+    }
+
         val currentInvoiceNumber by viewModel.currentInvoiceNumber.collectAsState()
         val deviceStatusOptions = listOf("Pending", "Repaired", "Delivered", "Cancel")
         var deviceStatus by remember { mutableStateOf("Pending") }
@@ -188,6 +193,7 @@ fun QuickInvoiceForm(
             CustomerInfoSection(
                 customerName = customerName,
                 contactNumber = contactNumber,
+                isFormValid = isFormValid,
                 onCustomerNameChange = { customerName = it },
                 onContactNumberChange = { contactNumber = it }
             )
@@ -237,6 +243,7 @@ fun QuickInvoiceForm(
             // Action Buttons
             SaveCustomerButton(
                 isLoading = isLoading,
+                isFormValid = isFormValid,
                 onSaveClick = { saveCustomer(false) },
                 onSaveAndPrintClick = { saveCustomer(true) },
                 onPreviewClick = { showPrintSheet = true },

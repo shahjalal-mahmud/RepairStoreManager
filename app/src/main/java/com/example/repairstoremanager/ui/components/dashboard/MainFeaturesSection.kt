@@ -18,6 +18,7 @@ import androidx.compose.material.icons.automirrored.outlined.ListAlt
 import androidx.compose.material.icons.automirrored.outlined.Note
 import androidx.compose.material.icons.outlined.AddCircle
 import androidx.compose.material.icons.outlined.AssignmentTurnedIn
+import androidx.compose.material.icons.outlined.Book
 import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.DeliveryDining
 import androidx.compose.material.icons.outlined.Inventory
@@ -59,6 +60,7 @@ fun MainFeaturesSection(navController: NavHostController) {
         FeatureItem("Quick Invoice", Icons.Outlined.PointOfSale, "quick_invoice"),
         FeatureItem("Notes", Icons.AutoMirrored.Outlined.Note, "notes"),
         FeatureItem("All Transactions", Icons.Outlined.Payment, "transactions"),
+        FeatureItem("Tali Khata", Icons.Outlined.Book, "talikhata_list")
     )
 
     // Delivery options for the dialog

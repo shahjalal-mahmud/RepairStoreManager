@@ -95,6 +95,11 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
     var drawerNumber by remember { mutableStateOf("") }
     var extraDetails by remember { mutableStateOf("") }
 
+    // Validation state
+    val isFormValid = remember(customerName, contactNumber) {
+        customerName.trim().isNotEmpty() || contactNumber.trim().isNotEmpty()
+    }
+
     // Common phone models
     val commonPhoneModels = remember {
         setOf(
@@ -255,6 +260,7 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
             CustomerInfoSection(
                 customerName = customerName,
                 contactNumber = contactNumber,
+                isFormValid = isFormValid,
                 onCustomerNameChange = { customerName = it },
                 onContactNumberChange = { contactNumber = it }
             )
@@ -388,6 +394,7 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
 
             SaveCustomerButton(
                 isLoading = isLoading,
+                isFormValid = isFormValid,
                 onSaveClick = { saveCustomer(false) },
                 onSaveAndPrintClick = { saveCustomer(true) },
                 onPreviewClick = { showPrintSheet = true },

@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 fun CustomerInfoSection(
     customerName: String,
     contactNumber: String,
+    isFormValid: Boolean, // Add this parameter
     onCustomerNameChange: (String) -> Unit,
     onContactNumberChange: (String) -> Unit,
     modifier: Modifier = Modifier
@@ -40,6 +41,14 @@ fun CustomerInfoSection(
         Column(modifier = Modifier.padding(16.dp)) {
             Text("👤 Customer Info", style = MaterialTheme.typography.titleMedium)
 
+            // Add requirement hint
+            Text(
+                text = "* At least one field is required",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
             Spacer(Modifier.height(8.dp))
 
             CustomTextField(
@@ -48,7 +57,8 @@ fun CustomerInfoSection(
                 onValueChange = onCustomerNameChange,
                 keyboardType = KeyboardType.Text,
                 imeAction = ImeAction.Next,
-                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                onNext = { focusManager.moveFocus(FocusDirection.Down) },
+                isError = customerName.isEmpty() && contactNumber.isEmpty() // Show error state when both are empty
             )
 
             CustomTextField(
@@ -57,7 +67,8 @@ fun CustomerInfoSection(
                 onValueChange = onContactNumberChange,
                 keyboardType = KeyboardType.Phone,
                 imeAction = ImeAction.Next,
-                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                onNext = { focusManager.moveFocus(FocusDirection.Down) },
+                isError = customerName.isEmpty() && contactNumber.isEmpty() // Show error state when both are empty
             )
         }
     }
@@ -69,6 +80,7 @@ fun CustomTextField(
     value: String,
     keyboardType: KeyboardType = KeyboardType.Text,
     imeAction: ImeAction = ImeAction.Default,
+    isError: Boolean = false, // Add this parameter
     onNext: (() -> Unit)? = null,
     onValueChange: (String) -> Unit
 ) {
@@ -85,6 +97,7 @@ fun CustomTextField(
         ),
         keyboardActions = KeyboardActions(
             onNext = { onNext?.invoke() }
-        )
+        ),
+        isError = isError // Apply error state
     )
 }
