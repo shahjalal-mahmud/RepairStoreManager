@@ -57,7 +57,7 @@ fun MainFeaturesSection(navController: NavHostController) {
         FeatureItem("Stock Management", Icons.Outlined.Inventory, "stock_list"),
         FeatureItem("Daily Records", Icons.Outlined.Receipt, "records"),
         FeatureItem("Sales", Icons.Outlined.Payment, "sales"),
-        FeatureItem("Quick Invoice", Icons.Outlined.PointOfSale, "quick_invoice"),
+//        FeatureItem("Quick Invoice", Icons.Outlined.PointOfSale, "quick_invoice"),
         FeatureItem("Notes", Icons.AutoMirrored.Outlined.Note, "notes"),
         FeatureItem("All Transactions", Icons.Outlined.Payment, "transactions"),
         FeatureItem("Tali Khata", Icons.Outlined.Book, "talikhata_list")

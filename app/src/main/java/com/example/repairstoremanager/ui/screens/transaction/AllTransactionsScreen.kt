@@ -48,6 +48,11 @@ fun AllTransactionsScreen(
     val transactions by viewModel.transactions.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
+    // ✅ Load all transactions when this screen appears
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        viewModel.loadAllTransactions()
+    }
+
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = { onAddTransactionClick() }) {
@@ -81,8 +86,21 @@ fun AllTransactionsScreen(
                     contentPadding = PaddingValues(12.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(transactions) { txn ->
-                        TransactionItem(txn)
+                    if (transactions.isEmpty()) {
+                        item {
+                            Box(
+                                Modifier
+                                    .fillMaxSize()
+                                    .padding(32.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("No transactions found")
+                            }
+                        }
+                    } else {
+                        items(transactions) { txn ->
+                            TransactionItem(txn)
+                        }
                     }
                 }
             }
