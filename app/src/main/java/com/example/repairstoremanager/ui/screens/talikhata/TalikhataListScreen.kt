@@ -18,8 +18,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.automirrored.outlined.ReceiptLong
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Whatsapp
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -42,10 +44,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.repairstoremanager.data.model.TalikhataEntry
+import com.example.repairstoremanager.util.MessageHelper
 import com.example.repairstoremanager.viewmodel.TalikhataViewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -159,6 +163,7 @@ private fun TalikhataEntryItem(
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     if (showDeleteDialog) {
@@ -208,13 +213,14 @@ private fun TalikhataEntryItem(
                     }
                 }
 
-                // Amount with color coding
                 Text(
                     text = "৳${String.format("%.2f", entry.amount)}",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = if (entry.payableToUser) MaterialTheme.colorScheme.error
-                    else MaterialTheme.colorScheme.primary
+                    color = if (entry.payableToUser)
+                        MaterialTheme.colorScheme.error
+                    else
+                        MaterialTheme.colorScheme.primary
                 )
             }
 
@@ -229,13 +235,14 @@ private fun TalikhataEntryItem(
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Status indicator
                     Box(
                         modifier = Modifier
                             .size(8.dp)
                             .background(
-                                color = if (entry.payableToUser) MaterialTheme.colorScheme.error
-                                else MaterialTheme.colorScheme.primary,
+                                color = if (entry.payableToUser)
+                                    MaterialTheme.colorScheme.error
+                                else
+                                    MaterialTheme.colorScheme.primary,
                                 shape = CircleShape
                             )
                     )
@@ -253,14 +260,54 @@ private fun TalikhataEntryItem(
                     )
                 }
 
-                // Reminder indicator
-                if (entry.reminderScheduled) {
-                    Icon(
-                        imageVector = Icons.Outlined.Notifications,
-                        contentDescription = "Reminder set",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(16.dp)
-                    )
+                // Right side icons: Message + Reminder
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Message icon button
+                    if (entry.phone.isNotBlank()) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Message,
+                            contentDescription = "Send Message",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier
+                                .size(18.dp)
+                                .clickable {
+                                    val message = if (entry.payableToUser) {
+                                        "Hello ${entry.name}, you need to receive ৳${String.format("%.2f", entry.amount)} from me by ${formatDate(entry.dueDate)}."
+                                    } else {
+                                        "Hello ${entry.name}, please pay ৳${String.format("%.2f", entry.amount)} by ${formatDate(entry.dueDate)}."
+                                    }
+                                    MessageHelper.sendSmsViaIntent(context, entry.phone, message)
+                                }
+                        )
+                        Icon(
+                            imageVector = Icons.Default.Whatsapp, // if you have an icon for it
+                            contentDescription = "Send WhatsApp Message",
+                            tint = Color(0xFF25D366),
+                            modifier = Modifier
+                                .size(18.dp)
+                                .clickable {
+                                    val message = if (entry.payableToUser) {
+                                        "Hello ${entry.name}, you need to receive ৳${String.format("%.2f", entry.amount)} from me by ${formatDate(entry.dueDate)}."
+                                    } else {
+                                        "Hello ${entry.name}, please pay ৳${String.format("%.2f", entry.amount)} by ${formatDate(entry.dueDate)}."
+                                    }
+                                    MessageHelper.sendWhatsAppMessage(context, entry.phone, message)
+                                }
+                        )
+
+                    }
+
+                    if (entry.reminderScheduled) {
+                        Icon(
+                            imageVector = Icons.Outlined.Notifications,
+                            contentDescription = "Reminder set",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
                 }
             }
         }
