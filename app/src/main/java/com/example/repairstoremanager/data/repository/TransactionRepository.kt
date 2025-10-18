@@ -4,11 +4,13 @@ import android.util.Log
 import com.example.repairstoremanager.data.model.DailySummary
 import com.example.repairstoremanager.data.model.Transaction
 import com.example.repairstoremanager.data.model.TransactionProduct
+import com.example.repairstoremanager.util.DateUtils
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.util.Date
 import java.util.Locale
 
@@ -227,5 +229,30 @@ class TransactionRepository {
     fun getCurrentDate(): String {
         val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
         return dateFormat.format(Date())
+    }
+    // Get transactions by date range
+    suspend fun getTransactionsByDateRange(startDate: LocalDate, endDate: LocalDate): List<Transaction> {
+        val uid = auth.currentUser?.uid ?: return emptyList()
+        return try {
+            // Convert LocalDate to timestamps for range query
+            val startTimestamp = DateUtils.localDateToLong(startDate)
+            val endTimestamp = DateUtils.localDateToLong(endDate.plusDays(1)) // Include the entire end date
+
+            db.collection("transactions")
+                .whereEqualTo("shopOwnerId", uid)
+                .whereEqualTo("type", "Sale")
+                .whereGreaterThanOrEqualTo("timestamp", startTimestamp)
+                .whereLessThan("timestamp", endTimestamp)
+                .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
+                .get()
+                .await()
+                .toObjects(Transaction::class.java)
+                .also {
+                    Log.d("TransactionRepo", "Fetched ${it.size} transactions from $startDate to $endDate")
+                }
+        } catch (e: Exception) {
+            Log.e("TransactionRepo", "Error fetching transactions by date range: ${e.message}", e)
+            emptyList()
+        }
     }
 }

@@ -1,5 +1,6 @@
 package com.example.repairstoremanager.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.repairstoremanager.data.model.DailySummary
@@ -7,6 +8,7 @@ import com.example.repairstoremanager.data.model.Product
 import com.example.repairstoremanager.data.model.Transaction
 import com.example.repairstoremanager.data.model.TransactionProduct
 import com.example.repairstoremanager.data.repository.TransactionRepository
+import com.example.repairstoremanager.ui.components.common.DateRange
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -35,6 +37,12 @@ class TransactionViewModel : ViewModel() {
 
     private val _showAllTransactions = MutableStateFlow(false)
     val showAllTransactions: StateFlow<Boolean> = _showAllTransactions
+
+    private val _dateRange = MutableStateFlow(DateRange())
+    val dateRange: StateFlow<DateRange> = _dateRange
+
+    private val _isFiltering = MutableStateFlow(false)
+    val isFiltering: StateFlow<Boolean> = _isFiltering
 
     init {
         loadTodayTransactions()
@@ -209,5 +217,51 @@ class TransactionViewModel : ViewModel() {
         } catch (e: Exception) {
             date
         }
+    }
+    fun loadTransactionsByDateRange(dateRange: DateRange) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _dateRange.value = dateRange
+            _isFiltering.value = dateRange.isComplete
+
+            try {
+                val transactions = if (dateRange.isComplete) {
+                    // Use date range filter
+                    repository.getTransactionsByDateRange(dateRange.startDate!!, dateRange.endDate!!)
+                } else {
+                    // Load all transactions
+                    repository.getAllSalesTransactions()
+                }
+
+                _transactions.value = transactions
+                _showAllTransactions.value = !dateRange.isComplete
+
+                Log.d("TransactionVM", "Loaded ${transactions.size} transactions with date range: ${dateRange.getDisplayText()}")
+
+            } catch (e: Exception) {
+                Log.e("TransactionVM", "Error loading transactions by date range: ${e.message}", e)
+                _transactions.value = emptyList()
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    // Update date range
+    fun updateDateRange(dateRange: DateRange) {
+        _dateRange.value = dateRange
+        if (dateRange.isComplete) {
+            loadTransactionsByDateRange(dateRange)
+        } else if (dateRange.isEmpty) {
+            // If cleared, load all transactions
+            loadAllTransactions()
+        }
+    }
+
+    // Clear date range filter
+    fun clearDateRangeFilter() {
+        _dateRange.value = DateRange()
+        _isFiltering.value = false
+        loadAllTransactions()
     }
 }
