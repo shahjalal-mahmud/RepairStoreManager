@@ -264,4 +264,7 @@ class TransactionViewModel : ViewModel() {
         _isFiltering.value = false
         loadAllTransactions()
     }
+    fun getTransactionForPrinting(invoiceNumber: String): Transaction? {
+        return _transactions.value.find { it.invoiceNumber == invoiceNumber }
+    }
 }

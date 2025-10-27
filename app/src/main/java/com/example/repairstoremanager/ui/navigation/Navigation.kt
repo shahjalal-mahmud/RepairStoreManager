@@ -282,7 +282,8 @@ fun Navigation(
                 AddTransactionScreen(
                     transactionViewModel = transactionViewModel,
                     stockViewModel = stockViewModel,
-                    onNavigateToTransactions = { navController.navigate("transactions") }
+                    storeViewModel = storeViewModel,
+                    onNavigateToTransactions = { navController.navigate("transactions") },
                 )
             }
         }

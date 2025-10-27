@@ -36,34 +36,61 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun PaymentDialog(
+fun PrintConfirmationDialog(
     total: Double,
-    paymentType: String,
-    onPaymentTypeChange: (String) -> Unit,
-    onConfirm: () -> Unit,
-    onCancel: () -> Unit
+    onPrintAndSave: () -> Unit,
+    onSaveOnly: () -> Unit,
+    onCancel: () -> Unit,
+    isLoading: Boolean = false
 ) {
     AlertDialog(
         onDismissRequest = onCancel,
         title = { Text("Complete Sale") },
         text = {
             Column {
-                Text("Total Amount: $${"%.2f".format(total)}", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    "Total Amount: ৳${"%.2f".format(total)}",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
                 Spacer(modifier = Modifier.height(16.dp))
-
-                PaymentTypeSelector(
-                    selectedType = paymentType,
-                    onTypeSelected = onPaymentTypeChange
+                Text(
+                    "Do you want to print the invoice?",
+                    style = MaterialTheme.typography.bodyMedium
                 )
             }
         },
         confirmButton = {
-            Button(onClick = onConfirm) {
-                Text("Complete Sale")
+            Column {
+                Button(
+                    onClick = onPrintAndSave,
+                    enabled = !isLoading,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    } else {
+                        Text("Print & Save")
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                TextButton(
+                    onClick = onSaveOnly,
+                    enabled = !isLoading,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Save Only (No Print)")
+                }
             }
         },
         dismissButton = {
-            TextButton(onClick = onCancel) {
+            TextButton(
+                onClick = onCancel,
+                enabled = !isLoading
+            ) {
                 Text("Cancel")
             }
         }
