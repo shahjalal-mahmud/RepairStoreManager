@@ -275,29 +275,28 @@ private fun TalikhataEntryItem(
                                 .size(18.dp)
                                 .clickable {
                                     val message = if (entry.payableToUser) {
-                                        "Hello ${entry.name}, you need to receive ৳${String.format("%.2f", entry.amount)} from me by ${formatDate(entry.dueDate)}."
+                                        "প্রিয় ${entry.name}, আমি আপনার ${String.format("%.2f", entry.amount)} টাকা ${formatDate(entry.dueDate)} এর মধ্যে পরিশোধ করব। ধন্যবাদ।"
                                     } else {
-                                        "Hello ${entry.name}, please pay ৳${String.format("%.2f", entry.amount)} by ${formatDate(entry.dueDate)}."
+                                        "প্রিয় ${entry.name}, আপনার কাছে ${String.format("%.2f", entry.amount)} টাকা প্রাপ্য আছে। অনুগ্রহ করে ${formatDate(entry.dueDate)} এর মধ্যে পরিশোধ করুন। ধন্যবাদ।"
                                     }
                                     MessageHelper.sendSmsViaIntent(context, entry.phone, message)
                                 }
                         )
                         Icon(
-                            imageVector = Icons.Default.Whatsapp, // if you have an icon for it
+                            imageVector = Icons.Default.Whatsapp,
                             contentDescription = "Send WhatsApp Message",
                             tint = Color(0xFF25D366),
                             modifier = Modifier
                                 .size(18.dp)
                                 .clickable {
                                     val message = if (entry.payableToUser) {
-                                        "Hello ${entry.name}, you need to receive ৳${String.format("%.2f", entry.amount)} from me by ${formatDate(entry.dueDate)}."
+                                        "প্রিয় ${entry.name}, আমি আপনার ${String.format("%.2f", entry.amount)} টাকা ${formatDate(entry.dueDate)} এর মধ্যে পরিশোধ করব। ধন্যবাদ।"
                                     } else {
-                                        "Hello ${entry.name}, please pay ৳${String.format("%.2f", entry.amount)} by ${formatDate(entry.dueDate)}."
+                                        "প্রিয় ${entry.name}, আপনার কাছে ${String.format("%.2f", entry.amount)} টাকা প্রাপ্য আছে। অনুগ্রহ করে ${formatDate(entry.dueDate)} এর মধ্যে পরিশোধ করুন। ধন্যবাদ।"
                                     }
                                     MessageHelper.sendWhatsAppMessage(context, entry.phone, message)
                                 }
                         )
-
                     }
 
                     if (entry.reminderScheduled) {

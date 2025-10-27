@@ -22,11 +22,16 @@ class TalikhataReminderWorker(context: Context, params: WorkerParameters) : Coro
         val isPayableToUser = inputData.getBoolean(KEY_IS_PAYABLE_TO_USER, true)
         val entryId = inputData.getString(KEY_ENTRY_ID) ?: UUID.randomUUID().toString()
 
-        val title = if (isPayableToUser) "Upcoming payment to $name" else "Upcoming payment from $name"
-        val message = if (isPayableToUser) {
-            "You need to pay ${formatMoney(amount)} to $name tomorrow."
+        val title = if (isPayableToUser) {
+            "${name}-কে ${formatMoney(amount)} টাকা দিতে হবে"
         } else {
-            "$name is due to pay you ${formatMoney(amount)} tomorrow."
+            "${name}-এর কাছ থেকে ${formatMoney(amount)} টাকা পাবেন"
+        }
+
+        val message = if (isPayableToUser) {
+            "আপনাকে ${name}-কে ${formatMoney(amount)} টাকা পরিশোধ করতে হবে। তারিখ: ${getFormattedDueDate()}"
+        } else {
+            "${name}-এর কাছ থেকে ${formatMoney(amount)} টাকা প্রাপ্য। তারিখ: ${getFormattedDueDate()}"
         }
 
         // Use your NotificationUtils to show and save notification
@@ -38,5 +43,10 @@ class TalikhataReminderWorker(context: Context, params: WorkerParameters) : Coro
     private fun formatMoney(value: Double): String {
         // simple formatting, adjust for locale if needed
         return String.format("%.2f", value)
+    }
+    private fun getFormattedDueDate(): String {
+        val dueDateMs = inputData.getLong(KEY_DUEDATE_MS, 0L)
+        val dateFormat = java.text.SimpleDateFormat("MMM dd, yyyy", java.util.Locale.getDefault())
+        return dateFormat.format(java.util.Date(dueDateMs))
     }
 }
