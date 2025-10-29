@@ -38,7 +38,7 @@ fun buildTransactionInvoiceText(
         transaction.products.forEach { product ->
             val productName = product.name.take(18).padEnd(18)
             val quantity = product.quantity.toString().padStart(3)
-            val price = "৳${"%.0f".format(product.sellingPrice)}".padStart(6)
+            val price = "Tk${"%.0f".format(product.sellingPrice)}".padStart(6)
 
             appendLine("$productName $quantity  $price")
 
@@ -52,7 +52,7 @@ fun buildTransactionInvoiceText(
         appendLine("--------------------------------")
 
         // Totals
-        appendLine("SUB-TOTAL : ${"৳${"%.2f".format(transaction.totalAmount)}".padStart(10)}")
+        appendLine("SUB-TOTAL : ${"Tk${"%.2f".format(transaction.totalAmount)}".padStart(10)}")
         appendLine("--------------------------------")
 
         // Payment Info
@@ -75,8 +75,8 @@ fun buildTransactionInvoiceText(
         }
 
         // Footer
-        appendLine("     THANK YOU FOR YOUR BUSINESS")
-        appendLine("   Keep this invoice for warranty")
+        appendLine("    THANK YOU FOR YOUR BUSINESS")
+        appendLine("  Keep this invoice for warranty")
         appendLine()
         appendLine()
         appendLine()
