@@ -43,6 +43,7 @@ import com.example.repairstoremanager.ui.components.customer.common.AccessoriesS
 import com.example.repairstoremanager.ui.components.customer.invoice.InvoicePrintBottomSheet
 import com.example.repairstoremanager.ui.components.customer.media.CaptureMediaSection
 import com.example.repairstoremanager.util.MessageHelper
+import com.example.repairstoremanager.util.rememberContactSaverLauncher
 import com.example.repairstoremanager.viewmodel.CustomerViewModel
 import com.example.repairstoremanager.viewmodel.StoreViewModel
 import java.text.SimpleDateFormat
@@ -94,6 +95,7 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
     var sendWhatsAppAfterSave by remember { mutableStateOf(false) }
     var drawerNumber by remember { mutableStateOf("") }
     var extraDetails by remember { mutableStateOf("") }
+    var saveToContacts by remember { mutableStateOf(false) }
 
     // Validation state
     val isFormValid = remember(customerName, contactNumber) {
@@ -139,6 +141,13 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
             calendar.get(Calendar.DAY_OF_MONTH)
         )
     }
+    // Contact saver launcher
+    val (hasWriteContactPermission, saveContact) = rememberContactSaverLauncher { success ->
+        // Handle save result if needed
+        if (success) {
+            Toast.makeText(context, "Contact saved to device!", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     fun clearForm() {
         customerName = ""
@@ -167,6 +176,7 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
         sendWhatsAppAfterSave = false
         drawerNumber = ""
         extraDetails = ""
+        saveToContacts = false
     }
 
     fun saveCustomer(showPrintAfterSave: Boolean = false) {
@@ -206,6 +216,11 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
                 Toast.makeText(context, "Customer saved!", Toast.LENGTH_SHORT).show()
                 currentCustomer = savedCustomer
                 isSaved = true
+
+                // Save to contacts if enabled and we have data
+                if (saveToContacts && (customerName.isNotBlank() || contactNumber.isNotBlank())) {
+                    saveContact(customerName, contactNumber)
+                }
 
                 // Send notifications if toggles are enabled
                 val message = viewModel.getStatusMessage(savedCustomer)
@@ -261,8 +276,10 @@ fun InvoiceFormSection(modifier: Modifier = Modifier) {
                 customerName = customerName,
                 contactNumber = contactNumber,
                 isFormValid = isFormValid,
+                saveToContacts = saveToContacts,
                 onCustomerNameChange = { customerName = it },
-                onContactNumberChange = { contactNumber = it }
+                onContactNumberChange = { contactNumber = it },
+                onSaveToContactsChange = { saveToContacts = it }
             )
 
             Spacer(Modifier.height(20.dp))

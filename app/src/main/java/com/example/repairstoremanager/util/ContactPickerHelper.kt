@@ -14,6 +14,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import android.content.ContentProviderOperation
+import android.content.ContentResolver
 
 data class ContactInfo(
     val name: String,
@@ -119,4 +121,109 @@ private fun launchContactPicker(
         type = ContactsContract.CommonDataKinds.Phone.CONTENT_TYPE
     }
     launcher.launch(intent)
+}
+
+class ContactSaverHelper {
+
+    fun saveContactToDevice(
+        contentResolver: ContentResolver,
+        name: String,
+        phoneNumber: String
+    ): Boolean {
+        return try {
+            val operations = ArrayList<ContentProviderOperation>()
+
+            // Create raw contact
+            operations.add(
+                ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI)
+                    .withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, null)
+                    .withValue(ContactsContract.RawContacts.ACCOUNT_NAME, null)
+                    .build()
+            )
+
+            // Add name
+            operations.add(
+                ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+                    .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+                    .withValue(
+                        ContactsContract.Data.MIMETYPE,
+                        ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE
+                    )
+                    .withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, name)
+                    .build()
+            )
+
+            // Add phone number
+            if (phoneNumber.isNotBlank()) {
+                operations.add(
+                    ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+                        .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+                        .withValue(
+                            ContactsContract.Data.MIMETYPE,
+                            ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE
+                        )
+                        .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, phoneNumber)
+                        .withValue(
+                            ContactsContract.CommonDataKinds.Phone.TYPE,
+                            ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE
+                        )
+                        .build()
+                )
+            }
+
+            // Apply batch operations
+            contentResolver.applyBatch(ContactsContract.AUTHORITY, operations)
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+}
+
+@Composable
+fun rememberContactSaverLauncher(
+    onContactSaved: (Boolean) -> Unit
+): Pair<Boolean, (String, String) -> Unit> {
+    val context = LocalContext.current
+
+    // Permission launcher for writing contacts
+    val writeContactPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (!isGranted) {
+            Toast.makeText(context, "Contact write permission denied", Toast.LENGTH_SHORT).show()
+            onContactSaved(false)
+        }
+    }
+
+    val hasWriteContactPermission = remember {
+        ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.WRITE_CONTACTS
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    val saveContact: (String, String) -> Unit = remember {
+        { name, phoneNumber ->
+            if (hasWriteContactPermission) {
+                val contactSaverHelper = ContactSaverHelper()
+                val success = contactSaverHelper.saveContactToDevice(
+                    context.contentResolver,
+                    name,
+                    phoneNumber
+                )
+                if (success) {
+                    Toast.makeText(context, "Contact saved successfully!", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, "Failed to save contact", Toast.LENGTH_SHORT).show()
+                }
+                onContactSaved(success)
+            } else {
+                writeContactPermissionLauncher.launch(Manifest.permission.WRITE_CONTACTS)
+            }
+        }
+    }
+
+    return Pair(hasWriteContactPermission, saveContact)
 }

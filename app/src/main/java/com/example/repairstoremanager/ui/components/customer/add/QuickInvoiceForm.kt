@@ -190,13 +190,13 @@ fun QuickInvoiceForm(
             )
         }
             // Customer Information
-            CustomerInfoSection(
-                customerName = customerName,
-                contactNumber = contactNumber,
-                isFormValid = isFormValid,
-                onCustomerNameChange = { customerName = it },
-                onContactNumberChange = { contactNumber = it }
-            )
+//            CustomerInfoSection(
+//                customerName = customerName,
+//                contactNumber = contactNumber,
+//                isFormValid = isFormValid,
+//                onCustomerNameChange = { customerName = it },
+//                onContactNumberChange = { contactNumber = it }
+//            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
