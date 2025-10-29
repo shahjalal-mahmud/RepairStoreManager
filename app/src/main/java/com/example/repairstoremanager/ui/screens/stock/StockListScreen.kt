@@ -21,10 +21,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -37,6 +39,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -73,9 +76,47 @@ fun StockListScreen(
     val searchQuery by viewModel.searchQuery.collectAsState()
 
     var showSearchBar by remember { mutableStateOf(false) }
+    var productToDelete by remember { mutableStateOf<Product?>(null) }
 
     LaunchedEffect(Unit) {
         viewModel.fetchProducts()
+    }
+
+    // Delete Confirmation Dialog
+    if (productToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { productToDelete = null },
+            title = { Text("Delete Product") },
+            text = {
+                Text("Are you sure you want to delete \"${productToDelete?.name}\"? This product will be permanently removed and cannot be restocked in the future.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        productToDelete?.let { product ->
+                            viewModel.deleteProduct(
+                                productId = product.id,
+                                onSuccess = {
+                                    productToDelete = null
+                                    // Show a snackbar or toast here if you want
+                                },
+                                onError = { errorMessage ->
+                                    productToDelete = null
+                                    // Handle error - show snackbar or toast
+                                }
+                            )
+                        }
+                    }
+                ) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { productToDelete = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 
     Scaffold(
@@ -202,7 +243,8 @@ fun StockListScreen(
                                 product = product,
                                 onItemClick = {
                                     navController.navigate("edit_product/${product.id}")
-                                }
+                                },
+                                onDeleteClick = { productToDelete = product }
                             )
                         }
                     }
@@ -246,9 +288,11 @@ fun SearchBar(
 @Composable
 fun ProductCard(
     product: Product,
-    onItemClick: () -> Unit
+    onItemClick: () -> Unit,
+    onDeleteClick: () -> Unit
 ) {
     val isLowStock = product.quantity <= product.alertQuantity && product.alertQuantity > 0
+    val canDelete = product.quantity == 0L // Show delete button only when quantity is 0
 
     Card(
         onClick = onItemClick,
@@ -310,19 +354,38 @@ fun ProductCard(
                         modifier = Modifier.weight(1f)
                     )
 
-                    if (isLowStock) {
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(MaterialTheme.colorScheme.errorContainer)
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                        ) {
-                            Text(
-                                text = "Low Stock",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onErrorContainer,
-                                fontWeight = FontWeight.Medium
-                            )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (isLowStock) {
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(MaterialTheme.colorScheme.errorContainer)
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = "Low Stock",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onErrorContainer,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                        }
+
+                        // Delete Button - Only show when quantity is 0
+                        if (canDelete) {
+                            IconButton(
+                                onClick = {
+                                    onDeleteClick()
+                                },
+                                modifier = Modifier.size(32.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Delete Product",
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            }
                         }
                     }
                 }
