@@ -119,7 +119,11 @@ fun SettingsScreen(
                     icon = Icons.Default.Lock,
                     title = "Update Password",
                     subtitle = "Change your login password",
-                    iconSize = 28.dp
+                    iconSize = 28.dp,
+                    onClick = {
+                        // Navigate to ChangePasswordScreen
+                        navController.navigate("changePassword")
+                    }
                 )
             }
 

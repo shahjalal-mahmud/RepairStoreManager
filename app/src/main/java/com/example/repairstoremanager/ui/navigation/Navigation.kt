@@ -18,6 +18,7 @@ import com.example.repairstoremanager.data.model.TalikhataEntry
 import com.example.repairstoremanager.data.repository.AuthRepository
 import com.example.repairstoremanager.ui.screens.auth.ForgotPasswordScreen
 import com.example.repairstoremanager.ui.screens.auth.LoginScreen
+import com.example.repairstoremanager.ui.screens.common.ChangePasswordScreen
 import com.example.repairstoremanager.ui.screens.common.NotificationsScreen
 import com.example.repairstoremanager.ui.screens.common.QuickInvoiceScreen
 import com.example.repairstoremanager.ui.screens.common.SearchScreen
@@ -355,6 +356,9 @@ fun Navigation(
         composable("edit_note/{noteId}") { backStackEntry ->
             val noteId = backStackEntry.arguments?.getString("noteId")
             AddEditNoteScreen(navController = navController, noteId = noteId)
+        }
+        composable("changePassword") {
+            ChangePasswordScreen(navController = navController)
         }
     }
 }
