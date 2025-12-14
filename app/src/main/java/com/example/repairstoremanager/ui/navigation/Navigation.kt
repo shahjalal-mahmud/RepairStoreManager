@@ -293,6 +293,8 @@ fun Navigation(
             MainScaffold(navController) {
                 TransactionScreen(
                     viewModel = transactionViewModel,
+                    stockViewModel = stockViewModel,
+                    storeViewModel = storeViewModel,
                     onBack = { navController.popBackStack() }
                 )
             }
@@ -301,6 +303,8 @@ fun Navigation(
             MainScaffold(navController) {
                 AllTransactionsScreen(
                     viewModel = transactionViewModel,
+                    stockViewModel = stockViewModel,
+                    storeViewModel = storeViewModel,
                     onAddTransactionClick = { navController.navigate("sales") }
                 )
             }

@@ -1,5 +1,7 @@
 package com.example.repairstoremanager.ui.screens.transaction
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Print
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -22,6 +25,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -31,6 +35,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,14 +46,20 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.repairstoremanager.data.model.Transaction
 import com.example.repairstoremanager.ui.components.common.DateRangePicker
+import com.example.repairstoremanager.ui.components.customer.invoice.TransactionPrintBottomSheet
+import com.example.repairstoremanager.viewmodel.StockViewModel
+import com.example.repairstoremanager.viewmodel.StoreViewModel
 import com.example.repairstoremanager.viewmodel.TransactionViewModel
 import java.text.NumberFormat
 import java.util.Locale
 
+@RequiresApi(Build.VERSION_CODES.S)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AllTransactionsScreen(
     viewModel: TransactionViewModel = viewModel(),
+    storeViewModel: StoreViewModel,
+    stockViewModel: StockViewModel,
     onAddTransactionClick: () -> Unit = {}
 ) {
     val transactions by viewModel.transactions.collectAsState()
@@ -186,7 +199,11 @@ fun AllTransactionsScreen(
                         }
 
                         items(transactions) { transaction ->
-                            TransactionItem(transaction = transaction)
+                            TransactionItem(
+                                transaction = transaction,
+                                storeViewModel = storeViewModel,
+                                stockViewModel = stockViewModel
+                            )
                         }
                     }
                 }
@@ -242,12 +259,23 @@ fun TransactionSummaryHeader(transactions: List<Transaction>, isFiltered: Boolea
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.S)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TransactionItem(transaction: Transaction) {
+fun TransactionItem(
+    transaction: Transaction,
+    storeViewModel: StoreViewModel,
+    stockViewModel: StockViewModel
+) {
     val formatter = NumberFormat.getCurrencyInstance(Locale.getDefault())
+    var showPrintSheet by remember { mutableStateOf(false) }
+    val storeInfo = storeViewModel.storeInfo
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp),
+        elevation = CardDefaults.cardElevation(6.dp),
         colors = CardDefaults.cardColors(
             containerColor = when (transaction.type) {
                 "Sale" -> Color(0xFFE3F2FD)
@@ -255,30 +283,81 @@ fun TransactionItem(transaction: Transaction) {
                 "Expense" -> Color(0xFFFFEBEE)
                 "Income" -> Color(0xFFE8F5E9)
                 "Service" -> Color(0xFFEDE7F6)
-                else -> Color.White
+                else -> MaterialTheme.colorScheme.surface
             }
-        )
+        ),
+        shape = MaterialTheme.shapes.large
     ) {
-        Column(Modifier.padding(12.dp)) {
+        Column(modifier = Modifier.padding(14.dp)) {
+
+            /** Header Row **/
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(transaction.invoiceNumber, fontWeight = FontWeight.Bold)
-                Text(transaction.date, style = MaterialTheme.typography.bodySmall)
+                Column {
+                    Text(
+                        text = transaction.invoiceNumber,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Text(
+                        text = transaction.date,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
+                    )
+                }
+
+                IconButton(onClick = { showPrintSheet = true }) {
+                    Icon(
+                        imageVector = Icons.Default.Print,
+                        contentDescription = "Print Invoice"
+                    )
+                }
             }
-            Text(transaction.customerName, style = MaterialTheme.typography.bodyMedium)
+
             Spacer(modifier = Modifier.height(6.dp))
+
+            /** Customer Name **/
+            Text(
+                text = transaction.customerName,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            /** Amount + Profit **/
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(formatter.format(transaction.totalAmount), fontWeight = FontWeight.Bold)
                 Text(
-                    "Profit: ${formatter.format(transaction.totalProfit)}",
-                    color = if (transaction.totalProfit >= 0) Color(0xFF2E7D32) else Color.Red
+                    text = formatter.format(transaction.totalAmount),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Text(
+                    text = "Profit: ${formatter.format(transaction.totalProfit)}",
+                    color = if (transaction.totalProfit >= 0)
+                        Color(0xFF2E7D32)
+                    else
+                        Color(0xFFC62828),
+                    fontWeight = FontWeight.SemiBold
                 )
             }
         }
+    }
+
+    /** Print Bottom Sheet **/
+    if (showPrintSheet) {
+        TransactionPrintBottomSheet(
+            transaction = transaction,
+            storeInfo = storeInfo,
+            stockViewModel = stockViewModel,
+            onDismiss = { showPrintSheet = false }
+        )
     }
 }

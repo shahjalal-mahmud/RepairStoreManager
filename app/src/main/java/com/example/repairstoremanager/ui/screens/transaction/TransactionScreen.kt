@@ -1,5 +1,7 @@
 package com.example.repairstoremanager.ui.screens.transaction
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,14 +35,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.repairstoremanager.data.model.DailySummary
+import com.example.repairstoremanager.viewmodel.StockViewModel
+import com.example.repairstoremanager.viewmodel.StoreViewModel
 import com.example.repairstoremanager.viewmodel.TransactionViewModel
 import java.text.NumberFormat
 import java.util.Locale
 
+@RequiresApi(Build.VERSION_CODES.S)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionScreen(
     viewModel: TransactionViewModel,
+    storeViewModel: StoreViewModel,
+    stockViewModel: StockViewModel,
     onBack: () -> Unit
 ) {
     val transactions by viewModel.transactions.collectAsState()
@@ -126,7 +134,11 @@ fun TransactionScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(transactions) { transaction ->
-                        TransactionItem(transaction = transaction)
+                        TransactionItem(
+                            transaction = transaction,
+                            storeViewModel = storeViewModel,
+                            stockViewModel = stockViewModel
+                        )
                     }
                 }
             }
@@ -135,7 +147,7 @@ fun TransactionScreen(
 }
 
 @Composable
-fun DailySummaryCard(dailySummary: com.example.repairstoremanager.data.model.DailySummary) {
+fun DailySummaryCard(dailySummary: DailySummary) {
     val formatter = NumberFormat.getNumberInstance(Locale.getDefault())
 
     Card(
